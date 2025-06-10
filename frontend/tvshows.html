@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ELI6 MOVIES - TV Shows</title>
+    <link href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(229, 9, 20, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(229, 9, 20, 0.8);
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .logo {
+            color: #e50914;
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.8);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            margin-left: 40px;
+        }
+
+        .nav-links a {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e50914;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            transform: scaleX(1);
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-container input {
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 40px 10px 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 260px;
+            transition: all 0.3s ease;
+        }
+
+        .search-container input:focus {
+            background: rgba(0, 0, 0, 0.85);
+            border-color: rgba(255, 255, 255, 0.4);
+            outline: none;
+            width: 300px;
+        }
+
+        .search-container::after {
+            content: '🔍';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .shows {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+            padding: 40px 50px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .show {
+            position: relative;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            transform-origin: center center;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .show.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .show img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+        }
+
+        .show:hover {
+            transform: scale(1.2) translateY(-10px);
+            z-index: 10;
+            box-shadow: 0 30px 45px rgba(0, 0, 0, 0.45);
+        }
+
+        .show:hover img {
+            transform: scale(1.1);
+            filter: brightness(0.3) blur(2px);
+        }
+
+        .hover-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                    rgba(0, 0, 0, 0.8) 0%,
+                    rgba(0, 0, 0, 0.2) 20%,
+                    rgba(0, 0, 0, 0.8) 100%);
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(10px);
+            z-index: 11;
+        }
+
+        .show:hover .hover-overlay {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .hover-content {
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+        }
+
+        .show:hover .hover-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .hover-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease 0.2s;
+        }
+
+        .show:hover .hover-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease 0.3s;
+        }
+
+        .show:hover .hover-meta {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .hover-quality,
+        .hover-rating,
+        .hover-year,
+        .hover-seasons {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .hover-quality {
+            background: rgba(229, 9, 20, 0.2);
+            color: #fff;
+        }
+
+        .hover-rating {
+            color: #ffb900;
+        }
+
+        .hover-rating::before {
+            content: '★';
+            margin-right: 4px;
+        }
+
+        .hover-overview {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #e5e5e5;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease 0.4s;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .show:hover .hover-overview {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease 0.5s;
+        }
+
+        .show:hover .hover-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            z-index: 12;
+        }
+
+        .hover-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            transition: transform 0.5s ease;
+        }
+
+        .hover-button:hover::before {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .play-button {
+            background: #e50914;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .play-button:hover {
+            background: #f40612;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .list-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .list-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .list-button.in-list {
+            background: rgba(255, 255, 255, 0.2);
+            color: #e50914;
+            border-color: #e50914;
+        }
+
+        .list-button.in-list:hover {
+            background: rgba(229, 9, 20, 0.1);
+        }
+
+        /* Loading animation */
+        .loading {
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e5e5e5;
+            font-size: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Player container styles */
+        .player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+        }
+
+        .player {
+            width: 90%;
+            height: 90%;
+            position: relative;
+        }
+
+        .player iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+
+        .close-player {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1002;
+        }
+
+        .close-player:hover {
+            color: #e50914;
+            transform: scale(1.1);
+        }
+
+        /* Season selector styles */
+        .season-selector {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(20, 20, 20, 0.95);
+            padding: 30px;
+            border-radius: 12px;
+            min-width: 300px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .season-selector.active {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .season-selector h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #fff;
+        }
+
+        .season-list {
+            display: grid;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        }
+
+        .season-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .season-card:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .season-card h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+            color: #fff;
+        }
+
+        .season-card p {
+            font-size: 14px;
+            color: #aaa;
+            margin: 5px 0;
+        }
+
+        .season-card .air-date {
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Add hover state indicators */
+        .hover-indicator {
+            position: absolute;
+            width: 4px;
+            height: 0;
+            background: #e50914;
+            transition: height 0.3s ease;
+        }
+
+        .hover-indicator.left {
+            left: 0;
+            top: 0;
+        }
+
+        .hover-indicator.right {
+            right: 0;
+            bottom: 0;
+        }
+
+        .show:hover .hover-indicator {
+            height: 100%;
+        }
+
+        /* Add a subtle glow effect on hover */
+        .show::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(229, 9, 20, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .show:hover::after {
+            opacity: 1;
+        }
+
+        /* Episode list styles */
+        .episode-list {
+            margin-top: 20px;
+            display: grid;
+            gap: 15px;
+        }
+
+        .episode-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 150px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .episode-card:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .episode-thumbnail {
+            width: 150px;
+            height: 85px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .episode-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .episode-info h4 {
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .episode-info p {
+            font-size: 14px;
+            color: #aaa;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .episode-duration {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Backdrop styles */
+        .backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center;">
+            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="movies.html">Movies</a>
+                <a href="tvshows.html" class="active">TV Shows</a>
+                <a href="anime.html">Anime</a>
+                <a href="mylist.html">My List</a>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search TV shows..." />
+        </div>
+    </nav>
+
+    <div class="shows">
+        <div class="show">
+            <img src="https://via.placeholder.com/500x750?text=Loading..." alt="Loading..." />
+            <div class="hover-overlay">
+                <div class="hover-content">
+                    <h3 class="hover-title">Loading...</h3>
+                    <div class="hover-meta">
+                        <span class="hover-quality">4K</span>
+                        <span class="hover-rating">★ N/A</span>
+                        <span class="hover-year">N/A</span>
+                        <span class="hover-seasons">? Seasons</span>
+                    </div>
+                    <p class="hover-overview">Loading show information...</p>
+                </div>
+                <div class="hover-actions">
+                    <button class="hover-button play-button">▶ Play</button>
+                    <button class="hover-button list-button">+ My List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="player-container" class="player-container">
+        <div id="player" class="player"></div>
+        <button id="close-player" class="close-player">×</button>
+    </div>
+
+    <div id="season-selector" class="season-selector">
+        <h2>Select Season</h2>
+        <div class="season-list">
+            <div class="season-card">
+                <h3>Season 1</h3>
+                <p>10 Episodes</p>
+                <p class="air-date">Air Date: 2024</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="backdrop" class="backdrop"></div>
+
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('search');
+        const showsContainer = document.querySelector('.shows');
+        const playerContainer = document.getElementById('player-container');
+        const seasonSelector = document.getElementById('season-selector');
+        const backdrop = document.getElementById('backdrop');
+        const closePlayerBtn = document.getElementById('close-player');
+
+        // Function to load initial shows
+        async function loadShows() {
+            showsContainer.innerHTML = '<div class="loading">Loading TV shows...</div>';
+            try {
+                const res = await fetch('http://localhost:3000/api/tv/popular');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const shows = await res.json();
+                displayShows(shows);
+            } catch (error) {
+                console.error('Error loading TV shows:', error);
+                showsContainer.innerHTML =
+                    '<div class="loading">Error loading TV shows. Please try refreshing.</div>';
+            }
+        }
+
+        // Function to get show seasons
+        async function getShowSeasons(showId) {
+            try {
+                const res = await fetch(`http://localhost:3000/api/tv/${showId}/seasons`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                return await res.json();
+            } catch (error) {
+                console.error('Error loading seasons:', error);
+                return [];
+            }
+        }
+
+        // Function to show season selector
+        async function showSeasonSelector(showId, showTitle) {
+            const seasons = await getShowSeasons(showId);
+            const seasonList = document.querySelector('.season-list');
+            seasonList.innerHTML = '';
+
+            seasons.forEach(season => {
+                const card = document.createElement('div');
+                card.className = 'season-card';
+                card.innerHTML = `
+                    <h3>Season ${season.season_number}</h3>
+                    <p>${season.episode_count} Episodes</p>
+                    <p class="air-date">Air Date: ${season.air_date || 'TBA'}</p>
+                `;
+                card.onclick = () => playShow(showId, season.season_number);
+                seasonList.appendChild(card);
+            });
+
+            document.querySelector('.season-selector h2').textContent = showTitle;
+            seasonSelector.classList.add('active');
+            backdrop.classList.add('active');
+        }
+
+        // Function to display shows with animations
+        async function displayShows(shows) {
+            if (!shows || shows.length === 0) {
+                showsContainer.innerHTML = '<div class="loading">No shows found</div>';
+                return;
+            }
+
+            showsContainer.innerHTML = '';
+
+            let myList = JSON.parse(localStorage.getItem('myList') || '[]');
+
+            shows.forEach(show => {
+                if (!show.poster_path) return;
+
+                const div = document.createElement('div');
+                div.className = 'show';
+                div.dataset.id = show.id;
+
+                const isInList = myList.some(m => m.id === show.id);
+                const rating = show.vote_average ? (show.vote_average * 10).toFixed(0) + '%' : 'N/A';
+                const firstAirDate = show.first_air_date ? new Date(show.first_air_date).getFullYear() : 'N/A';
+
+                div.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" 
+                         alt="${show.name}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/500x750?text=No+Image'" />
+                    <div class="hover-overlay">
+                        <div class="hover-content">
+                            <h3 class="hover-title">${show.name}</h3>
+                            <div class="hover-meta">
+                                <span class="hover-quality">4K</span>
+                                <span class="hover-rating">★ ${rating}</span>
+                                <span class="hover-year">${firstAirDate}</span>
+                                <span class="hover-seasons">${show.number_of_seasons || '?'} Seasons</span>
+                            </div>
+                            <p class="hover-overview">${show.overview || 'No description available.'}</p>
+                        </div>
+                        <div class="hover-actions">
+                            <button class="hover-button play-button" 
+                                onclick="event.stopPropagation(); showSeasonSelector(${show.id}, '${show.name.replace(/'/g, "\\'")}')">▶ Play</button>
+                            <button class="hover-button list-button ${isInList ? 'in-list' : ''}" 
+                                onclick="event.stopPropagation(); toggleMyList(${JSON.stringify(show).replace(/"/g, '&quot;')})">
+                                ${isInList ? '✓ In List' : '+ My List'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                showsContainer.appendChild(div);
+                addShowHoverEffects(div);
+                showObserver.observe(div);
+            });
+        }
+
+        // Function to play show
+        function playShow(showId, seasonNumber = 1) {
+            const player = document.getElementById('player');
+            player.innerHTML = `
+                <iframe src="https://vidsrc.to/embed/tv/${showId}/${seasonNumber}/1" 
+                        allowfullscreen></iframe>
+            `;
+            playerContainer.style.display = 'flex';
+            seasonSelector.classList.remove('active');
+            backdrop.classList.remove('active');
+        }
+
+        // Function to close player
+        function closePlayer() {
+            const player = document.getElementById('player');
+            playerContainer.style.display = 'none';
+            player.innerHTML = '';
+            seasonSelector.classList.remove('active');
+            backdrop.classList.remove('active');
+        }
+
+        // Function to toggle show in My List
+        function toggleMyList(show) {
+            let myList = JSON.parse(localStorage.getItem('myList') || '[]');
+            const index = myList.findIndex(m => m.id === show.id);
+            const button = document.querySelector(`.show[data-id="${show.id}"] .list-button`);
+
+            if (index === -1) {
+                myList.push(show);
+                if (button) {
+                    button.classList.add('in-list');
+                    button.textContent = '✓ In List';
+                }
+            } else {
+                myList.splice(index, 1);
+                if (button) {
+                    button.classList.remove('in-list');
+                    button.textContent = '+ My List';
+                }
+            }
+
+            localStorage.setItem('myList', JSON.stringify(myList));
+        }
+
+        // Add search event listener
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            searchTimeout = setTimeout(() => {
+                if (query.length < 2) {
+                    loadShows();
+                    return;
+                }
+                searchShows(query);
+            }, 500);
+        });
+
+        // Function to search shows
+        async function searchShows(query) {
+            showsContainer.innerHTML = '<div class="loading">Searching TV shows...</div>';
+            try {
+                const res = await fetch(`http://localhost:3000/api/search/tv?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const shows = await res.json();
+                displayShows(shows);
+            } catch (error) {
+                console.error('Error searching TV shows:', error);
+                showsContainer.innerHTML = '<div class="loading">Error searching. Please try again.</div>';
+            }
+        }
+
+        // Close player button event
+        closePlayerBtn.addEventListener('click', closePlayer);
+
+        // Close player and season selector on backdrop click
+        backdrop.addEventListener('click', closePlayer);
+
+        // Close player and season selector on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePlayer();
+            }
+        });
+
+        // Add scroll handler for navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for shows
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const showObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Function to add hover effects to shows
+        function addShowHoverEffects(show) {
+            // Add hover indicators
+            const leftIndicator = document.createElement('div');
+            leftIndicator.className = 'hover-indicator left';
+            const rightIndicator = document.createElement('div');
+            rightIndicator.className = 'hover-indicator right';
+            show.appendChild(leftIndicator);
+            show.appendChild(rightIndicator);
+
+            // Add mouse movement effect
+            show.addEventListener('mousemove', (e) => {
+                if (e.target.closest('.hover-button')) return;
+
+                const { left, top, width, height } = show.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
+
+                const tiltX = (y - 0.5) * 10;
+                const tiltY = (x - 0.5) * -10;
+
+                show.style.transform = `
+                    scale(1.2) 
+                    translateY(-10px)
+                    rotateX(${tiltX}deg) 
+                    rotateY(${tiltY}deg)
+                `;
+            });
+
+            // Reset transform on mouse leave
+            show.addEventListener('mouseleave', () => {
+                show.style.transform = '';
+            });
+
+            // Smooth button interactions
+            show.querySelectorAll('.hover-button').forEach(button => {
+                button.addEventListener('mouseenter', (e) => {
+                    e.stopPropagation();
+                    button.style.transform = 'translateY(-2px)';
+                    show.style.transform = 'scale(1.2) translateY(-10px)';
+                });
+
+                button.addEventListener('mouseleave', (e) => {
+                    e.stopPropagation();
+                    button.style.transform = 'translateY(0)';
+                });
+
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShows();
+        });
+    </script>
+</body>
+
+</html>

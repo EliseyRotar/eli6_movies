@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ELI6 MOVIES - Movies</title>
+    <link href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(229, 9, 20, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(229, 9, 20, 0.8);
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .logo {
+            color: #e50914;
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.8);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            margin-left: 40px;
+        }
+
+        .nav-links a {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e50914;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            transform: scaleX(1);
+        }
+
+        .genre-filters {
+            padding: 20px 50px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 80px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.8));
+            z-index: 999;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .genre-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            animation: fadeInUp 0.5s backwards;
+        }
+
+        .genre-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            transition: transform 0.5s ease;
+        }
+
+        .genre-button:hover::before {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .genre-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .genre-button.active {
+            background: #e50914;
+            border-color: #e50914;
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .genre-button.active:hover {
+            background: #f40612;
+        }
+
+        .movies {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 30px;
+            padding: 40px 50px;
+            position: relative;
+        }
+
+        .movie {
+            position: relative;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            transform-origin: center center;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .movie.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .movie:hover {
+            transform: scale(1.2) translateY(-10px);
+            z-index: 10;
+            box-shadow: 0 30px 45px rgba(0, 0, 0, 0.45);
+        }
+
+        .movie img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: all 0.5s ease;
+        }
+
+        .movie:hover img {
+            transform: scale(1.1);
+            filter: brightness(0.3) blur(2px);
+        }
+
+        .hover-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to bottom,
+                    rgba(0, 0, 0, 0.8) 0%,
+                    rgba(0, 0, 0, 0.2) 20%,
+                    rgba(0, 0, 0, 0.8) 100%);
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(10px);
+            z-index: 11;
+        }
+
+        .movie:hover .hover-overlay {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .hover-content {
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+        }
+
+        .movie:hover .hover-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .hover-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease 0.2s;
+        }
+
+        .movie:hover .hover-title {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-meta {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s ease 0.3s;
+        }
+
+        .movie:hover .hover-meta {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .hover-quality,
+        .hover-rating,
+        .hover-year {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .hover-quality {
+            background: rgba(229, 9, 20, 0.2);
+            color: #fff;
+        }
+
+        .hover-rating {
+            color: #ffb900;
+        }
+
+        .hover-rating::before {
+            content: '★';
+            margin-right: 4px;
+        }
+
+        .hover-overview {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #e5e5e5;
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease 0.4s;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .movie:hover .hover-overview {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease 0.5s;
+        }
+
+        .movie:hover .hover-actions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hover-button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            z-index: 12;
+        }
+
+        .hover-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%) scale(0);
+            border-radius: 50%;
+            transition: transform 0.5s ease;
+        }
+
+        .hover-button:hover::before {
+            transform: translate(-50%, -50%) scale(2);
+        }
+
+        .play-button {
+            background: #e50914;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .play-button:hover {
+            background: #f40612;
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+
+        .list-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .list-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .list-button.in-list {
+            background: rgba(255, 255, 255, 0.2);
+            color: #e50914;
+            border-color: #e50914;
+        }
+
+        .list-button.in-list:hover {
+            background: rgba(229, 9, 20, 0.1);
+        }
+
+        /* Loading animation */
+        .loading {
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #e5e5e5;
+            font-size: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        /* Add hover state indicators */
+        .hover-indicator {
+            position: absolute;
+            width: 4px;
+            height: 0;
+            background: #e50914;
+            transition: height 0.3s ease;
+        }
+
+        .hover-indicator.left {
+            left: 0;
+            top: 0;
+        }
+
+        .hover-indicator.right {
+            right: 0;
+            bottom: 0;
+        }
+
+        .movie:hover .hover-indicator {
+            height: 100%;
+        }
+
+        /* Add a subtle glow effect on hover */
+        .movie::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(229, 9, 20, 0.3);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .movie:hover::after {
+            opacity: 1;
+        }
+
+        /* Player container styles */
+        .player-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .player-container.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .close-player {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 36px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            z-index: 2001;
+        }
+
+        .close-player:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        iframe {
+            width: 90%;
+            height: 80vh;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .player-container.active iframe {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Add animations for genre buttons */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center;">
+            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="movies.html" class="active">Movies</a>
+                <a href="tvshows.html">TV Shows</a>
+                <a href="anime.html">Anime</a>
+                <a href="mylist.html">My List</a>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="search" placeholder="Search movies..." />
+        </div>
+    </nav>
+
+    <div id="genre-filters" class="genre-filters">
+        <!-- Genre buttons will be added here -->
+    </div>
+
+    <div class="movies">
+        <!-- Movies will be loaded here -->
+    </div>
+
+    <div id="player-container" class="player-container">
+        <div id="player" class="player"></div>
+        <button id="close-player" class="close-player">×</button>
+    </div>
+
+    <script>
+        let searchTimeout;
+        const searchInput = document.getElementById('search');
+        const moviesContainer = document.querySelector('.movies');
+        const playerContainer = document.getElementById('player-container');
+        const closePlayerBtn = document.getElementById('close-player');
+
+        // Function to load genres
+        async function loadGenres() {
+            try {
+                const res = await fetch('http://localhost:3000/api/movies/genres');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const genres = await res.json();
+                const container = document.getElementById('genre-filters');
+                container.innerHTML = ''; // Clear existing buttons
+
+                // Add "All" button
+                const allButton = document.createElement('button');
+                allButton.className = 'genre-button active';
+                allButton.textContent = 'All';
+                allButton.onclick = () => filterByGenre(null, allButton);
+                allButton.style.animationDelay = `${0 * 0.1}s`;
+                container.appendChild(allButton);
+
+                genres.forEach((genre, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'genre-button';
+                    button.textContent = genre.name;
+                    button.onclick = () => filterByGenre(genre.id, button);
+                    button.style.animationDelay = `${(index + 1) * 0.1}s`;
+                    container.appendChild(button);
+                });
+            } catch (error) {
+                console.error('Error loading genres:', error);
+                document.getElementById('genre-filters').innerHTML =
+                    '<div style="color: #e5e5e5;">Error loading genres. Please try refreshing.</div>';
+            }
+        }
+
+        // Function to filter movies by genre
+        async function filterByGenre(genreId, clickedButton) {
+            const buttons = document.querySelectorAll('.genre-button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            clickedButton.classList.add('active');
+
+            moviesContainer.innerHTML = '<div class="loading">Loading movies...</div>';
+
+            const endpoint = genreId ?
+                `http://localhost:3000/api/movies/genre/${genreId}` :
+                'http://localhost:3000/api/movies/popular';
+
+            try {
+                const res = await fetch(endpoint);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const movies = await res.json();
+                displayMovies(movies);
+            } catch (error) {
+                console.error('Error filtering movies:', error);
+                moviesContainer.innerHTML =
+                    '<div class="loading">Error loading movies. Please try refreshing.</div>';
+            }
+        }
+
+        // Function to load initial movies
+        async function loadMovies() {
+            moviesContainer.innerHTML = '<div class="loading">Loading movies...</div>';
+            try {
+                const res = await fetch('http://localhost:3000/api/movies/popular');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const movies = await res.json();
+                displayMovies(movies);
+            } catch (error) {
+                console.error('Error loading movies:', error);
+                moviesContainer.innerHTML =
+                    '<div class="loading">Error loading movies. Please try refreshing.</div>';
+            }
+        }
+
+        // Function to display movies with animations
+        async function displayMovies(movies) {
+            if (!movies || movies.length === 0) {
+                moviesContainer.innerHTML = '<div class="loading">No movies found</div>';
+                return;
+            }
+
+            moviesContainer.innerHTML = '';
+
+            let myList = JSON.parse(localStorage.getItem('myList') || '[]');
+
+            movies.forEach(movie => {
+                if (!movie.poster_path) return;
+
+                const div = document.createElement('div');
+                div.className = 'movie';
+                div.dataset.id = movie.id;
+
+                const isInList = myList.some(m => m.id === movie.id);
+                const rating = movie.vote_average ? (movie.vote_average * 10).toFixed(0) + '%' : 'N/A';
+                const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
+
+                div.innerHTML = `
+                    <img src="https://image.tmdb.org/t/p/w500${movie.poster_path}" 
+                         alt="${movie.title}"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='https://via.placeholder.com/500x750?text=No+Image'" />
+                    <div class="hover-overlay">
+                        <div class="hover-content">
+                            <h3 class="hover-title">${movie.title}</h3>
+                            <div class="hover-meta">
+                                <span class="hover-quality">4K</span>
+                                <span class="hover-rating">★ ${rating}</span>
+                                <span class="hover-year">${releaseYear}</span>
+                            </div>
+                            <p class="hover-overview">${movie.overview || 'No description available.'}</p>
+                        </div>
+                        <div class="hover-actions">
+                            <button class="hover-button play-button" onclick="event.stopPropagation(); playMovie(${movie.id})">▶ Play</button>
+                            <button class="hover-button list-button ${isInList ? 'in-list' : ''}" 
+                                    onclick="event.stopPropagation(); toggleMyList(${JSON.stringify(movie).replace(/"/g, '&quot;')})">
+                                ${isInList ? '✓ In List' : '+ My List'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                moviesContainer.appendChild(div);
+                addMovieHoverEffects(div);
+                movieObserver.observe(div);
+            });
+        }
+
+        // Function to play movie
+        function playMovie(movieId) {
+            const player = document.getElementById('player');
+            player.innerHTML = `
+                <iframe src="https://vidsrc.to/embed/movie/${movieId}" 
+                        allowfullscreen></iframe>
+            `;
+            playerContainer.style.display = 'flex';
+        }
+
+        // Function to close player
+        function closePlayer() {
+            const player = document.getElementById('player');
+            playerContainer.style.display = 'none';
+            player.innerHTML = '';
+        }
+
+        // Function to toggle movie in My List
+        function toggleMyList(movie) {
+            let myList = JSON.parse(localStorage.getItem('myList') || '[]');
+            const index = myList.findIndex(m => m.id === movie.id);
+            const button = document.querySelector(`.movie[data-id="${movie.id}"] .list-button`);
+
+            if (index === -1) {
+                myList.push(movie);
+                if (button) {
+                    button.classList.add('in-list');
+                    button.textContent = '✓ In List';
+                }
+            } else {
+                myList.splice(index, 1);
+                if (button) {
+                    button.classList.remove('in-list');
+                    button.textContent = '+ My List';
+                }
+            }
+
+            localStorage.setItem('myList', JSON.stringify(myList));
+        }
+
+        // Add search event listener
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            searchTimeout = setTimeout(() => {
+                if (query.length < 2) {
+                    loadMovies();
+                    return;
+                }
+                searchMovies(query);
+            }, 500);
+        });
+
+        // Function to search movies
+        async function searchMovies(query) {
+            moviesContainer.innerHTML = '<div class="loading">Searching movies...</div>';
+            try {
+                const res = await fetch(`http://localhost:3000/api/search/movies?q=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const movies = await res.json();
+                displayMovies(movies);
+            } catch (error) {
+                console.error('Error searching movies:', error);
+                moviesContainer.innerHTML = '<div class="loading">Error searching. Please try again.</div>';
+            }
+        }
+
+        // Close player button event
+        closePlayerBtn.addEventListener('click', closePlayer);
+
+        // Close player on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closePlayer();
+            }
+        });
+
+        // Add scroll handler for navbar
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for movies
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const movieObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Function to add hover effects to movies
+        function addMovieHoverEffects(movie) {
+            // Add hover indicators
+            const leftIndicator = document.createElement('div');
+            leftIndicator.className = 'hover-indicator left';
+            const rightIndicator = document.createElement('div');
+            rightIndicator.className = 'hover-indicator right';
+            movie.appendChild(leftIndicator);
+            movie.appendChild(rightIndicator);
+
+            // Add mouse movement effect
+            movie.addEventListener('mousemove', (e) => {
+                if (e.target.closest('.hover-button')) return;
+
+                const { left, top, width, height } = movie.getBoundingClientRect();
+                const x = (e.clientX - left) / width;
+                const y = (e.clientY - top) / height;
+
+                const tiltX = (y - 0.5) * 10;
+                const tiltY = (x - 0.5) * -10;
+
+                movie.style.transform = `
+                    scale(1.2) 
+                    translateY(-10px)
+                    rotateX(${tiltX}deg) 
+                    rotateY(${tiltY}deg)
+                `;
+            });
+
+            // Reset transform on mouse leave
+            movie.addEventListener('mouseleave', () => {
+                movie.style.transform = '';
+            });
+
+            // Smooth button interactions
+            movie.querySelectorAll('.hover-button').forEach(button => {
+                button.addEventListener('mouseenter', (e) => {
+                    e.stopPropagation();
+                    button.style.transform = 'translateY(-2px)';
+                    movie.style.transform = 'scale(1.2) translateY(-10px)';
+                });
+
+                button.addEventListener('mouseleave', (e) => {
+                    e.stopPropagation();
+                    button.style.transform = 'translateY(0)';
+                });
+
+                button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGenres();
+            loadMovies();
+        });
+    </script>
+</body>
+
+</html>
