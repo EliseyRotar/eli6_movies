@@ -3,7 +3,7 @@
 # Check if yay is installed, if not install it
 if ! command -v yay &> /dev/null; then
     echo "yay is not installed. Installing yay..."
-    sudo pacman -S --needed git base-devel
+    sudo pacman -S --needed git base-devel --noconfirm
     git clone https://aur.archlinux.org/yay.git
     cd yay
     makepkg -si --noconfirm
@@ -12,6 +12,42 @@ if ! command -v yay &> /dev/null; then
     echo "yay installed."
 else
     echo "yay is already installed."
+fi
+
+# Check if Node.js and npm are installed, if not install them
+if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
+    echo "Node.js or npm is not installed. Installing Node.js and npm..."
+    yay -S nodejs npm --noconfirm
+    echo "Node.js and npm installed."
+else
+    echo "Node.js and npm are already installed."
+fi
+
+# Check if live-server is installed globally, if not install it
+if ! command -v live-server &> /dev/null; then
+    echo "live-server is not installed globally. Installing live-server..."
+    sudo npm install -g live-server
+    echo "live-server installed."
+else
+    echo "live-server is already installed."
+fi
+
+# Check if PHP is installed, if not install it
+if ! command -v php &> /dev/null; then
+    echo "PHP is not installed. Installing PHP..."
+    yay -S php --noconfirm
+    echo "PHP installed."
+else
+    echo "PHP is already installed."
+fi
+
+# Check if php-curl is enabled, if not install it
+if ! php -m | grep -q curl; then
+    echo "php-curl is not enabled. Installing php-curl..."
+    yay -S php-curl --noconfirm
+    echo "php-curl installed."
+else
+    echo "php-curl is already enabled."
 fi
 
 # Check if MongoDB is installed, if not install it
@@ -40,8 +76,13 @@ echo "Checking for processes on port 3000..."
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 
 # Start backend server
-echo "Starting backend server..."
+echo "Installing backend dependencies if needed..."
 cd backend
+if [ ! -d "node_modules" ] || [ package-lock.json -nt node_modules ]; then
+    npm install
+fi
+
+echo "Starting backend server..."
 node server.js &
 BACKEND_PID=$!
 
