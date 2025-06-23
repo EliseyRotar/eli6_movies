@@ -1,0 +1,7 @@
+nohup: ignoring input
+
+> eli6_movies-backend@1.0.0 start
+> node server.js
+
+Server is running on port 3000
+Connected to MongoDB

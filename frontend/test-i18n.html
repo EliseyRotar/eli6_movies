@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ELI6 MOVIES - i18n Test</title>
+    <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="css/theme.css">
+    <script src="js/i18n.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e50914;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-icon {
+            color: #e5e5e5;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-icon:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .nav-icon i {
+            font-size: 24px;
+        }
+
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .test-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .test-section h2 {
+            color: #e50914;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .test-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border-left: 4px solid #e50914;
+        }
+
+        .test-item h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .test-item p {
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .test-item .original {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .test-item .translated {
+            background: rgba(46, 204, 113, 0.2);
+            padding: 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #2ecc71;
+        }
+
+        .dynamic-content {
+            background: rgba(52, 152, 219, 0.2);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .dynamic-content h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .movie-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .movie-overview {
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.success {
+            background: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+
+        .status.error {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .status.loading {
+            background: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 30px;">
+            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
+            </div>
+        </div>
+        <div class="nav-icons">
+            <a href="search.html" class="nav-icon">
+                <i class="material-icons">search</i>
+            </a>
+            <a href="settings.html" class="nav-icon">
+                <i class="material-icons">settings</i>
+            </a>
+            <a href="account.html" class="nav-icon">
+                <i class="material-icons">account_circle</i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="test-container">
+        <div class="test-section">
+            <h2>🌐 i18n System Test</h2>
+            <p>This page tests the internationalization system with both static and dynamic content translation.</p>
+
+            <div class="test-item">
+                <h3>Current Language</h3>
+                <p>Language: <span id="current-lang">Loading...</span></p>
+                <p>URL Parameter: <span id="url-lang">Loading...</span></p>
+                <p>Cookie: <span id="cookie-lang">Loading...</span></p>
+            </div>
+
+            <div class="test-item">
+                <h3>Static Content Translation</h3>
+                <p>These elements should be translated using the JSON translation files:</p>
+                <div class="original">Original: "Home", "Movies", "TV Shows", "My List"</div>
+                <div class="translated">Translated: <span data-i18n="nav.home">Home</span>, <span
+                        data-i18n="nav.movies">Movies</span>, <span data-i18n="nav.tvshows">TV Shows</span>, <span
+                        data-i18n="nav.mylist">My List</span></div>
+            </div>
+
+            <div class="test-item">
+                <h3>Dynamic Content Translation</h3>
+                <p>These elements should be translated using LibreTranslate API:</p>
+                <div class="dynamic-content">
+                    <h4>Movie Titles (Dynamic Translation)</h4>
+                    <div class="movie-card">
+                        <div class="movie-title" data-dynamic-translate="true" data-original-text="The Avengers">The
+                            Avengers</div>
+                        <div class="movie-overview" data-dynamic-translate="true"
+                            data-original-text="Earth's mightiest heroes must come together and learn to fight as a team if they are going to stop the mischievous Loki and his alien army from enslaving humanity.">
+                            Earth's mightiest heroes must come together and learn to fight as a team if they are going
+                            to stop the mischievous Loki and his alien army from enslaving humanity.</div>
+                    </div>
+                    <div class="movie-card">
+                        <div class="movie-title" data-dynamic-translate="true" data-original-text="Inception">Inception
+                        </div>
+                        <div class="movie-overview" data-dynamic-translate="true"
+                            data-original-text="A thief who steals corporate secrets through the use of dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.">
+                            A thief who steals corporate secrets through the use of dream-sharing technology is given
+                            the inverse task of planting an idea into the mind of a C.E.O.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-item">
+                <h3>Translation Status</h3>
+                <p>Static Content: <span class="status" id="static-status">loading</span></p>
+                <p>Dynamic Content: <span class="status" id="dynamic-status">loading</span></p>
+                <p>API Connection: <span class="status" id="api-status">loading</span></p>
+            </div>
+
+            <div class="test-item">
+                <h3>Test URLs</h3>
+                <p>Test different languages:</p>
+                <ul style="color: #ccc; margin-left: 20px;">
+                    <li><a href="?lng=en" style="color: #e50914;">English (?lng=en)</a></li>
+                    <li><a href="?lng=it" style="color: #e50914;">Italian (?lng=it)</a></li>
+                    <li><a href="?lng=ru" style="color: #e50914;">Russian (?lng=ru)</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Test the i18n system
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🧪 Starting i18n system test...');
+
+            // Update status displays
+            const updateStatus = (elementId, status, text) => {
+                const element = document.getElementById(elementId);
+                element.className = `status ${status}`;
+                element.textContent = text;
+            };
+
+            // Test static content translation
+            setTimeout(() => {
+                const staticElements = document.querySelectorAll('[data-i18n]');
+                const translatedCount = Array.from(staticElements).filter(el => {
+                    const key = el.getAttribute('data-i18n');
+                    return el.textContent !== key;
+                }).length;
+
+                if (translatedCount > 0) {
+                    updateStatus('static-status', 'success', `✅ ${translatedCount} elements translated`);
+                } else {
+                    updateStatus('static-status', 'error', '❌ No static elements translated');
+                }
+            }, 1000);
+
+            // Test dynamic content translation
+            setTimeout(async () => {
+                try {
+                    if (window.i18n && window.i18n.currentLanguage !== 'en') {
+                        await window.i18n.translateDynamicElements();
+                        updateStatus('dynamic-status', 'success', '✅ Dynamic content translated');
+                    } else {
+                        updateStatus('dynamic-status', 'success', '✅ No translation needed (English)');
+                    }
+                } catch (error) {
+                    updateStatus('dynamic-status', 'error', '❌ Dynamic translation failed');
+                }
+            }, 2000);
+
+            // Test API connection
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('/api/translation/translate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: 'Hello World',
+                            targetLanguage: 'it'
+                        })
+                    });
+
+                    if (response.ok) {
+                        updateStatus('api-status', 'success', '✅ API connection working');
+                    } else {
+                        updateStatus('api-status', 'error', '❌ API connection failed');
+                    }
+                } catch (error) {
+                    updateStatus('api-status', 'error', '❌ API connection error');
+                }
+            }, 3000);
+
+            // Update language info
+            setTimeout(() => {
+                if (window.i18n) {
+                    document.getElementById('current-lang').textContent = window.i18n.currentLanguage;
+                    document.getElementById('url-lang').textContent = new URLSearchParams(window.location.search).get('lng') || 'None';
+                    document.getElementById('cookie-lang').textContent = window.i18n.getLanguageCookie() || 'None';
+                }
+            }, 500);
+
+            console.log('✅ i18n test setup complete');
+        });
+    </script>
+</body>
+
+</html>

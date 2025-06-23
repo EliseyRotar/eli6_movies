@@ -1,0 +1,102 @@
+:root {
+    /* Dark Theme (Default) */
+    --bg-primary: #141414;
+    --bg-secondary: #1f1f1f;
+    --text-primary: #ffffff;
+    --text-secondary: #e5e5e5;
+    --accent-color: #e50914;
+    --card-bg: rgba(0, 0, 0, 0.75);
+    --input-bg: #333;
+    --input-border: rgba(255, 255, 255, 0.2);
+    --success-color: #2ecc71;
+    --error-color: #e74c3c;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --nav-bg: rgba(0, 0, 0, 0.9);
+    --nav-bg-scrolled: rgba(0, 0, 0, 0.95);
+    --hover-bg: rgba(255, 255, 255, 0.1);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --accent-color: #e50914;
+    --card-bg: #ffffff;
+    --input-bg: #f0f0f0;
+    --input-border: rgba(0, 0, 0, 0.2);
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --nav-bg: rgba(255, 255, 255, 0.9);
+    --nav-bg-scrolled: rgba(255, 255, 255, 0.95);
+    --hover-bg: rgba(0, 0, 0, 0.05);
+}
+
+/* Common Theme Transitions */
+*, *::before, *::after {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Common Theme-Aware Elements */
+body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.navbar {
+    background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+}
+
+.navbar.scrolled {
+    background: var(--nav-bg-scrolled);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.logo {
+    color: var(--accent-color);
+}
+
+.nav-links a {
+    color: var(--text-secondary);
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+    color: var(--text-primary);
+}
+
+.nav-links a::after {
+    background: var(--accent-color);
+}
+
+.settings-link,
+.account-link {
+    color: var(--text-primary);
+}
+
+input, select, textarea {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    color: var(--text-primary);
+}
+
+input:focus, select:focus, textarea:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(229, 9, 20, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(229, 9, 20, 0.8);
+} 

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ELI6 MOVIES - Anime</title>
+    <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="css/theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(229, 9, 20, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(229, 9, 20, 0.8);
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: var(--nav-bg-scrolled);
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.8);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            margin-left: 40px;
+        }
+
+        .nav-links a {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a.active {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e50914;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            transform: scaleX(1);
+        }
+
+        /* Anime Section Styles */
+        .anime-section {
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            padding: 0 50px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .anime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 50px;
+        }
+
+        .movie-card {
+            position: relative;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            transform-style: preserve-3d;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .movie-card:hover {
+            transform: scale(1.1);
+            z-index: 10;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .movie-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            transform: skewX(-25deg);
+        }
+
+        .movie-card:hover::after {
+            left: 150%;
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .movie-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0.8) 70%, transparent);
+            color: #fff;
+            transform: translateY(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .movie-card:hover .movie-info {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .movie-card .card-actions,
+        .movie-card .movie-title,
+        .movie-card .card-meta,
+        .movie-card .movie-overview {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease-in-out;
+        }
+
+        .movie-card:hover .movie-info>* {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .movie-card:hover .card-actions {
+            transition-delay: 0.1s;
+        }
+
+        .movie-card:hover .movie-title {
+            transition-delay: 0.15s;
+        }
+
+        .movie-card:hover .card-meta {
+            transition-delay: 0.2s;
+        }
+
+        .movie-card:hover .movie-overview {
+            transition-delay: 0.25s;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.7);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #e50914;
+            border-color: #e50914;
+            transform: scale(1.1);
+        }
+
+        .action-btn.in-list {
+            background: #e50914;
+            border-color: #e50914;
+        }
+
+        .movie-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 14px;
+            color: #b3b3b3;
+            margin-top: 10px;
+        }
+
+        .card-meta .rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #46d369;
+            font-weight: bold;
+        }
+
+        .movie-overview {
+            font-size: 13px;
+            color: #e5e5e5;
+            margin-top: 10px;
+            line-height: 1.5;
+            height: 4.5em;
+            /* Limit to 3 lines */
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Additional styles for anime page */
+        .anime-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 0 50px;
+            transform: translateY(100%);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+        }
+
+        .movie-card:hover .movie-info {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .movie-title {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">ELI6</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="movies.html">Movies</a>
+            <a href="tvshows.html">TV Shows</a>
+            <a href="anime.html" class="active">Anime</a>
+            <a href="sports.html">Sports</a>
+            <a href="mylist.html">My List</a>
+        </div>
+    </nav>
+
+    <main>
+        <section class="anime-section">
+            <div class="section-header">
+                <h2 class="section-title">Popular Anime</h2>
+            </div>
+            <div class="anime-grid" id="popular-anime"></div>
+        </section>
+
+        <section class="anime-section">
+            <div class="section-header">
+                <h2 class="section-title">New Episodes</h2>
+            </div>
+            <div class="anime-grid" id="latest-anime"></div>
+        </section>
+
+        <section class="anime-section">
+            <div class="section-header">
+                <h2 class="section-title">Continuing Series</h2>
+            </div>
+            <div class="anime-grid" id="top-rated-anime"></div>
+        </section>
+    </main>
+
+    <div id="player-container" class="player-container">
+        <div class="player-content">
+            <button class="close-player" onclick="closePlayer()">×</button>
+            <div class="player-wrapper">
+                <div class="loading">Loading player...</div>
+            </div>
+            <div class="episode-selector">
+                <div class="episode-selector-header">
+                    <h3>Episodes</h3>
+                </div>
+                <div id="episodes-list" class="episodes-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TMDB_API_URL = 'https://api.themoviedb.org/3';
+        const TMDB_API_KEY = '8c247ea0b4b56ed2ff7d41c9a833aa77';
+        const VIDSRC_API_URL = 'https://vidsrc.to/embed';
+        let currentAnime = null;
+
+        // Function to create anime card
+        function createAnimeCard(anime) {
+            const posterPath = anime.poster_path ? `https://image.tmdb.org/t/p/w500${anime.poster_path}` : 'https://via.placeholder.com/200x300?text=No+Image';
+            const year = anime.first_air_date ? anime.first_air_date.split('-')[0] : 'N/A';
+            const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
+            const isInList = myListArr.some(listItem => listItem.id === anime.id && listItem.type === 'tv');
+            const rating = anime.vote_average ? anime.vote_average.toFixed(1) : 'N/A';
+            const title = anime.name;
+            const overview = anime.overview ? anime.overview.substring(0, 100) + (anime.overview.length > 100 ? '...' : '') : '';
+
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <img src="${posterPath}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
+                <div class="movie-info">
+                    <div class="card-actions">
+                        <button class="action-btn play-btn" onclick="playContent(${anime.id}, 'tv')">
+                            <i class="material-icons">play_arrow</i>
+                        </button>
+                        <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${anime.id}, 'tv', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
+                            <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                        </button>
+                    </div>
+                    <div class="movie-title">${title}</div>
+                    <div class="card-meta">
+                        <span class="rating">
+                            <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
+                        </span>
+                        <span>${year}</span>
+                    </div>
+                    <p class="movie-overview">${overview}</p>
+                </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.action-btn')) return;
+                playContent(anime.id, 'tv');
+            });
+
+            return card;
+        }
+
+        // Function to toggle My List
+        async function toggleMyList(id, type, title, posterPath, year) {
+            event.stopPropagation();
+            if (!checkAuth()) return;
+
+            const button = event.currentTarget;
+            const icon = button.querySelector('.material-icons');
+            const isInList = button.classList.contains('in-list') || icon.textContent === 'check';
+
+            try {
+                const response = await fetch('/api/mylist', {
+                    method: isInList ? 'DELETE' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ id, type })
+                });
+
+                if (response.ok) {
+                    button.classList.toggle('in-list', !isInList);
+                    icon.textContent = !isInList ? 'check' : 'add';
+                    button.querySelector('span:last-child').textContent = !isInList ? 'In List' : 'My List';
+                    showNotification(isInList ? 'Removed from My List' : 'Added to My List', 'success');
+                } else {
+                    throw new Error('Failed to update My List');
+                }
+            } catch (error) {
+                console.error('Error updating My List:', error);
+                showNotification('Failed to update My List', 'error');
+            }
+        }
+
+        // Function to show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Function to check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showNotification('Please log in to use this feature', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        // Function to fetch anime from TMDB
+        async function fetchAnime(endpoint) {
+            try {
+                // Use discover endpoint with anime-specific filters
+                const response = await fetch(
+                    `${TMDB_API_URL}/discover/tv?api_key=${TMDB_API_KEY}` +
+                    '&with_genres=16' +
+                    '&with_origin_country=JP' +
+                    '&with_keywords=210024' +
+                    '&with_original_language=ja' +
+                    '&sort_by=popularity.desc' +
+                    '&page=1'
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Additional filtering to ensure we only get anime
+                const animeResults = data.results.filter(show => {
+                    // Check if the show has anime-related keywords
+                    const isAnime = show.genre_ids.includes(16) && // Animation genre
+                        show.origin_country.includes('JP') && // Japanese origin
+                        show.original_language === 'ja'; // Japanese language
+
+                    // Additional check for anime titles (common anime title patterns)
+                    const title = show.name.toLowerCase();
+                    const isAnimeTitle = title.includes('anime') ||
+                        title.includes('no') || // Common in anime titles
+                        title.includes('ga') || // Common in anime titles
+                        title.includes('wa') || // Common in anime titles
+                        title.includes('de') || // Common in anime titles
+                        title.includes('ni') || // Common in anime titles
+                        title.includes('wo'); // Common in anime titles
+
+                    return isAnime && isAnimeTitle;
+                });
+
+                return animeResults;
+            } catch (error) {
+                console.error('Error fetching anime:', error);
+                return [];
+            }
+        }
+
+        // Function to load anime content
+        async function loadAnimeContent() {
+            try {
+                // Fetch popular anime
+                const popularAnime = await fetchAnime('/tv/popular');
+                const popularContainer = document.getElementById('popular-anime');
+                if (popularAnime.length > 0) {
+                    popularContainer.innerHTML = '';
+                    popularAnime.forEach(anime => {
+                        popularContainer.appendChild(createAnimeCard(anime));
+                    });
+                } else {
+                    popularContainer.innerHTML = '<div class="error">Failed to load popular anime</div>';
+                }
+
+                // Fetch latest episodes (airing today)
+                const latestAnime = await fetchAnime('/tv/airing_today');
+                const latestContainer = document.getElementById('latest-anime');
+                if (latestAnime.length > 0) {
+                    latestContainer.innerHTML = '';
+                    latestAnime.forEach(anime => {
+                        latestContainer.appendChild(createAnimeCard(anime));
+                    });
+                } else {
+                    latestContainer.innerHTML = '<div class="error">Failed to load latest episodes</div>';
+                }
+
+                // Fetch top rated anime
+                const topRatedAnime = await fetchAnime('/tv/top_rated');
+                const topRatedContainer = document.getElementById('top-rated-anime');
+                if (topRatedAnime.length > 0) {
+                    topRatedContainer.innerHTML = '';
+                    topRatedAnime.forEach(anime => {
+                        topRatedContainer.appendChild(createAnimeCard(anime));
+                    });
+                } else {
+                    topRatedContainer.innerHTML = '<div class="error">Failed to load top rated anime</div>';
+                }
+            } catch (error) {
+                console.error('Error loading anime content:', error);
+                document.querySelectorAll('.anime-grid').forEach(container => {
+                    container.innerHTML = '<div class="error">Error loading content. Please try again later.</div>';
+                });
+            }
+        }
+
+        // Function to open player
+        function openPlayer(anime) {
+            // Store anime info in localStorage
+            localStorage.setItem('currentContent', JSON.stringify({
+                id: anime.id,
+                title: anime.name,
+                type: 'tv',
+                poster: `https://image.tmdb.org/t/p/w500${anime.poster_path}`,
+                overview: anime.overview,
+                releaseDate: anime.first_air_date,
+                rating: anime.vote_average
+            }));
+
+            // Redirect to player page
+            window.location.href = './player.html';
+        }
+
+        // Function to close player
+        function closePlayer() {
+            const playerContainer = document.getElementById('player-container');
+            playerContainer.classList.remove('active');
+            currentAnime = null;
+        }
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAnimeContent();
+            checkAuth();
+        });
+
+        function playContent(id, type) {
+            window.location.href = `player.html?type=${type}&id=${id}`;
+        }
+    </script>
+</body>
+
+</html>

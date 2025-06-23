@@ -1,0 +1,141 @@
+{
+    "nav": {
+        "home": "Главная",
+        "movies": "Фильмы",
+        "tvshows": "Сериалы",
+        "mylist": "Мой Список",
+        "search": "Поиск",
+        "settings": "Настройки",
+        "account": "Аккаунт"
+    },
+    "home": {
+        "hero": {
+            "watchNow": "Смотреть Сейчас",
+            "moreInfo": "Подробнее"
+        },
+        "sections": {
+            "trending": "В Тренде",
+            "popular": "Популярные",
+            "topRated": "Высоко Оцененные",
+            "upcoming": "Скоро",
+            "nowPlaying": "Сейчас Играет",
+            "airingToday": "В Эфире Сегодня",
+            "onTheAir": "В Эфире"
+        }
+    },
+    "movies": {
+        "title": "Фильмы",
+        "sections": {
+            "trending": "Фильмы в Тренде",
+            "popular": "Популярные Фильмы",
+            "topRated": "Высоко Оцененные Фильмы",
+            "upcoming": "Скоро в Кино",
+            "nowPlaying": "Сейчас в Кино"
+        }
+    },
+    "tvshows": {
+        "title": "Сериалы",
+        "sections": {
+            "trending": "Сериалы в Тренде",
+            "popular": "Популярные Сериалы",
+            "topRated": "Высоко Оцененные Сериалы"
+        }
+    },
+    "search": {
+        "title": "Поиск",
+        "placeholder": "Поиск фильмов, сериалов...",
+        "noResults": "Результаты не найдены",
+        "searching": "Поиск...",
+        "categories": {
+            "all": "Все",
+            "movies": "Фильмы",
+            "tvshows": "Сериалы"
+        }
+    },
+    "mylist": {
+        "title": "Мой Список",
+        "empty": "Ваш список пуст",
+        "addTo": "Добавить в Мой Список",
+        "removeFrom": "Удалить из Моего Списка",
+        "added": "Добавлено в Мой Список",
+        "removed": "Удалено из Моего Списка"
+    },
+    "player": {
+        "close": "Закрыть",
+        "episodes": "Эпизоды",
+        "selectSeason": "Выбрать Сезон",
+        "play": "Играть",
+        "loading": "Загрузка...",
+        "error": "Ошибка загрузки контента"
+    },
+    "account": {
+        "title": "Аккаунт",
+        "login": "Войти",
+        "register": "Регистрация",
+        "logout": "Выйти",
+        "email": "Email",
+        "password": "Пароль",
+        "confirmPassword": "Подтвердите Пароль",
+        "submit": "Отправить",
+        "profile": "Профиль",
+        "settings": "Настройки"
+    },
+    "settings": {
+        "title": "Настройки",
+        "language": "Язык",
+        "theme": "Тема",
+        "notifications": "Уведомления",
+        "privacy": "Конфиденциальность",
+        "about": "О Приложении"
+    },
+    "common": {
+        "loading": "Загрузка...",
+        "error": "Ошибка",
+        "success": "Успешно",
+        "cancel": "Отмена",
+        "save": "Сохранить",
+        "delete": "Удалить",
+        "edit": "Редактировать",
+        "add": "Добавить",
+        "remove": "Удалить",
+        "back": "Назад",
+        "next": "Далее",
+        "previous": "Предыдущий",
+        "close": "Закрыть",
+        "open": "Открыть",
+        "search": "Поиск",
+        "filter": "Фильтр",
+        "sort": "Сортировка",
+        "view": "Просмотр",
+        "rating": "Рейтинг",
+        "year": "Год",
+        "genre": "Жанр",
+        "duration": "Продолжительность",
+        "overview": "Описание",
+        "cast": "В ролях",
+        "crew": "Создатели",
+        "trailer": "Трейлер",
+        "watch": "Смотреть",
+        "download": "Скачать",
+        "share": "Поделиться",
+        "favorite": "Избранное",
+        "like": "Нравится",
+        "dislike": "Не нравится",
+        "comment": "Комментарий",
+        "review": "Отзыв",
+        "recommend": "Рекомендовать",
+        "report": "Пожаловаться",
+        "help": "Помощь",
+        "support": "Поддержка",
+        "contact": "Контакты",
+        "about": "О нас",
+        "terms": "Условия использования",
+        "privacy": "Политика конфиденциальности",
+        "cookies": "Политика cookie"
+    },
+    "languages": {
+        "en": "English",
+        "it": "Italiano",
+        "ru": "Русский"
+    }
+}

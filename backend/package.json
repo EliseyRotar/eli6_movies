@@ -1,0 +1,25 @@
+{
+    "name": "eli6_movies-backend",
+    "version": "1.0.0",
+    "description": "Backend for eli6 movies",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.2",
+        "bcryptjs": "^3.0.2",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "dotenv": "^16.5.0",
+        "ejs": "^3.1.10",
+        "express": "^4.21.2",
+        "jsonwebtoken": "^9.0.2",
+        "mongoose": "^8.15.2",
+        "node-fetch": "^2.7.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}

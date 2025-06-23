@@ -1,0 +1,58 @@
+language switcher, (ru/it/en)
+
+cutom pages for movie , tv shows, my list FATTO
+
+in the home wheres the title in the centre, add some films preview FATTO
+
+make the arrows functional in the home FATTO
+
+custom page anime  FATTO 
+
+more movies FATTO
+fix the section of genres of movies in movies.html FATTO
+
+add russian movies support 
+
+add italian movies support FATTO
+
+account support?? FATTO
+
+custom search??  FATTO
+
+FIX THE SEARCH.HTML FATTO
+
+add a season and an episode selector for both servers FATTO
+
+add a keep watching FATTO
+
+add a watched and a favorites in the mylist.html  FATTO
+
+ADD ANOTHER SERVER (VIXSRC) FATTO
+
+IMPROVE CARDS HOVER OVERLAY (rating, animations, ecc) FATTO
+
+fix card ovelay in my list
+
+in the netflix carousel add rating system
+
+fix the remove of keep watching
+
+add another page for the streaming of live sports (calcio per ora), 
+USE DADDYLIVE
+add sport selector on the top
+multiple servers per match
+auto-refreshing the matches and adds new automatically
+
+
+
+
+
+
+
+
+❯ cd backend && fuser -k 3000/tcp || true && node index.js
+
+❯ sudo lsof -i :3000 | grep LISTEN | awk '{print $2}' | xargs -r kill -9 && npm start
+
+cd backend; npm start
+cd frontend; npx live-server --host=0.0.0.0 --port=5500

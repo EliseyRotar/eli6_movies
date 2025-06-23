@@ -1,0 +1,141 @@
+{
+    "nav": {
+        "home": "Home",
+        "movies": "Film",
+        "tvshows": "Serie TV",
+        "mylist": "La Mia Lista",
+        "search": "Cerca",
+        "settings": "Impostazioni",
+        "account": "Account"
+    },
+    "home": {
+        "hero": {
+            "watchNow": "Guarda Ora",
+            "moreInfo": "Maggiori Informazioni"
+        },
+        "sections": {
+            "trending": "Tendenze",
+            "popular": "Popolari",
+            "topRated": "Più Votati",
+            "upcoming": "Prossimamente",
+            "nowPlaying": "Ora in Riproduzione",
+            "airingToday": "In Onda Oggi",
+            "onTheAir": "In Onda"
+        }
+    },
+    "movies": {
+        "title": "Film",
+        "sections": {
+            "trending": "Film di Tendenza",
+            "popular": "Film Popolari",
+            "topRated": "Film Più Votati",
+            "upcoming": "Film in Arrivo",
+            "nowPlaying": "Ora al Cinema"
+        }
+    },
+    "tvshows": {
+        "title": "Serie TV",
+        "sections": {
+            "trending": "Serie TV di Tendenza",
+            "popular": "Serie TV Popolari",
+            "topRated": "Serie TV Più Votate"
+        }
+    },
+    "search": {
+        "title": "Cerca",
+        "placeholder": "Cerca film, serie TV...",
+        "noResults": "Nessun risultato trovato",
+        "searching": "Ricerca in corso...",
+        "categories": {
+            "all": "Tutto",
+            "movies": "Film",
+            "tvshows": "Serie TV"
+        }
+    },
+    "mylist": {
+        "title": "La Mia Lista",
+        "empty": "La tua lista è vuota",
+        "addTo": "Aggiungi alla Mia Lista",
+        "removeFrom": "Rimuovi dalla Mia Lista",
+        "added": "Aggiunto alla Mia Lista",
+        "removed": "Rimosso dalla Mia Lista"
+    },
+    "player": {
+        "close": "Chiudi",
+        "episodes": "Episodi",
+        "selectSeason": "Seleziona Stagione",
+        "play": "Riproduci",
+        "loading": "Caricamento...",
+        "error": "Errore nel caricamento del contenuto"
+    },
+    "account": {
+        "title": "Account",
+        "login": "Accedi",
+        "register": "Registrati",
+        "logout": "Esci",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Conferma Password",
+        "submit": "Invia",
+        "profile": "Profilo",
+        "settings": "Impostazioni"
+    },
+    "settings": {
+        "title": "Impostazioni",
+        "language": "Lingua",
+        "theme": "Tema",
+        "notifications": "Notifiche",
+        "privacy": "Privacy",
+        "about": "Informazioni"
+    },
+    "common": {
+        "loading": "Caricamento...",
+        "error": "Errore",
+        "success": "Successo",
+        "cancel": "Annulla",
+        "save": "Salva",
+        "delete": "Elimina",
+        "edit": "Modifica",
+        "add": "Aggiungi",
+        "remove": "Rimuovi",
+        "back": "Indietro",
+        "next": "Avanti",
+        "previous": "Precedente",
+        "close": "Chiudi",
+        "open": "Apri",
+        "search": "Cerca",
+        "filter": "Filtra",
+        "sort": "Ordina",
+        "view": "Visualizza",
+        "rating": "Valutazione",
+        "year": "Anno",
+        "genre": "Genere",
+        "duration": "Durata",
+        "overview": "Trama",
+        "cast": "Cast",
+        "crew": "Crew",
+        "trailer": "Trailer",
+        "watch": "Guarda",
+        "download": "Scarica",
+        "share": "Condividi",
+        "favorite": "Preferito",
+        "like": "Mi Piace",
+        "dislike": "Non Mi Piace",
+        "comment": "Commenta",
+        "review": "Recensione",
+        "recommend": "Raccomanda",
+        "report": "Segnala",
+        "help": "Aiuto",
+        "support": "Supporto",
+        "contact": "Contatti",
+        "about": "Informazioni",
+        "terms": "Termini di Servizio",
+        "privacy": "Informativa Privacy",
+        "cookies": "Informativa Cookie"
+    },
+    "languages": {
+        "en": "English",
+        "it": "Italiano",
+        "ru": "Русский"
+    }
+}

@@ -1,0 +1,141 @@
+{
+    "nav": {
+        "home": "Home",
+        "movies": "Movies",
+        "tvshows": "TV Shows",
+        "mylist": "My List",
+        "search": "Search",
+        "settings": "Settings",
+        "account": "Account"
+    },
+    "home": {
+        "hero": {
+            "watchNow": "Watch Now",
+            "moreInfo": "More Info"
+        },
+        "sections": {
+            "trending": "Trending Now",
+            "popular": "Popular",
+            "topRated": "Top Rated",
+            "upcoming": "Upcoming",
+            "nowPlaying": "Now Playing",
+            "airingToday": "Airing Today",
+            "onTheAir": "On The Air"
+        }
+    },
+    "movies": {
+        "title": "Movies",
+        "sections": {
+            "trending": "Trending Movies",
+            "popular": "Popular Movies",
+            "topRated": "Top Rated Movies",
+            "upcoming": "Upcoming Movies",
+            "nowPlaying": "Now Playing"
+        }
+    },
+    "tvshows": {
+        "title": "TV Shows",
+        "sections": {
+            "trending": "Trending TV Shows",
+            "popular": "Popular TV Shows",
+            "topRated": "Top Rated TV Shows"
+        }
+    },
+    "search": {
+        "title": "Search",
+        "placeholder": "Search for movies, TV shows...",
+        "noResults": "No results found",
+        "searching": "Searching...",
+        "categories": {
+            "all": "All",
+            "movies": "Movies",
+            "tvshows": "TV Shows"
+        }
+    },
+    "mylist": {
+        "title": "My List",
+        "empty": "Your list is empty",
+        "addTo": "Add to My List",
+        "removeFrom": "Remove from My List",
+        "added": "Added to My List",
+        "removed": "Removed from My List"
+    },
+    "player": {
+        "close": "Close",
+        "episodes": "Episodes",
+        "selectSeason": "Select Season",
+        "play": "Play",
+        "loading": "Loading...",
+        "error": "Error loading content"
+    },
+    "account": {
+        "title": "Account",
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "email": "Email",
+        "password": "Password",
+        "confirmPassword": "Confirm Password",
+        "submit": "Submit",
+        "profile": "Profile",
+        "settings": "Settings"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "theme": "Theme",
+        "notifications": "Notifications",
+        "privacy": "Privacy",
+        "about": "About"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "cancel": "Cancel",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "add": "Add",
+        "remove": "Remove",
+        "back": "Back",
+        "next": "Next",
+        "previous": "Previous",
+        "close": "Close",
+        "open": "Open",
+        "search": "Search",
+        "filter": "Filter",
+        "sort": "Sort",
+        "view": "View",
+        "rating": "Rating",
+        "year": "Year",
+        "genre": "Genre",
+        "duration": "Duration",
+        "overview": "Overview",
+        "cast": "Cast",
+        "crew": "Crew",
+        "trailer": "Trailer",
+        "watch": "Watch",
+        "download": "Download",
+        "share": "Share",
+        "favorite": "Favorite",
+        "like": "Like",
+        "dislike": "Dislike",
+        "comment": "Comment",
+        "review": "Review",
+        "recommend": "Recommend",
+        "report": "Report",
+        "help": "Help",
+        "support": "Support",
+        "contact": "Contact",
+        "about": "About",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "cookies": "Cookie Policy"
+    },
+    "languages": {
+        "en": "English",
+        "it": "Italiano",
+        "ru": "Русский"
+    }
+}

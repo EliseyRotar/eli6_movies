@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account - ELI6 MOVIES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Netflix+Sans:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            margin-left: 40px;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 16px;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-color);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: center;
+        }
+
+        .account-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: radial-gradient(circle at center, #1f1f1f 0%, #0f0f0f 100%);
+        }
+
+        .account-box {
+            background: rgba(0, 0, 0, 0.75);
+            border-radius: 8px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #e50914;
+        }
+
+        .form-container {
+            margin-top: 20px;
+        }
+
+        .form {
+            display: none;
+        }
+
+        .form.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            background: #333;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            background: #454545;
+            box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.5);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: #e50914;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background: #f40612;
+            transform: translateY(-2px);
+        }
+
+        .error-message {
+            color: #e50914;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success-message {
+            color: #2ecc71;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .account-info {
+            display: none;
+            text-align: center;
+        }
+
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #333;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: #666;
+        }
+
+        .account-details {
+            margin-bottom: 30px;
+        }
+
+        .account-details h2 {
+            margin-bottom: 10px;
+        }
+
+        .account-details p {
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 2px solid #e50914;
+            color: #e50914;
+            padding: 12px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #e50914;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="logo">ELI6 MOVIES</a>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="movies.html">Movies</a>
+            <a href="tvshows.html">TV Shows</a>
+            <a href="mylist.html">My List</a>
+        </div>
+    </nav>
+
+    <div class="account-container">
+        <div class="account-box">
+            <div class="tabs">
+                <div class="tab active" data-tab="login">Sign In</div>
+                <div class="tab" data-tab="register">Sign Up</div>
+            </div>
+
+            <div class="form-container">
+                <!-- Login Form -->
+                <form id="loginForm" class="form active">
+                    <div class="input-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <div id="loginError" class="error-message"></div>
+                    <button type="submit" class="submit-btn">Sign In</button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="registerForm" class="form">
+                    <div class="input-group">
+                        <label for="registerUsername">Username</label>
+                        <input type="text" id="registerUsername" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <div id="registerError" class="error-message"></div>
+                    <button type="submit" class="submit-btn">Sign Up</button>
+                </form>
+            </div>
+
+            <!-- Account Info (shown when logged in) -->
+            <div id="accountInfo" class="account-info">
+                <div class="profile-picture">
+                    <span id="profileInitial"></span>
+                </div>
+                <div class="account-details">
+                    <h2 id="profileUsername"></h2>
+                    <p id="profileEmail"></p>
+                </div>
+                <button onclick="logout()" class="logout-btn">Sign Out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const loginTab = document.querySelector('.tab[data-tab="login"]');
+            const registerTab = document.querySelector('.tab[data-tab="register"]');
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginError = document.getElementById('loginError');
+            const registerError = document.getElementById('registerError');
+
+            // Switch between login and register tabs
+            loginTab.addEventListener('click', () => {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+            });
+
+            registerTab.addEventListener('click', () => {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.add('active');
+                loginForm.classList.remove('active');
+            });
+
+            // Register form submission
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('registerUsername').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+
+                try {
+                    await register(username, email, password);
+                    window.location.href = '/';
+                } catch (error) {
+                    registerError.textContent = 'Registration failed. Please try again.';
+                    registerError.style.display = 'block';
+                }
+            });
+
+            // Login form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                try {
+                    await login(email, password);
+                    window.location.href = '/';
+                } catch (error) {
+                    loginError.textContent = 'Invalid email or password';
+                    loginError.style.display = 'block';
+                }
+            });
+
+            // Check if user is logged in
+            async function checkAuth() {
+                if (isLoggedIn()) {
+                    try {
+                        const profile = await getProfile();
+                        document.querySelector('.form-container').style.display = 'none';
+                        document.getElementById('accountInfo').style.display = 'block';
+                        document.getElementById('profileUsername').textContent = profile.username;
+                        document.getElementById('profileEmail').textContent = profile.email;
+                        document.getElementById('profileInitial').textContent = profile.username[0].toUpperCase();
+                    } catch (error) {
+                        console.error('Error fetching profile:', error);
+                        logout();
+                    }
+                } else {
+                    document.querySelector('.form-container').style.display = 'block';
+                    document.getElementById('accountInfo').style.display = 'none';
+                }
+            }
+
+            // Check auth status on page load
+            checkAuth();
+        });
+    </script>
+</body>
+
+</html>
