@@ -109,9 +109,9 @@
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            margin: 0 -60px;
-            padding-left: 0;
-            padding-right: 60px;
+            margin: 0 -30px;
+            padding-left: 30px;
+            padding-right: 30px;
         }
 
         .movie-row::-webkit-scrollbar {
@@ -311,9 +311,9 @@
             }
 
             .movie-row {
-                margin: 0 -40px;
-                padding-left: 0;
-                padding-right: 40px;
+                margin: 0 -20px;
+                padding-left: 20px;
+                padding-right: 20px;
             }
 
             .movie-card {
@@ -372,11 +372,12 @@
 <body>
     <nav class="navbar">
         <div style="display: flex; align-items: center; gap: 30px;">
-            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
             <div class="nav-links">
                 <a href="index.html" data-i18n="nav.home">Home</a>
                 <a href="movies.html" class="active" data-i18n="nav.movies">Movies</a>
                 <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
                 <a href="mylist.html" data-i18n="nav.mylist">My List</a>
             </div>
         </div>
@@ -403,13 +404,166 @@
         </div>
     </section>
 
-    <section id="popular-movies" class="movie-section">
+    <section id="action-movies" class="movie-section">
         <h2 class="section-title">
-            <i class="material-icons">star</i>
-            <span data-i18n="movies.sections.popular">Popular Movies</span>
+            <i class="material-icons">local_fire_department</i>
+            <span data-i18n="movies.sections.action">Action Movies</span>
         </h2>
-        <div class="movie-row" id="popular-movies-row">
-            <div class="loading" data-i18n="common.loading">Loading popular movies...</div>
+        <div class="movie-row" id="action-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading action movies...</div>
+        </div>
+    </section>
+    <section id="comedy-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">sentiment_very_satisfied</i>
+            <span data-i18n="movies.sections.comedy">Comedy Movies</span>
+        </h2>
+        <div class="movie-row" id="comedy-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading comedy movies...</div>
+        </div>
+    </section>
+    <section id="drama-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">theater_comedy</i>
+            <span data-i18n="movies.sections.drama">Drama Movies</span>
+        </h2>
+        <div class="movie-row" id="drama-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading drama movies...</div>
+        </div>
+    </section>
+    <section id="horror-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">nightlight</i>
+            <span data-i18n="movies.sections.horror">Horror Movies</span>
+        </h2>
+        <div class="movie-row" id="horror-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading horror movies...</div>
+        </div>
+    </section>
+    <section id="animation-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">animation</i>
+            <span data-i18n="movies.sections.animation">Animation Movies</span>
+        </h2>
+        <div class="movie-row" id="animation-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading animation movies...</div>
+        </div>
+    </section>
+    <section id="scifi-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">science</i>
+            <span data-i18n="movies.sections.scifi">Science Fiction Movies</span>
+        </h2>
+        <div class="movie-row" id="scifi-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading science fiction movies...</div>
+        </div>
+    </section>
+    <section id="crime-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">gavel</i>
+            <span data-i18n="movies.sections.crime">Crime Movies</span>
+        </h2>
+        <div class="movie-row" id="crime-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading crime movies...</div>
+        </div>
+    </section>
+    <section id="family-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">family_restroom</i>
+            <span data-i18n="movies.sections.family">Family Movies</span>
+        </h2>
+        <div class="movie-row" id="family-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading family movies...</div>
+        </div>
+    </section>
+    <section id="romance-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">favorite</i>
+            <span data-i18n="movies.sections.romance">Romance Movies</span>
+        </h2>
+        <div class="movie-row" id="romance-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading romance movies...</div>
+        </div>
+    </section>
+    <section id="mystery-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">help_outline</i>
+            <span data-i18n="movies.sections.mystery">Mystery Movies</span>
+        </h2>
+        <div class="movie-row" id="mystery-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading mystery movies...</div>
+        </div>
+    </section>
+    <section id="fantasy-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">auto_awesome</i>
+            <span data-i18n="movies.sections.fantasy">Fantasy Movies</span>
+        </h2>
+        <div class="movie-row" id="fantasy-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading fantasy movies...</div>
+        </div>
+    </section>
+    <section id="documentary-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">menu_book</i>
+            <span data-i18n="movies.sections.documentary">Documentary Movies</span>
+        </h2>
+        <div class="movie-row" id="documentary-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading documentary movies...</div>
+        </div>
+    </section>
+    <section id="adventure-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">explore</i>
+            <span data-i18n="movies.sections.adventure">Adventure Movies</span>
+        </h2>
+        <div class="movie-row" id="adventure-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading adventure movies...</div>
+        </div>
+    </section>
+    <section id="history-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">history_edu</i>
+            <span data-i18n="movies.sections.history">History Movies</span>
+        </h2>
+        <div class="movie-row" id="history-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading history movies...</div>
+        </div>
+    </section>
+    <section id="music-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">music_note</i>
+            <span data-i18n="movies.sections.music">Music Movies</span>
+        </h2>
+        <div class="movie-row" id="music-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading music movies...</div>
+        </div>
+    </section>
+    <section id="thriller-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">flash_on</i>
+            <span data-i18n="movies.sections.thriller">Thriller Movies</span>
+        </h2>
+        <div class="movie-row" id="thriller-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading thriller movies...</div>
+        </div>
+    </section>
+    <section id="war-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">military_tech</i>
+            <span data-i18n="movies.sections.war">War Movies</span>
+        </h2>
+        <div class="movie-row" id="war-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading war movies...</div>
+        </div>
+    </section>
+    <section id="western-movies" class="movie-section">
+        <h2 class="section-title">
+            <i class="material-icons">terrain</i>
+            <span data-i18n="movies.sections.western">Western Movies</span>
+        </h2>
+        <div class="movie-row" id="western-movies-row">
+            <div class="loading" data-i18n="common.loading">Loading western movies...</div>
         </div>
     </section>
 
@@ -438,11 +592,13 @@
             const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
             const title = movie.title;
             const overview = movie.overview ? movie.overview.substring(0, 100) + (movie.overview.length > 100 ? '...' : '') : '';
-
             // Use up-to-date myList
             const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
             const isInList = myListArr.some(listItem => listItem.id === movie.id && listItem.type === 'movie');
-
+            let duration = 'N/A';
+            if (typeof movie.runtime === 'number') {
+                duration = `${movie.runtime} min`;
+            }
             const card = document.createElement('div');
             card.className = 'movie-card';
             card.innerHTML = `
@@ -452,94 +608,45 @@
                         <button class="action-btn play-btn" onclick="event.stopPropagation(); playContent(${movie.id}, 'movie')">
                             <i class="material-icons">play_arrow</i>
                         </button>
-                        <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${movie.id}, 'movie', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
+                        <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${movie.id},"title":"${title}","type":"movie","poster_path":"${posterPath}","overview":"${overview}"}'>
                             <i class="material-icons">${isInList ? 'check' : 'add'}</i>
                         </button>
                     </div>
                     <div class="movie-title">${title}</div>
                     <div class="card-meta">
-                        <span class="rating">
-                            <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                        </span>
+                        <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${rating}</span>
+                        <span>|</span>
                         <span>${year}</span>
+                        <span>|</span>
+                        <span class="duration">${duration}</span>
                     </div>
                     <p class="movie-overview">${overview}</p>
                 </div>
             `;
-
             card.addEventListener('click', (e) => {
-                if (e.target.closest('.action-btn')) return;
+                if (e.target.closest('.action-btn, .mylist-btn')) return;
                 playContent(movie.id, 'movie');
             });
-
             return card;
         }
 
-        function playContent(id, type) {
-            window.location.href = `player.html?type=${type}&id=${id}`;
+        async function fetchAndSetMovieDuration(movie, card) {
+            try {
+                const url = `${TMDB_BASE_URL}/movie/${movie.id}?api_key=${TMDB_API_KEY}`;
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                let duration = 'N/A';
+                if (typeof data.runtime === 'number') {
+                    duration = `${data.runtime} min`;
+                }
+                const durationSpan = card.querySelector('.duration');
+                if (durationSpan) durationSpan.textContent = duration;
+            } catch (e) { }
         }
 
-        // Function to toggle My List (backend version)
-        async function toggleMyList(id, type, title, posterPath, year) {
-            const button = event.currentTarget;
-            const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-            const isInList = myListArr.some(listItem => listItem.id === id && listItem.type === type);
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = 'account.html';
-                return;
-            }
-            try {
-                // Prepare the item object for the backend
-                const item = {
-                    id: parseInt(id),
-                    title: title,
-                    type: type,
-                    poster_path: posterPath.includes('/t/p/') ? posterPath.split('/t/p/')[1] : posterPath,
-                    overview: '',
-                };
-
-                let response;
-                if (isInList) {
-                    // Use the correct URL format for DELETE requests
-                    response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                } else {
-                    response = await fetch(`${AUTH_API_URL}/user/mylist`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(item)
-                    });
-                }
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || `Failed to ${isInList ? 'remove from' : 'add to'} list`);
-                }
-
-                // Get the updated list from the response
-                const updatedList = await response.json();
-
-                // Update localStorage with the new list
-                localStorage.setItem('myList', JSON.stringify(updatedList));
-
-                // Update UI
-                button.classList.toggle('in-list', !isInList);
-                button.innerHTML = `
-                    <i class="material-icons">${!isInList ? 'check' : 'add'}</i>
-                `;
-                showNotification(!isInList ? 'Added to My List' : 'Removed from My List');
-            } catch (error) {
-                console.error('Error updating list:', error);
-                showNotification(error.message || `Failed to ${isInList ? 'remove from' : 'add to'} list`, 'error');
-            }
+        function playContent(id, type) {
+            window.location.href = `player.php?type=${type}&id=${id}`;
         }
 
         // Function to show notification
@@ -567,9 +674,14 @@
         }
 
         // Function to fetch content from TMDB
-        async function fetchContent(endpoint) {
+        async function fetchContent(endpoint, lang) {
             try {
-                const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+                let url = `${TMDB_BASE_URL}${endpoint}`;
+                url += (url.includes('?') ? '&' : '?') + `api_key=${TMDB_API_KEY}`;
+                if (lang) {
+                    url += `&language=${lang}`;
+                }
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -584,29 +696,275 @@
         // Function to load content
         async function loadContent() {
             try {
+                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
                 // Fetch trending movies
-                const trendingMovies = await fetchContent('/trending/movie/week');
+                const trendingMovies = await fetchContent('/trending/movie/week', lang);
                 const trendingContainer = document.getElementById('trending-movies-row');
                 if (trendingContainer && trendingMovies.length > 0) {
-                    trendingContainer.innerHTML = ''; // Clear loading message
+                    trendingContainer.innerHTML = '';
                     trendingMovies.forEach(movie => {
-                        trendingContainer.appendChild(createMovieCard(movie));
+                        const card = createMovieCard(movie);
+                        trendingContainer.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card); // Fetch duration for trending movies
                     });
+                    window.initMyListButtons();
                 } else if (trendingContainer) {
                     trendingContainer.innerHTML = '<div class="loading">No trending movies found</div>';
                 }
 
-                // Fetch popular movies
-                const popularMovies = await fetchContent('/movie/popular');
-                const popularMoviesRow = document.getElementById('popular-movies-row');
-                if (popularMoviesRow && popularMovies.length > 0) {
-                    popularMoviesRow.innerHTML = ''; // Clear loading message
-                    popularMovies.forEach(movie => {
-                        popularMoviesRow.appendChild(createMovieCard(movie));
+                // Fetch Action movies
+                const actionMovies = await fetchContent('/discover/movie?with_genres=28&sort_by=popularity.desc', lang);
+                const actionMoviesRow = document.getElementById('action-movies-row');
+                if (actionMoviesRow && actionMovies.length > 0) {
+                    actionMoviesRow.innerHTML = '';
+                    actionMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        actionMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
                     });
-                } else if (popularMoviesRow) {
-                    popularMoviesRow.innerHTML = '<div class="loading">No popular movies found</div>';
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (actionMoviesRow) {
+                    actionMoviesRow.innerHTML = '<div class="loading">No action movies found</div>';
                 }
+                // Fetch Comedy movies
+                const comedyMovies = await fetchContent('/discover/movie?with_genres=35&sort_by=popularity.desc', lang);
+                const comedyMoviesRow = document.getElementById('comedy-movies-row');
+                if (comedyMoviesRow && comedyMovies.length > 0) {
+                    comedyMoviesRow.innerHTML = '';
+                    comedyMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        comedyMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (comedyMoviesRow) {
+                    comedyMoviesRow.innerHTML = '<div class="loading">No comedy movies found</div>';
+                }
+                // Fetch Drama movies
+                const dramaMovies = await fetchContent('/discover/movie?with_genres=18&sort_by=popularity.desc', lang);
+                const dramaMoviesRow = document.getElementById('drama-movies-row');
+                if (dramaMoviesRow && dramaMovies.length > 0) {
+                    dramaMoviesRow.innerHTML = '';
+                    dramaMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        dramaMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (dramaMoviesRow) {
+                    dramaMoviesRow.innerHTML = '<div class="loading">No drama movies found</div>';
+                }
+                // Fetch Horror movies
+                const horrorMovies = await fetchContent('/discover/movie?with_genres=27&sort_by=popularity.desc', lang);
+                const horrorMoviesRow = document.getElementById('horror-movies-row');
+                if (horrorMoviesRow && horrorMovies.length > 0) {
+                    horrorMoviesRow.innerHTML = '';
+                    horrorMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        horrorMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (horrorMoviesRow) {
+                    horrorMoviesRow.innerHTML = '<div class="loading">No horror movies found</div>';
+                }
+                // Fetch Animation movies
+                const animationMovies = await fetchContent('/discover/movie?with_genres=16&sort_by=popularity.desc', lang);
+                const animationMoviesRow = document.getElementById('animation-movies-row');
+                if (animationMoviesRow && animationMovies.length > 0) {
+                    animationMoviesRow.innerHTML = '';
+                    animationMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        animationMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (animationMoviesRow) {
+                    animationMoviesRow.innerHTML = '<div class="loading">No animation movies found</div>';
+                }
+                // Fetch Science Fiction movies
+                const scifiMovies = await fetchContent('/discover/movie?with_genres=878&sort_by=popularity.desc', lang);
+                const scifiMoviesRow = document.getElementById('scifi-movies-row');
+                if (scifiMoviesRow && scifiMovies.length > 0) {
+                    scifiMoviesRow.innerHTML = '';
+                    scifiMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        scifiMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (scifiMoviesRow) {
+                    scifiMoviesRow.innerHTML = '<div class="loading">No science fiction movies found</div>';
+                }
+                // Fetch Crime movies
+                const crimeMovies = await fetchContent('/discover/movie?with_genres=80&sort_by=popularity.desc', lang);
+                const crimeMoviesRow = document.getElementById('crime-movies-row');
+                if (crimeMoviesRow && crimeMovies.length > 0) {
+                    crimeMoviesRow.innerHTML = '';
+                    crimeMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        crimeMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (crimeMoviesRow) {
+                    crimeMoviesRow.innerHTML = '<div class="loading">No crime movies found</div>';
+                }
+                // Fetch Family movies
+                const familyMovies = await fetchContent('/discover/movie?with_genres=10751&sort_by=popularity.desc', lang);
+                const familyMoviesRow = document.getElementById('family-movies-row');
+                if (familyMoviesRow && familyMovies.length > 0) {
+                    familyMoviesRow.innerHTML = '';
+                    familyMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        familyMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (familyMoviesRow) {
+                    familyMoviesRow.innerHTML = '<div class="loading">No family movies found</div>';
+                }
+                // Fetch Romance movies
+                const romanceMovies = await fetchContent('/discover/movie?with_genres=10749&sort_by=popularity.desc', lang);
+                const romanceMoviesRow = document.getElementById('romance-movies-row');
+                if (romanceMoviesRow && romanceMovies.length > 0) {
+                    romanceMoviesRow.innerHTML = '';
+                    romanceMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        romanceMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (romanceMoviesRow) {
+                    romanceMoviesRow.innerHTML = '<div class="loading">No romance movies found</div>';
+                }
+                // Fetch Mystery movies
+                const mysteryMovies = await fetchContent('/discover/movie?with_genres=9648&sort_by=popularity.desc', lang);
+                const mysteryMoviesRow = document.getElementById('mystery-movies-row');
+                if (mysteryMoviesRow && mysteryMovies.length > 0) {
+                    mysteryMoviesRow.innerHTML = '';
+                    mysteryMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        mysteryMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (mysteryMoviesRow) {
+                    mysteryMoviesRow.innerHTML = '<div class="loading">No mystery movies found</div>';
+                }
+                // Fetch Fantasy movies
+                const fantasyMovies = await fetchContent('/discover/movie?with_genres=14&sort_by=popularity.desc', lang);
+                const fantasyMoviesRow = document.getElementById('fantasy-movies-row');
+                if (fantasyMoviesRow && fantasyMovies.length > 0) {
+                    fantasyMoviesRow.innerHTML = '';
+                    fantasyMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        fantasyMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (fantasyMoviesRow) {
+                    fantasyMoviesRow.innerHTML = '<div class="loading">No fantasy movies found</div>';
+                }
+                // Fetch Documentary movies
+                const documentaryMovies = await fetchContent('/discover/movie?with_genres=99&sort_by=popularity.desc', lang);
+                const documentaryMoviesRow = document.getElementById('documentary-movies-row');
+                if (documentaryMoviesRow && documentaryMovies.length > 0) {
+                    documentaryMoviesRow.innerHTML = '';
+                    documentaryMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        documentaryMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (documentaryMoviesRow) {
+                    documentaryMoviesRow.innerHTML = '<div class="loading">No documentary movies found</div>';
+                }
+                // Fetch Adventure movies
+                const adventureMovies = await fetchContent('/discover/movie?with_genres=12&sort_by=popularity.desc', lang);
+                const adventureMoviesRow = document.getElementById('adventure-movies-row');
+                if (adventureMoviesRow && adventureMovies.length > 0) {
+                    adventureMoviesRow.innerHTML = '';
+                    adventureMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        adventureMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (adventureMoviesRow) {
+                    adventureMoviesRow.innerHTML = '<div class="loading">No adventure movies found</div>';
+                }
+                // Fetch History movies
+                const historyMovies = await fetchContent('/discover/movie?with_genres=36&sort_by=popularity.desc', lang);
+                const historyMoviesRow = document.getElementById('history-movies-row');
+                if (historyMoviesRow && historyMovies.length > 0) {
+                    historyMoviesRow.innerHTML = '';
+                    historyMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        historyMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (historyMoviesRow) {
+                    historyMoviesRow.innerHTML = '<div class="loading">No history movies found</div>';
+                }
+                // Fetch Music movies
+                const musicMovies = await fetchContent('/discover/movie?with_genres=10402&sort_by=popularity.desc', lang);
+                const musicMoviesRow = document.getElementById('music-movies-row');
+                if (musicMoviesRow && musicMovies.length > 0) {
+                    musicMoviesRow.innerHTML = '';
+                    musicMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        musicMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (musicMoviesRow) {
+                    musicMoviesRow.innerHTML = '<div class="loading">No music movies found</div>';
+                }
+                // Fetch Thriller movies
+                const thrillerMovies = await fetchContent('/discover/movie?with_genres=53&sort_by=popularity.desc', lang);
+                const thrillerMoviesRow = document.getElementById('thriller-movies-row');
+                if (thrillerMoviesRow && thrillerMovies.length > 0) {
+                    thrillerMoviesRow.innerHTML = '';
+                    thrillerMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        thrillerMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (thrillerMoviesRow) {
+                    thrillerMoviesRow.innerHTML = '<div class="loading">No thriller movies found</div>';
+                }
+                // Fetch War movies
+                const warMovies = await fetchContent('/discover/movie?with_genres=10752&sort_by=popularity.desc', lang);
+                const warMoviesRow = document.getElementById('war-movies-row');
+                if (warMoviesRow && warMovies.length > 0) {
+                    warMoviesRow.innerHTML = '';
+                    warMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        warMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (warMoviesRow) {
+                    warMoviesRow.innerHTML = '<div class="loading">No war movies found</div>';
+                }
+                // Fetch Western movies
+                const westernMovies = await fetchContent('/discover/movie?with_genres=37&sort_by=popularity.desc', lang);
+                const westernMoviesRow = document.getElementById('western-movies-row');
+                if (westernMoviesRow && westernMovies.length > 0) {
+                    westernMoviesRow.innerHTML = '';
+                    westernMovies.forEach(movie => {
+                        const card = createMovieCard(movie);
+                        westernMoviesRow.appendChild(card);
+                        fetchAndSetMovieDuration(movie, card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (westernMoviesRow) {
+                    westernMoviesRow.innerHTML = '<div class="loading">No western movies found</div>';
+                }
+
             } catch (error) {
                 console.error('Error loading content:', error);
                 document.querySelectorAll('.movie-row').forEach(row => {
@@ -615,8 +973,35 @@
             }
         }
 
-        // Load content when page loads
-        document.addEventListener('DOMContentLoaded', loadContent);
+        // Debounce helper
+        function debounce(fn, delay) {
+            let timer = null;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        // Unified TMDB content reload on language change
+        async function reloadAllTMDBContent() {
+            // Optionally show a loading spinner here
+            await loadContent();
+            // Optionally hide loading spinner here
+        }
+        // Listen for i18n language change event
+        if (window.i18next && typeof window.i18next.on === 'function') {
+            window.i18next.on('languageChanged', debounce(async (lng) => {
+                await reloadAllTMDBContent();
+            }, 200));
+        } else if (window.i18n) {
+            // Patch changeLanguage as fallback
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = debounce(async function (lang) {
+                await origChangeLanguage(lang);
+                await reloadAllTMDBContent();
+            }, 200);
+        }
+        // On page load, fetch all TMDB content in the current language
+        document.addEventListener('DOMContentLoaded', reloadAllTMDBContent);
 
         // Handle navbar scroll effect
         window.addEventListener('scroll', () => {
@@ -643,7 +1028,17 @@
             row.parentElement.appendChild(leftBtn);
             row.parentElement.appendChild(rightBtn);
         });
+
+        // Listen for language changes and reload TMDB content
+        if (window.i18n) {
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = async function (lang) {
+                await origChangeLanguage(lang);
+                await loadContent();
+            };
+        }
     </script>
+    <script src="js/mylist.js"></script>
 </body>
 
 </html>

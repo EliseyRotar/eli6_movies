@@ -23,6 +23,7 @@
             min-height: 100vh;
             padding-top: 80px;
             overflow-x: hidden;
+            overflow-y: auto;
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
@@ -276,9 +277,17 @@
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            margin: 0 -60px;
-            padding-left: 0;
-            padding-right: 60px;
+            margin: 0 -30px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content-row {
+                margin: 0 -20px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
         }
 
         .content-row::-webkit-scrollbar {
@@ -399,6 +408,144 @@
 
             .scroll-right {
                 right: 5px;
+            }
+
+            body {
+                overflow-x: hidden;
+                overflow-y: auto;
+            }
+
+            .mobile-carousels {
+                margin-top: 64px;
+                display: block;
+                overflow-y: visible;
+            }
+
+            .mobile-carousel-row {
+                display: flex;
+                overflow-x: auto;
+                gap: 12px;
+                padding-bottom: 8px;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                overscroll-behavior-x: contain;
+                overscroll-behavior-y: none;
+                /* Allow vertical scroll to bubble up */
+                /* touch-action: pan-x; */
+                scroll-behavior: smooth;
+            }
+
+            .card-actions,
+            .mobile-card-overlay {
+                display: flex;
+                gap: 10px;
+                justify-content: center;
+                margin-bottom: 10px;
+            }
+
+            .action-btn,
+            .mobile-play-btn,
+            .mobile-mylist-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0;
+                border: 2px solid var(--accent-color);
+                border-radius: 24px;
+                padding: 6px 14px;
+                font-size: 15px;
+                font-weight: 600;
+                background: var(--card-bg);
+                color: var(--accent-color);
+                box-shadow: none;
+                cursor: pointer;
+                transition: background 0.2s, color 0.2s, border 0.2s, transform 0.1s;
+                outline: none;
+                margin: 0 2px;
+                min-width: 36px;
+                min-height: 36px;
+                height: 36px;
+            }
+
+            .action-btn:hover,
+            .mobile-play-btn:active,
+            .mobile-mylist-btn:active {
+                background: #fbeaec;
+                color: #e50914;
+                transform: scale(0.97);
+            }
+
+            .mobile-mylist-btn.in-list {
+                background: var(--accent-color);
+                color: #fff;
+                border-color: var(--accent-color);
+            }
+
+            .mobile-play-btn {
+                background: var(--accent-color);
+                color: #fff;
+                border: 2px solid var(--accent-color);
+            }
+
+            .mobile-play-btn:active,
+            .mobile-play-btn:focus,
+            .mobile-mylist-btn:active,
+            .mobile-mylist-btn:focus {
+                background: #b00610;
+                color: #fff;
+                transform: scale(0.97);
+            }
+
+            .mobile-play-btn .material-icons,
+            .mobile-mylist-btn .material-icons {
+                font-size: 20px;
+                vertical-align: middle;
+                margin-right: 0;
+            }
+
+            .mobile-play-btn span,
+            .mobile-mylist-btn span {
+                display: none;
+            }
+
+            .floating-scroll-btn {
+                position: fixed;
+                left: 50%;
+                bottom: 24px;
+                transform: translateX(-50%);
+                width: 48px;
+                height: 48px;
+                background: #e50914;
+                color: #fff;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 32px;
+                z-index: 1200;
+                box-shadow: 0 4px 16px rgba(229, 9, 20, 0.18);
+                cursor: pointer;
+                opacity: 0.85;
+                transition: background 0.2s;
+            }
+
+            .floating-scroll-btn:active {
+                background: #b00610;
+            }
+
+            .mobile-scroll-hint {
+                position: absolute;
+                left: 50%;
+                bottom: 8px;
+                transform: translateX(-50%);
+                color: #fff;
+                font-size: 18px;
+                opacity: 0.7;
+                z-index: 1001;
+                pointer-events: none;
+                animation: fadeInOut 2s infinite;
             }
         }
 
@@ -586,17 +733,529 @@
             gap: 20px;
             padding: 20px;
         }
+
+        /* --- MOBILE UI STYLES --- */
+        @media (max-width: 768px) {
+
+            .navbar,
+            .hero,
+            .content-section,
+            .nav-icons,
+            .nav-links {
+                display: none !important;
+            }
+
+            .mobile-topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--nav-bg, #181818);
+                color: #fff;
+                padding: 0 16px;
+                height: 56px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 2000;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+
+            .mobile-hamburger {
+                background: none;
+                border: none;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                cursor: pointer;
+                padding: 8px;
+            }
+
+            .mobile-hamburger span {
+                display: block;
+                width: 24px;
+                height: 3px;
+                background: #fff;
+                border-radius: 2px;
+            }
+
+            .mobile-logo {
+                font-size: 20px;
+                font-weight: bold;
+                letter-spacing: 1px;
+            }
+
+            .mobile-search-btn {
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 24px;
+                cursor: pointer;
+                padding: 8px;
+            }
+
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 2100;
+                display: none;
+            }
+
+            .mobile-sidenav {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 80vw;
+                max-width: 320px;
+                height: 100vh;
+                background: #181818;
+                color: #fff;
+                z-index: 2200;
+                box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
+                transform: translateX(-100%);
+                transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+                display: flex;
+                flex-direction: column;
+            }
+
+            .mobile-sidenav.open {
+                transform: translateX(0);
+            }
+
+            .mobile-sidenav-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 18px 20px 12px 20px;
+                border-bottom: 1px solid #222;
+            }
+
+            .mobile-sidenav-title {
+                font-size: 18px;
+                font-weight: bold;
+            }
+
+            .mobile-sidenav-close {
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 28px;
+                cursor: pointer;
+            }
+
+            .mobile-sidenav-links {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                flex: 1;
+            }
+
+            .mobile-sidenav-links li {
+                border-bottom: 1px solid #222;
+            }
+
+            .mobile-sidenav-links a {
+                display: block;
+                color: #fff;
+                text-decoration: none;
+                padding: 16px 24px;
+                font-size: 16px;
+                transition: background 0.2s;
+            }
+
+            .mobile-sidenav-links a:hover {
+                background: #222;
+            }
+
+            .mobile-searchbar {
+                display: flex;
+                align-items: center;
+                background: #222;
+                padding: 8px 12px;
+                position: fixed;
+                top: 56px;
+                left: 0;
+                right: 0;
+                z-index: 2100;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+
+            .mobile-searchbar input {
+                flex: 1;
+                padding: 10px 12px;
+                border: none;
+                border-radius: 4px;
+                font-size: 16px;
+                outline: none;
+                background: #181818;
+                color: #fff;
+            }
+
+            .mobile-searchbar button {
+                background: none;
+                border: none;
+                color: #fff;
+                font-size: 24px;
+                margin-left: 8px;
+                cursor: pointer;
+            }
+
+            .mobile-carousels {
+                margin-top: 64px;
+                display: block;
+            }
+
+            .mobile-carousel-section {
+                margin-bottom: 24px;
+                padding: 0 8px;
+            }
+
+            .mobile-carousel-section h3 {
+                font-size: 1.1rem;
+                font-weight: 700;
+                margin: 12px 0 10px 8px;
+                color: #fff;
+            }
+
+            .mobile-carousel-row {
+                display: flex;
+                overflow-x: auto;
+                gap: 12px;
+                padding-bottom: 8px;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                overscroll-behavior-x: contain;
+                overscroll-behavior-y: none;
+                /* Allow vertical scroll to bubble up */
+                /* touch-action: pan-x; */
+                scroll-behavior: smooth;
+            }
+
+            .mobile-carousel-card {
+                flex: 0 0 120px;
+                max-width: 120px;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #222;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+                scroll-snap-align: start;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                cursor: pointer;
+                transition: transform 0.2s;
+                position: relative;
+            }
+
+            .mobile-carousel-card:active {
+                transform: scale(0.95);
+            }
+
+            .mobile-carousel-card img {
+                width: 100%;
+                height: 170px;
+                object-fit: cover;
+                border-radius: 8px 8px 0 0;
+                background: #181818;
+                transition: opacity 0.3s;
+            }
+
+            .mobile-carousel-card.loading img {
+                opacity: 0.5;
+            }
+
+            .mobile-carousel-title {
+                font-size: 0.95rem;
+                color: #fff;
+                padding: 6px 6px 8px 6px;
+                text-align: center;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-weight: 500;
+            }
+
+            .mobile-loading {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 200px;
+                color: #666;
+                font-size: 14px;
+            }
+
+            .mobile-loading::after {
+                content: '';
+                width: 20px;
+                height: 20px;
+                border: 2px solid #333;
+                border-top: 2px solid #e50914;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-left: 8px;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            .mobile-error {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 200px;
+                color: #e50914;
+                font-size: 14px;
+                text-align: center;
+                padding: 0 20px;
+            }
+
+            .mobile-swipe-hint {
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: rgba(255, 255, 255, 0.5);
+                font-size: 12px;
+                pointer-events: none;
+                animation: fadeInOut 2s infinite;
+            }
+
+            @keyframes fadeInOut {
+
+                0%,
+                100% {
+                    opacity: 0.3;
+                }
+
+                50% {
+                    opacity: 0.8;
+                }
+            }
+
+            .mobile-carousel-row:not(:hover) .mobile-swipe-hint {
+                display: block;
+            }
+
+            .mobile-carousel-row:hover .mobile-swipe-hint {
+                display: none;
+            }
+
+            .mobile-hero-carousel {
+                width: 100vw;
+                height: 56vw;
+                max-height: 380px;
+                min-height: 220px;
+                position: relative;
+                overflow: hidden;
+                margin-top: 56px;
+                background: #181818;
+                z-index: 1;
+            }
+
+            .mobile-hero-slider {
+                width: 100%;
+                height: 100%;
+                display: flex;
+                transition: transform 0.6s cubic-bezier(.4, 0, .2, 1);
+            }
+
+            .mobile-hero-slide {
+                min-width: 100vw;
+                height: 100%;
+                position: relative;
+                background-size: cover;
+                background-position: center;
+                display: flex;
+                align-items: flex-end;
+                justify-content: flex-start;
+            }
+
+            .mobile-hero-gradient {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                top: 0;
+                background: linear-gradient(to top, #181818 0%, rgba(24, 24, 24, 0.7) 40%, transparent 100%);
+                z-index: 1;
+            }
+
+            .mobile-hero-content {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 2;
+                padding: 18px 18px 28px 18px;
+                color: #fff;
+                width: 100%;
+            }
+
+            .mobile-hero-title {
+                font-size: 1.5rem;
+                font-weight: 800;
+                margin-bottom: 10px;
+                text-shadow: 0 2px 8px #000;
+                line-height: 1.1;
+            }
+
+            .mobile-hero-overview {
+                font-size: 1rem;
+                line-height: 1.3;
+                margin-bottom: 16px;
+                max-height: 2.6em;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-shadow: 0 1px 4px #000;
+            }
+
+            .mobile-hero-btns {
+                display: flex;
+                gap: 12px;
+            }
+
+            .mobile-hero-btn {
+                background: #fff;
+                color: #181818;
+                border: none;
+                border-radius: 4px;
+                font-size: 1rem;
+                font-weight: 700;
+                padding: 8px 18px;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+                transition: background 0.2s, color 0.2s;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .mobile-hero-btn.play {
+                background: #e50914;
+                color: #fff;
+            }
+
+            .mobile-hero-btn:active {
+                background: #b0060f;
+                color: #fff;
+            }
+
+            .mobile-hero-indicators {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                z-index: 3;
+            }
+
+            .mobile-hero-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.4);
+                transition: background 0.2s, transform 0.2s;
+            }
+
+            .mobile-hero-dot.active {
+                background: #e50914;
+                transform: scale(1.2);
+            }
+        }
+
+        @media (min-width: 769px) {
+
+            .mobile-topbar,
+            .mobile-overlay,
+            .mobile-sidenav,
+            .mobile-searchbar {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 
 <body>
+
+    <!-- Mobile Overlay and Side Navigation -->
+    <div class="mobile-overlay" id="mobileOverlay" style="display:none;"></div>
+    <nav class="mobile-sidenav" id="mobileSidenav" style="display:none;">
+        <div class="mobile-sidenav-header">
+            <span class="mobile-sidenav-title" data-i18n="nav.logo">ELI6 MOVIES</span>
+            <button class="mobile-sidenav-close" id="closeMobileSidenav">&times;</button>
+        </div>
+        <ul class="mobile-sidenav-links">
+            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="movies.html" data-i18n="nav.movies">Movies</a></li>
+            <li><a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a></li>
+            <li><a href="mylist.html" data-i18n="nav.mylist">My List</a></li>
+            <li><a href="settings.html" data-i18n="nav.settings">Settings</a></li>
+            <li><a href="account.html" data-i18n="nav.account">Account</a></li>
+        </ul>
+    </nav>
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar">
+        <button class="mobile-hamburger" id="openMobileSidenav">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-logo" style="text-align:center;" data-i18n="nav.logo">ELI6 MOVIES</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <a href="search.html" class="mobile-search-btn"
+                style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 8px; display: flex; align-items: center; box-shadow: none; border-bottom: none;">
+                <i class="material-icons">search</i>
+            </a>
+            <a href="account.html" class="mobile-account-btn"
+                style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 8px; display: flex; align-items: center; box-shadow: none; border-bottom: none;">
+                <i class="material-icons">account_circle</i>
+            </a>
+        </div>
+    </div>
+    <div class="mobile-searchbar" id="mobileSearchbar" style="display:none;">
+        <input type="text" placeholder="" data-i18n-placeholder="search.placeholder" id="mobileSearchInput" />
+        <button id="closeMobileSearch"><i class="material-icons">close</i></button>
+    </div>
+    <!-- Netflix-style Mobile Hero Carousel -->
+    <div class="mobile-hero-carousel" id="mobileHeroCarousel">
+        <div class="mobile-hero-slider" id="mobileHeroSlider"></div>
+        <div class="mobile-hero-indicators" id="mobileHeroIndicators"></div>
+    </div>
+    <div class="mobile-carousels">
+        <!-- <section class="mobile-carousel-section" id="mobile-trending">
+            <h3>Trending Now</h3>
+            <div class="mobile-carousel-row" id="mobile-trending-row"></div>
+        </section>
+        <section class="mobile-carousel-section" id="mobile-nowplaying">
+            <h3>Now Playing</h3>
+            <div class="mobile-carousel-row" id="mobile-nowplaying-row"></div>
+        </section>
+        <section class="mobile-carousel-section" id="mobile-toprated">
+            <h3>Top Rated</h3>
+            <div class="mobile-carousel-row" id="mobile-toprated-row"></div>
+        </section> -->
+    </div>
     <nav class="navbar">
         <div style="display: flex; align-items: center; gap: 30px;">
-            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
             <div class="nav-links">
                 <a href="index.html" class="active" data-i18n="nav.home">Home</a>
                 <a href="movies.html" data-i18n="nav.movies">Movies</a>
                 <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
                 <a href="mylist.html" data-i18n="nav.mylist">My List</a>
             </div>
         </div>
@@ -625,13 +1284,13 @@
                     data-original-text="Discover the latest movies and TV shows. Stream your favorite content anytime, anywhere.">
                     Discover the latest movies and TV shows. Stream your favorite content anytime, anywhere.</p>
                 <div class="hero-buttons">
-                    <button class="hero-btn primary" data-i18n="home.hero.watchNow">
+                    <button class="hero-btn primary" data-i18n="home.hero.watchNow" id="heroPlayBtn">
                         <i class="material-icons">play_arrow</i>
-                        Watch Now
+                        <span data-i18n="home.hero.watchNow">Watch Now</span>
                     </button>
-                    <button class="hero-btn secondary" data-i18n="home.hero.moreInfo">
-                        <i class="material-icons">info</i>
-                        More Info
+                    <button class="hero-btn secondary" id="heroMyListBtn" data-i18n="home.hero.addToMyList">
+                        <i class="material-icons">add</i>
+                        <span data-i18n="home.hero.addToMyList">My List</span>
                     </button>
                 </div>
             </div>
@@ -664,10 +1323,10 @@
     <section id="trending-tv" class="content-section">
         <h2 class="section-title">
             <i class="material-icons">tv</i>
-            <span data-i18n="home.sections.trendingTV">Trending TV</span>
+            <span data-i18n="home.sections.trendingTV">Popular TV</span>
         </h2>
         <div class="content-row" id="trending-tv-row">
-            <div class="loading" data-i18n="common.loading">Loading trending TV...</div>
+            <div class="loading" data-i18n="common.loading">Loading Popular TV...</div>
         </div>
     </section>
 
@@ -678,6 +1337,16 @@
         </h2>
         <div class="content-row" id="popular-row">
             <div class="loading" data-i18n="common.loading">Loading popular content...</div>
+        </div>
+    </section>
+
+    <section id="anime" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">animation</i>
+            <span data-i18n="home.sections.anime">Anime</span>
+        </h2>
+        <div class="content-row" id="anime-row">
+            <div class="loading" data-i18n="common.loading">Loading anime content...</div>
         </div>
     </section>
 
@@ -694,7 +1363,7 @@
 
         // Hero slider configuration
         const SLIDE_DURATION = 5000; // 5 seconds per slide
-        const MAX_HERO_SLIDES = 5; // Maximum number of hero slides
+        const MAX_HERO_SLIDES = 10; // Maximum number of hero slides
 
         // Fetch myList from backend and store in localStorage
         async function syncMyList() {
@@ -724,14 +1393,27 @@
                 ? (item.poster_path.startsWith('http') ? item.poster_path : `${TMDB_IMAGE_BASE_URL}${item.poster_path}`)
                 : 'https://via.placeholder.com/200x300?text=No+Image';
             const year = type === 'movie'
-                ? (item.release_date ? item.release_date.split('-')[0] : 'N/A')
-                : (item.first_air_date ? item.first_air_date.split('-')[0] : 'N/A');
+                ? (item.release_date ? item.release_date.split('-')[0] : '')
+                : (item.first_air_date ? item.first_air_date.split('-')[0] : '');
             // Use up-to-date myList
             const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
             const isInList = myListArr.some(listItem => listItem.id === item.id && listItem.type === type);
-            const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+            const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
             const title = type === 'movie' ? item.title : item.name;
             const overview = item.overview ? item.overview.substring(0, 100) + (item.overview.length > 100 ? '...' : '') : '';
+            // Duration: fallback to empty if not present
+            let duration = '';
+            if (typeof item.runtime === 'number') {
+                duration = `${item.runtime} min`;
+            } else if (type === 'tv' && item.episode_run_time && item.episode_run_time.length > 0) {
+                duration = `${item.episode_run_time[0]} min`;
+            }
+
+            // Build meta parts dynamically, skipping empty values
+            const metaParts = [];
+            if (rating) metaParts.push(`<span class=\"rating\"><i class=\"material-icons\" style=\"font-size: 16px;\">star</i> ${rating}</span>`);
+            if (year) metaParts.push(`<span>${year}</span>`);
+            if (duration) metaParts.push(`<span class=\"duration\">${duration}</span>`);
 
             const card = document.createElement('div');
             card.className = 'movie-card';
@@ -743,7 +1425,7 @@
                 <button class="action-btn play-btn" onclick="event.stopPropagation(); playContent(${item.id}, '${type}')">
                     <i class="material-icons">play_arrow</i>
                 </button>
-                <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${item.id}, '${type}', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
+                <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${item.id},"title":"${title}","type":"${type}","poster_path":"${posterPath}","overview":"${overview}"}'>
                     <i class="material-icons">${isInList ? 'check' : 'add'}</i>
                 </button>
                 <button class="action-btn remove-btn" style="display: none;" onclick="event.stopPropagation(); removeFromKeepWatching(${item.id}, '${type}')">
@@ -752,10 +1434,7 @@
             </div>
             <div class="movie-title">${title}</div>
             <div class="card-meta">
-                <span class="rating">
-                    <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                </span>
-                <span>${year}</span>
+                ${metaParts.join('<span>|</span>')}
             </div>
             <p class="movie-overview">${overview}</p>
         </div>
@@ -763,12 +1442,42 @@
 
             // Add click handler for the entire card to navigate to player
             card.addEventListener('click', (e) => {
-                // a little check to not trigger navigation when clicking buttons
-                if (e.target.closest('.action-btn')) return;
-                playContent(item.id, type);
+                // Prevent navigation if clicking any action button or mylist-btn
+                if (e.target.closest('.action-btn, .mylist-btn')) return;
+                if (type === 'anime') {
+                    playContent(item.id, type, item.link_url);
+                } else {
+                    playContent(item.id, type);
+                }
             });
 
             return card;
+        }
+
+        // Helper to fetch and update duration for a card
+        async function fetchAndSetDuration(item, type, card) {
+            try {
+                let url = '';
+                if (type === 'movie') {
+                    url = `${TMDB_BASE_URL}/movie/${item.id}?api_key=${TMDB_API_KEY}`;
+                } else if (type === 'tv') {
+                    url = `${TMDB_BASE_URL}/tv/${item.id}?api_key=${TMDB_API_KEY}`;
+                }
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                let duration = '';
+                if (type === 'movie' && typeof data.runtime === 'number') {
+                    duration = `${data.runtime} min`;
+                } else if (type === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
+                    duration = `${data.episode_run_time[0]} min`;
+                }
+                // Update the card's duration span
+                const durationSpan = card.querySelector('.duration');
+                if (durationSpan) durationSpan.textContent = duration;
+            } catch (e) {
+                // Ignore errors
+            }
         }
 
         // Function to toggle My List (backend version)
@@ -858,7 +1567,7 @@
         }
 
         // Function to fetch content from TMDB API
-        async function fetchContent(type, category) {
+        async function fetchContent(type, category, lang) {
             try {
                 let endpoint;
                 switch (type) {
@@ -874,7 +1583,12 @@
                         endpoint = '/movie/popular';
                 }
 
-                const response = await fetch(`${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+                let url = `${TMDB_BASE_URL}${endpoint}`;
+                url += (url.includes('?') ? '&' : '?') + `api_key=${TMDB_API_KEY}`;
+                if (lang) {
+                    url += `&language=${lang}`;
+                }
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -888,46 +1602,100 @@
 
         async function fetchKeepWatching() {
             const token = localStorage.getItem('token');
-            if (!token) return [];
+            if (!token) {
+                console.log('[Keep Watching] No token found, returning empty list');
+                return [];
+            }
             try {
+                console.log('[Keep Watching] Fetching from:', `${AUTH_API_URL}/user/keep-watching`);
                 const response = await fetch(`${AUTH_API_URL}/user/keep-watching`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (response.ok) {
-                    return await response.json();
+                    const data = await response.json();
+                    console.log('[Keep Watching] Successfully fetched:', data);
+                    return data;
+                } else {
+                    console.error('[Keep Watching] Response not ok:', response.status, response.statusText);
+                    return [];
                 }
-                return [];
             } catch (e) {
+                console.error('[Keep Watching] Error fetching:', e);
                 return [];
             }
         }
 
-        // Function to load featured content
+        // Helper: fetch TMDB content with per-language cache and fallback
+        async function fetchTMDBWithFallback(type, category, lang) {
+            const cacheKey = `hero_${type}_${category}_${lang}`;
+            let data = window.tmdbCache && window.tmdbCache.get(cacheKey, lang);
+            if (!data) {
+                data = await fetchContent(type, category, lang);
+                if (window.tmdbCache) window.tmdbCache.set(cacheKey, lang, data);
+            }
+            // Fallback to en-US for missing fields
+            if (lang !== 'en-US') {
+                const missing = data.filter(item => !(item.title || item.name) || !item.overview);
+                if (missing.length) {
+                    let enData = window.tmdbCache && window.tmdbCache.get(cacheKey, 'en-US');
+                    if (!enData) {
+                        enData = await fetchContent(type, category, 'en-US');
+                        if (window.tmdbCache) window.tmdbCache.set(cacheKey, 'en-US', enData);
+                    }
+                    data = data.map((item, i) => {
+                        const enItem = enData[i] || {};
+                        return {
+                            ...item,
+                            title: item.title || item.name || enItem.title || enItem.name,
+                            overview: item.overview || enItem.overview || '',
+                        };
+                    });
+                }
+            }
+            return data;
+        }
+        // Show/hide hero loading spinner
+        function showHeroLoading() {
+            let spinner = document.getElementById('hero-loading');
+            if (!spinner) {
+                spinner = document.createElement('div');
+                spinner.id = 'hero-loading';
+                spinner.style = 'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
+                spinner.innerHTML = '<div class="loading-spinner"></div>';
+                document.querySelector('.hero').appendChild(spinner);
+            }
+            spinner.style.display = 'flex';
+        }
+        function hideHeroLoading() {
+            const spinner = document.getElementById('hero-loading');
+            if (spinner) spinner.style.display = 'none';
+        }
+        // Update loadFeaturedContent to use language and cache
         async function loadFeaturedContent() {
             try {
-                // Fetch multiple content sources for variety
+                showHeroLoading();
+                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
                 const [trendingMovies, popularMovies, trendingTV] = await Promise.all([
-                    fetchContent('movie', 'trending'),
-                    fetchContent('movie', 'popular'),
-                    fetchContent('tv', 'trending')
+                    fetchTMDBWithFallback('movie', 'trending', lang),
+                    fetchTMDBWithFallback('movie', 'popular', lang),
+                    fetchTMDBWithFallback('tv', 'trending', lang)
                 ]);
-
                 // Combine and shuffle content for variety
                 const allContent = [
                     ...trendingMovies.slice(0, 3),
                     ...popularMovies.slice(0, 2),
                     ...trendingTV.slice(0, 2)
                 ].sort(() => Math.random() - 0.5);
-
                 // Take the first MAX_HERO_SLIDES items
                 featuredContent = allContent.slice(0, MAX_HERO_SLIDES);
-
                 if (featuredContent.length > 0) {
                     createHeroSlides();
                     updateHeroContent(0);
                     startSlideRotation();
                 }
+                hideHeroLoading();
             } catch (error) {
+                hideHeroLoading();
                 console.error('Error loading featured content:', error);
             }
         }
@@ -962,24 +1730,50 @@
         }
 
         // Function to update hero content
-        function updateHeroContent(slideIndex) {
+        async function updateHeroContent(slideIndex) {
             if (!featuredContent[slideIndex]) return;
 
             const content = featuredContent[slideIndex];
             const title = content.title || content.name;
-            const overview = content.overview || 'No description available.';
+            const overview = truncateText(content.overview || 'No description available.', 180);
+            const type = content.title ? 'movie' : 'tv';
+            const year = type === 'movie'
+                ? (content.release_date ? content.release_date.split('-')[0] : 'N/A')
+                : (content.first_air_date ? content.first_air_date.split('-')[0] : 'N/A');
+            const rating = content.vote_average ? content.vote_average.toFixed(1) : 'N/A';
+            let duration = 'N/A';
+            if (typeof content.runtime === 'number') {
+                duration = `${content.runtime} min`;
+            } else if (type === 'tv' && content.episode_run_time && content.episode_run_time.length > 0) {
+                duration = `${content.episode_run_time[0]} min`;
+            }
 
             // Update content with animation
             const heroContent = document.querySelector('.hero-content');
             heroContent.classList.remove('active');
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 const titleElement = document.querySelector('.hero-title');
                 const overviewElement = document.querySelector('.hero-overview');
-
+                let metaElement = document.querySelector('.hero-meta');
+                if (!metaElement) {
+                    metaElement = document.createElement('div');
+                    metaElement.className = 'hero-meta';
+                    titleElement.parentNode.insertBefore(metaElement, overviewElement);
+                }
+                // If duration is N/A, fetch it
+                if (duration === 'N/A') {
+                    duration = await fetchHeroDuration(content, type);
+                }
+                metaElement.innerHTML = `
+                    <span class="rating"><i class="material-icons" style="font-size: 18px; vertical-align: middle;">star</i> ${rating}</span>
+                    <span style="margin: 0 8px;">|</span>
+                    <span>${year}</span>
+                    <span style="margin: 0 8px;">|</span>
+                    <span class="duration">${duration}</span>
+                `;
                 titleElement.textContent = title;
                 overviewElement.textContent = overview;
-
                 heroContent.classList.add('active');
             }, 300);
 
@@ -1084,41 +1878,68 @@
         // Function to load all content
         async function loadContent() {
             try {
+                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
                 // Load trending movies
-                const trendingMovies = await fetchContent('movie', 'trending');
+                const trendingMovies = await fetchContent('movie', 'trending', lang);
                 const trendingMoviesRow = document.getElementById('trending-row');
                 if (trendingMovies.length > 0) {
                     trendingMoviesRow.innerHTML = ''; // Clear loading message
                     trendingMovies.forEach(movie => {
-                        trendingMoviesRow.appendChild(createContentCard(movie, 'movie'));
+                        const card = createContentCard(movie, 'movie');
+                        trendingMoviesRow.appendChild(card);
+                        fetchAndSetDuration(movie, 'movie', card);
                     });
                 } else {
                     trendingMoviesRow.innerHTML = '<div class="loading">No trending movies found</div>';
                 }
 
                 // Load trending TV shows
-                const trendingTV = await fetchContent('tv', 'trending');
+                const trendingTV = await fetchContent('tv', 'trending', lang);
                 const trendingTVRow = document.getElementById('trending-tv-row');
                 if (trendingTV.length > 0) {
                     trendingTVRow.innerHTML = ''; // Clear loading message
                     trendingTV.forEach(show => {
-                        trendingTVRow.appendChild(createContentCard(show, 'tv'));
+                        const card = createContentCard(show, 'tv');
+                        trendingTVRow.appendChild(card);
+                        fetchAndSetDuration(show, 'tv', card);
                     });
                 } else {
                     trendingTVRow.innerHTML = '<div class="loading">No trending TV shows found</div>';
                 }
 
                 // Load popular movies
-                const popularMovies = await fetchContent('movie', 'popular');
+                const popularMovies = await fetchContent('movie', 'popular', lang);
                 const popularMoviesRow = document.getElementById('popular-row');
                 if (popularMoviesRow && popularMovies.length > 0) {
                     popularMoviesRow.innerHTML = '';
                     popularMovies.forEach(movie => {
-                        popularMoviesRow.appendChild(createContentCard(movie, 'movie'));
+                        const card = createContentCard(movie, 'movie');
+                        popularMoviesRow.appendChild(card);
+                        fetchAndSetDuration(movie, 'movie', card);
                     });
+                    window.initMyListButtons();
                 } else if (popularMoviesRow) {
                     popularMoviesRow.innerHTML = '<div class="loading">No popular movies found</div>';
                 }
+
+                // Load anime
+                const anime = await fetchAnimeContent();
+                const animeRow = document.getElementById('anime-row');
+                if (animeRow && anime.length > 0) {
+                    animeRow.innerHTML = '';
+                    anime.forEach(show => {
+                        const card = createContentCard(show, 'tv');
+                        animeRow.appendChild(card);
+                        fetchAndSetDuration(show, 'tv', card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                } else if (animeRow) {
+                    animeRow.innerHTML = '<div class="loading">No anime found</div>';
+                }
+
+                // Load upcoming movies
+                const upcomingMovies = await fetchContent('movie', 'upcoming', lang);
+                // ... existing code ...
             } catch (error) {
                 console.error('Error loading content:', error);
                 document.querySelectorAll('.content-row').forEach(row => {
@@ -1141,12 +1962,16 @@
             }));
 
             // Redirect to player page
-            window.location.href = './player.html';
+            window.location.href = './player.php';
         }
 
         // Function to play content
-        function playContent(id, type) {
-            window.location.href = `player.html?type=${type}&id=${id}`;
+        function playContent(id, type, link_url) {
+            if (type === 'anime' && link_url) {
+                window.location.href = `player.php?type=anime&link_url=${encodeURIComponent(link_url)}`;
+            } else {
+                window.location.href = `player.php?type=${type}&id=${id}`;
+            }
         }
 
         // Function to play featured content
@@ -1229,67 +2054,95 @@
 
         // Load Keep Watching Section
         async function loadKeepWatching() {
-            const keepWatchingList = await fetchKeepWatching();
             const section = document.getElementById('keep-watching-section');
             const container = document.getElementById('keep-watching-row');
-
-            if (!section || !container || keepWatchingList.length === 0) {
-                if (section) section.style.display = 'none';
+            if (!section || !container) return;
+            showKeepWatchingLoading(container);
+            let keepWatchingList = [];
+            try {
+                keepWatchingList = await fetchKeepWatching();
+            } catch (e) {
+                handleMyListApiError(e);
+                container.innerHTML = '<div class="error-state"><i class="material-icons">error_outline</i><h2>Failed to load Keep Watching</h2><p>Please try again later or check your connection.</p></div>';
+                hideKeepWatchingLoading();
                 return;
             }
-
+            if (!keepWatchingList.length) {
+                showMyListEmpty(container);
+                section.style.display = 'none';
+                hideKeepWatchingLoading();
+                return;
+            }
             section.style.display = 'block';
-            container.innerHTML = ''; // Clear existing content
-
-            keepWatchingList.forEach(item => {
+            container.innerHTML = '';
+            const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+            for (const item of keepWatchingList) {
+                const tmdbData = await fetchTMDBItemWithFallback(item.id, item.type, lang);
                 const cardItem = {
                     id: item.id,
-                    overview: item.overview,
-                    vote_average: item.vote_average,
-                    title: item.title,
-                    name: item.title,
-                    release_date: item.release_date,
-                    first_air_date: item.first_air_date,
-                    poster_path: item.poster_path,
+                    overview: tmdbData.overview,
+                    vote_average: tmdbData.vote_average,
+                    title: tmdbData.title || tmdbData.name,
+                    name: tmdbData.title || tmdbData.name,
+                    release_date: tmdbData.release_date,
+                    first_air_date: tmdbData.first_air_date,
+                    poster_path: tmdbData.poster_path,
                 };
-
                 const card = createContentCard(cardItem, item.type);
-                // Show remove button and hide add button for keep watching cards
-                card.querySelector('.add-btn').style.display = 'none';
-                card.querySelector('.remove-btn').style.display = 'flex';
+                // Show remove button and hide mylist button for keep watching cards
+                const mylistBtn = card.querySelector('.mylist-btn');
+                const removeBtn = card.querySelector('.remove-btn');
+                if (mylistBtn) mylistBtn.style.display = 'none';
+                if (removeBtn) {
+                    removeBtn.style.display = 'flex';
+                    removeBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        await removeFromKeepWatchingWithUndo(item.id, item.type, card, async () => {
+                            // Undo: re-add the item
+                            await fetch(`${AUTH_API_URL}/user/keep-watching`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                },
+                                body: JSON.stringify(item)
+                            });
+                            loadKeepWatching();
+                        });
+                        loadKeepWatching();
+                    };
+                }
                 container.appendChild(card);
-            });
+            }
+            hideKeepWatchingLoading();
         }
 
-        async function removeFromKeepWatching(id, type) {
+        async function removeFromKeepWatchingWithUndo(id, type, card, undoCallback) {
             const token = localStorage.getItem('token');
             if (!token) {
                 showNotification('You must be logged in to do that.', 'error');
                 return;
             }
-
             try {
                 const response = await fetch(`${AUTH_API_URL}/user/keep-watching/${id}/${type}`, {
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-
                 if (response.ok) {
-                    showNotification('Removed from Keep Watching');
-                    // Remove the card from the DOM
-                    const cardToRemove = document.getElementById(`content-card-${type}-${id}`);
-                    if (cardToRemove) {
-                        cardToRemove.style.transition = 'opacity 0.5s ease';
-                        cardToRemove.style.opacity = '0';
-                        setTimeout(() => cardToRemove.remove(), 500);
-                    }
+                    if (card) card.remove();
+                    showMyListToast('Removed from Keep Watching', 'info', async () => {
+                        if (undoCallback) await undoCallback();
+                        showMyListToast('Undo: Added back to Keep Watching', 'success');
+                        loadKeepWatching();
+                    });
                 } else {
                     const error = await response.json();
+                    handleMyListApiError(error);
                     throw new Error(error.message || 'Failed to remove from list');
                 }
             } catch (error) {
-                console.error('Error removing from Keep Watching:', error);
-                showNotification(error.message, 'error');
+                showMyListToast(error.message, 'error');
+                handleMyListApiError(error);
             }
         }
 
@@ -1300,6 +2153,663 @@
             loadContent();
             loadKeepWatching();
         });
+
+        // --- MOBILE UI JS ---
+        (function () {
+            // Elements
+            const openBtn = document.getElementById('openMobileSidenav');
+            const closeBtn = document.getElementById('closeMobileSidenav');
+            const sidenav = document.getElementById('mobileSidenav');
+            const overlay = document.getElementById('mobileOverlay');
+            const searchBtn = document.getElementById('mobileSearchBtn');
+            const searchbar = document.getElementById('mobileSearchbar');
+            const closeSearch = document.getElementById('closeMobileSearch');
+
+            // Open sidenav
+            if (openBtn) openBtn.onclick = function () {
+                sidenav.classList.add('open');
+                sidenav.style.display = 'flex';
+                overlay.style.display = 'block';
+            };
+            // Close sidenav
+            if (closeBtn) closeBtn.onclick = function () {
+                sidenav.classList.remove('open');
+                setTimeout(() => { sidenav.style.display = 'none'; }, 300);
+                overlay.style.display = 'none';
+            };
+            if (overlay) overlay.onclick = function () {
+                sidenav.classList.remove('open');
+                setTimeout(() => { sidenav.style.display = 'none'; }, 300);
+                overlay.style.display = 'none';
+            };
+            // Open searchbar
+            if (searchBtn) searchBtn.onclick = function () {
+                searchbar.style.display = 'flex';
+                setTimeout(() => { searchbar.querySelector('input').focus(); }, 100);
+            };
+            // Close searchbar
+            if (closeSearch) closeSearch.onclick = function () {
+                searchbar.style.display = 'none';
+            };
+        })();
+
+        // --- ENHANCED MOBILE CAROUSEL JS ---
+        (function () {
+            if (window.innerWidth > 768) return;
+
+            // Enhanced card creation with loading states
+            function createMobileCard(item, type) {
+                const poster = item.poster_path ?
+                    (item.poster_path.startsWith('http') ? item.poster_path : `https://image.tmdb.org/t/p/w300${item.poster_path}`) :
+                    'https://via.placeholder.com/120x170?text=No+Image';
+                const title = type === 'movie' ? item.title : item.name;
+                const id = item.id;
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                const isInList = (JSON.parse(localStorage.getItem('myList') || '[]')).some(listItem => listItem.id === id && listItem.type === type);
+
+                const card = document.createElement('div');
+                card.className = 'mobile-carousel-card loading';
+                card.innerHTML = `
+                    <img src="${poster}" alt="${title}" onload="this.parentElement.classList.remove('loading');this.classList.add('fade-in')" onerror="this.src='https://via.placeholder.com/120x170?text=Error'">
+                    <div class="mobile-carousel-title">${title}</div>
+                    <div class="mobile-card-overlay">
+                        <button class="mobile-play-btn"><i class="material-icons">play_arrow</i></button>
+                        <button class="mobile-mylist-btn${isInList ? ' in-list' : ''}" title="" data-i18n-title="addToMyList">
+                          <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                          <span data-i18n="addToMyList">Add to My List</span>
+                        </button>
+                    </div>
+                `;
+                // Play button
+                card.querySelector('.mobile-play-btn').onclick = function (e) {
+                    e.stopPropagation();
+                    card.style.transform = 'scale(0.97)';
+                    setTimeout(() => {
+                        card.style.transform = '';
+                        window.location.href = `player.php?type=${type}&id=${id}`;
+                    }, 120);
+                };
+                // My List button
+                card.querySelector('.mobile-mylist-btn').onclick = async function (e) {
+                    e.stopPropagation();
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        if (confirm('You must be logged in to add to My List. Log in or sign up now?')) {
+                            window.location.href = 'account.html';
+                        }
+                        return;
+                    }
+                    const btn = this;
+                    btn.disabled = true;
+                    btn.classList.add('mylist-processing');
+                    try {
+                        const itemObj = { id, title, type, poster_path: item.poster_path, overview: item.overview || '' };
+                        const isInListNow = btn.classList.contains('in-list');
+                        const method = isInListNow ? 'DELETE' : 'POST';
+                        const url = isInListNow ? `${AUTH_API_URL}/user/mylist/${id}/${type}` : `${AUTH_API_URL}/user/mylist`;
+                        const response = await fetch(url, {
+                            method,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: method === 'POST' ? JSON.stringify(itemObj) : undefined
+                        });
+                        if (!response.ok) throw new Error('Failed to update My List');
+                        btn.classList.toggle('in-list', !isInListNow);
+                        btn.querySelector('.material-icons').textContent = !isInListNow ? 'check' : 'add';
+                        // Update localStorage
+                        const updatedList = await response.json();
+                        localStorage.setItem('myList', JSON.stringify(updatedList));
+                    } catch (err) {
+                        alert(err.message || 'Failed to update My List');
+                    } finally {
+                        btn.disabled = false;
+                        btn.classList.remove('mylist-processing');
+                    }
+                };
+                // Haptic feedback
+                card.addEventListener('touchstart', function () {
+                    if (navigator.vibrate) navigator.vibrate(10);
+                });
+                card.onclick = function (e) {
+                    if (e.target.closest('.mobile-play-btn, .mobile-mylist-btn')) return;
+                    window.location.href = `player.php?type=${type}&id=${id}`;
+                };
+                return card;
+            }
+
+            // Enhanced content loading with error handling
+            async function loadMobileContent() {
+                const sections = [
+                    { id: 'mobile-trending-row', url: 'trending/movie/week', title: 'Trending Now' },
+                    { id: 'mobile-nowplaying-row', url: 'movie/now_playing', title: 'Now Playing' },
+                    { id: 'mobile-toprated-row', url: 'movie/top_rated', title: 'Top Rated' }
+                ];
+
+                for (const section of sections) {
+                    const row = document.getElementById(section.id);
+                    if (!row) continue;
+
+                    // Show loading state
+                    row.innerHTML = '<div class="mobile-loading">Loading...</div>';
+
+                    try {
+                        const response = await fetch(`https://api.themoviedb.org/3/${section.url}?api_key=8c247ea0b4b56ed2ff7d41c9a833aa77`);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                        const data = await response.json();
+                        const items = data.results || [];
+
+                        if (items.length === 0) {
+                            row.innerHTML = '<div class="mobile-error">No content available</div>';
+                            continue;
+                        }
+
+                        // Clear loading and add content
+                        row.innerHTML = '';
+                        items.slice(0, 10).forEach(item => {
+                            row.appendChild(createMobileCard(item, 'movie'));
+                        });
+
+                        // Add swipe hint
+                        const hint = document.createElement('div');
+                        hint.className = 'mobile-swipe-hint';
+                        hint.textContent = '← swipe →';
+                        row.appendChild(hint);
+
+                    } catch (error) {
+                        console.error(`Error loading ${section.title}:`, error);
+                        row.innerHTML = '<div class="mobile-error">Failed to load content. Tap to retry.</div>';
+                        row.onclick = () => loadMobileContent();
+                    }
+                }
+            }
+
+            // Initialize everything
+            document.addEventListener('DOMContentLoaded', function () {
+                loadMobileContent();
+            });
+
+            // Performance optimization: Intersection Observer for lazy loading
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.classList.remove('lazy');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                // Observe all carousel images
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.mobile-carousel-card img').forEach(img => {
+                        imageObserver.observe(img);
+                    });
+                });
+            }
+
+            // Add more mobile carousel sections
+            document.addEventListener('DOMContentLoaded', function () {
+                // ... existing code ...
+                // Add extra sections
+                const extraSections = [
+                    { id: 'mobile-toprated', title: 'Top Rated Movies', url: 'movie/top_rated' },
+                    { id: 'mobile-trendingtv', title: '', url: 'trending/tv/week', 'data-i18n-title': 'trendingTV' },
+                    { id: 'mobile-topratedtv', title: 'Top Rated TV Shows', url: 'tv/top_rated' },
+                    { id: 'mobile-anime', title: 'Anime', url: 'discover/tv?with_genres=16&sort_by=popularity.desc' }
+                ];
+                const carouselsDiv = document.querySelector('.mobile-carousels');
+                extraSections.forEach(section => {
+                    if (!document.getElementById(section.id)) {
+                        const sec = document.createElement('section');
+                        sec.className = 'mobile-carousel-section';
+                        sec.id = section.id;
+                        sec.innerHTML = `<h3 data-i18n="${section['data-i18n-title'] || ''}">${section.title}</h3><div class="mobile-carousel-row" id="${section.id}-row"></div>`;
+                        carouselsDiv.appendChild(sec);
+                        i18n.translateStaticContent();
+                    }
+                });
+                // Load content for extra sections
+                extraSections.forEach(async section => {
+                    const row = document.getElementById(section.id + '-row');
+                    if (!row) return;
+                    row.innerHTML = '<div class="mobile-loading">Loading...</div>';
+                    try {
+                        // Fix API URL: if url contains '?', use &api_key=..., else use ?api_key=...
+                        let apiUrl = `https://api.themoviedb.org/3/${section.url}`;
+                        apiUrl += (apiUrl.includes('?') ? '&' : '?') + 'api_key=8c247ea0b4b56ed2ff7d41c9a833aa77';
+                        let response = await fetch(apiUrl);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        const data = await response.json();
+                        const items = data.results || [];
+                        if (items.length === 0) {
+                            row.innerHTML = '<div class="mobile-error">No content available</div>';
+                            return;
+                        }
+                        row.innerHTML = '';
+                        items.slice(0, 10).forEach(item => {
+                            // Use 'tv' type for TV/anime sections, 'movie' for movie
+                            const type = section.url.startsWith('movie') ? 'movie' : 'tv';
+                            row.appendChild(createMobileCard(item, type));
+                        });
+                        // Add scroll hint
+                        if (!row.querySelector('.mobile-scroll-hint')) {
+                            const hint = document.createElement('div');
+                            hint.className = 'mobile-scroll-hint';
+                            hint.textContent = '⬇ Scroll down';
+                            row.appendChild(hint);
+                        }
+                    } catch (error) {
+                        row.innerHTML = '<div class="mobile-error">Failed to load content. Tap to retry.</div>';
+                        row.onclick = () => location.reload();
+                    }
+                });
+            });
+        })();
+
+        // --- MOBILE HERO CAROUSEL JS ---
+        (function () {
+            if (window.innerWidth > 768) return;
+            const slider = document.getElementById('mobileHeroSlider');
+            const indicators = document.getElementById('mobileHeroIndicators');
+            let slides = [];
+            let current = 0;
+            let autoSlideTimer = null;
+            let touchStartX = 0;
+            let touchDeltaX = 0;
+            const SLIDE_INTERVAL = 5000;
+            function goToSlide(idx) {
+                if (!slides.length) return;
+                current = (idx + slides.length) % slides.length;
+                slider.style.transition = 'transform 0.7s cubic-bezier(.4,0,.2,1)';
+                slider.style.transform = `translateX(-${current * 100}vw)`;
+                Array.from(indicators.children).forEach((dot, i) => {
+                    dot.classList.toggle('active', i === current);
+                });
+                resetAutoSlide();
+            }
+            function resetAutoSlide() {
+                if (autoSlideTimer) clearTimeout(autoSlideTimer);
+                autoSlideTimer = setTimeout(() => goToSlide(current + 1), SLIDE_INTERVAL);
+            }
+            function setupTouch() {
+                slider.addEventListener('touchstart', e => {
+                    if (e.touches.length !== 1) return;
+                    touchStartX = e.touches[0].clientX;
+                    touchDeltaX = 0;
+                    slider.style.transition = 'none';
+                }, { passive: true });
+                slider.addEventListener('touchmove', e => {
+                    if (e.touches.length !== 1) return;
+                    touchDeltaX = e.touches[0].clientX - touchStartX;
+                    slider.style.transform = `translateX(calc(${-current * 100}vw + ${touchDeltaX}px))`;
+                }, { passive: true });
+                slider.addEventListener('touchend', e => {
+                    slider.style.transition = '';
+                    if (Math.abs(touchDeltaX) > 60) {
+                        goToSlide(current + (touchDeltaX < 0 ? 1 : -1));
+                    } else {
+                        goToSlide(current);
+                    }
+                });
+            }
+            function renderHeroSlides(movies) {
+                slider.innerHTML = '';
+                indicators.innerHTML = '';
+                slides = movies.slice(0, 5);
+                slides.forEach((movie, i) => {
+                    const bg = movie.backdrop_path ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}` : 'https://via.placeholder.com/780x440?text=No+Image';
+                    const title = movie.title || movie.name;
+                    const overview = movie.overview || '';
+                    const id = movie.id;
+                    const type = movie.title ? 'movie' : 'tv';
+                    const isInList = (JSON.parse(localStorage.getItem('myList') || '[]')).some(listItem => listItem.id === id && listItem.type === type);
+                    const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
+                    const year = type === 'movie'
+                        ? (movie.release_date ? movie.release_date.split('-')[0] : 'N/A')
+                        : (movie.first_air_date ? movie.first_air_date.split('-')[0] : 'N/A');
+                    let duration = 'N/A';
+                    if (typeof movie.runtime === 'number') {
+                        duration = `${movie.runtime} min`;
+                    } else if (type === 'tv' && movie.episode_run_time && movie.episode_run_time.length > 0) {
+                        duration = `${movie.episode_run_time[0]} min`;
+                    }
+                    const slide = document.createElement('div');
+                    slide.className = 'mobile-hero-slide';
+                    slide.style.backgroundImage = `url('${bg}')`;
+                    slide.innerHTML = `
+                        <div class='mobile-hero-gradient'></div>
+                        <div class='mobile-hero-content fade-in'>
+                            <div class='mobile-hero-title'>${title}</div>
+                            <div class='mobile-hero-meta'>
+                                <span class="rating"><i class="material-icons" style="font-size: 16px; vertical-align: middle;">star</i> ${rating}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span>${year}</span>
+                                <span style="margin: 0 8px;">|</span>
+                                <span class="duration">${duration}</span>
+                            </div>
+                            <div class='mobile-hero-overview'>${overview}</div>
+                            <div class='mobile-hero-btns'>
+                                <button class='mobile-hero-btn play'><i class="material-icons">play_arrow</i></button>
+                                <button class='mobile-hero-btn mylist${isInList ? ' in-list' : ''}'><i class="material-icons">${isInList ? 'check' : 'add'}</i></button>
+                            </div>
+                        </div>
+                    `;
+                    // If duration is N/A, fetch it
+                    if (duration === 'N/A') {
+                        (async () => {
+                            let fetched = await fetchHeroDuration(movie, type);
+                            const durationSpan = slide.querySelector('.duration');
+                            if (durationSpan) durationSpan.textContent = fetched;
+                        })();
+                    }
+                    // Fade-in effect for slide
+                    slide.style.opacity = '0';
+                    setTimeout(() => { slide.style.transition = 'opacity 0.7s'; slide.style.opacity = '1'; }, 50 + i * 100);
+                    slide.querySelector('.play').onclick = () => window.location.href = `player.php?type=${type}&id=${id}`;
+                    // Add to My List button logic
+                    slide.querySelector('.mylist').onclick = async function () {
+                        const token = localStorage.getItem('token');
+                        if (!token) {
+                            if (confirm('You must be logged in to add to My List. Log in or sign up now?')) {
+                                window.location.href = 'account.html';
+                            }
+                            return;
+                        }
+                        const btn = this;
+                        btn.disabled = true;
+                        btn.classList.add('mylist-processing');
+                        try {
+                            const itemObj = { id, title, type, poster_path: movie.poster_path, overview: movie.overview || '' };
+                            const isInListNow = btn.classList.contains('in-list');
+                            const method = isInListNow ? 'DELETE' : 'POST';
+                            const url = isInListNow ? `${AUTH_API_URL}/user/mylist/${id}/${type}` : `${AUTH_API_URL}/user/mylist`;
+                            const response = await fetch(url, {
+                                method,
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: method === 'POST' ? JSON.stringify(itemObj) : undefined
+                            });
+                            if (!response.ok) throw new Error('Failed to update My List');
+                            btn.classList.toggle('in-list', !isInListNow);
+                            btn.querySelector('.material-icons').textContent = !isInListNow ? 'check' : 'add';
+                        } catch (err) {
+                            alert(err.message || 'Failed to update My List');
+                        } finally {
+                            btn.disabled = false;
+                            btn.classList.remove('mylist-processing');
+                        }
+                    };
+                    slider.appendChild(slide);
+                    const dot = document.createElement('div');
+                    dot.className = 'mobile-hero-dot' + (i === 0 ? ' active' : '');
+                    dot.onclick = () => goToSlide(i);
+                    indicators.appendChild(dot);
+                });
+                slider.style.transform = 'translateX(0vw)';
+                setupTouch();
+                goToSlide(0);
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                fetch('https://api.themoviedb.org/3/trending/movie/week?api_key=8c247ea0b4b56ed2ff7d41c9a833aa77')
+                    .then(r => r.json())
+                    .then(data => renderHeroSlides(data.results || []));
+            });
+        })();
+
+        // In updateHeroContent, after setting title and overview, add or update a .hero-meta div to show rating, year, and duration
+        // Add a helper to fetch and update duration if not present
+        async function fetchHeroDuration(content, type) {
+            try {
+                let url = '';
+                if (type === 'movie') {
+                    url = `${TMDB_BASE_URL}/movie/${content.id}?api_key=${TMDB_API_KEY}`;
+                } else if (type === 'tv') {
+                    url = `${TMDB_BASE_URL}/tv/${content.id}?api_key=${TMDB_API_KEY}`;
+                }
+                const response = await fetch(url);
+                if (!response.ok) return 'N/A';
+                const data = await response.json();
+                if (type === 'movie' && typeof data.runtime === 'number') {
+                    return `${data.runtime} min`;
+                } else if (type === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
+                    return `${data.episode_run_time[0]} min`;
+                }
+                return 'N/A';
+            } catch (e) {
+                return 'N/A';
+            }
+        }
+
+        // Attach event listeners for hero buttons after DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function () {
+            const playBtn = document.getElementById('heroPlayBtn');
+            const myListBtn = document.getElementById('heroMyListBtn');
+            if (playBtn) playBtn.onclick = playFeatured;
+            if (myListBtn) myListBtn.onclick = addFeaturedToList;
+        });
+
+        // Add this helper function after fetchContent
+        async function fetchAnimeContent() {
+            try {
+                const response = await fetch('https://animeapi.skin/trending');
+                if (!response.ok) throw new Error('Failed to fetch trending anime');
+                const data = await response.json();
+                // Map to a format compatible with createContentCard
+                return (data || []).map(anime => ({
+                    id: anime.slug, // Use slug for 2Anime
+                    name: anime.title_en || anime.title_jp || anime.slug,
+                    poster_path: anime.poster_url,
+                    overview: anime.description || '',
+                    vote_average: anime.score || 'N/A',
+                    first_air_date: anime.aired || '',
+                    media_type: 'anime',
+                    episodes: anime.episodes || [],
+                }));
+            } catch (error) {
+                console.error('Error fetching anime content:', error);
+                return [];
+            }
+        }
+
+        // Listen for language changes and reload TMDB content
+        if (window.i18n) {
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = async function (lang) {
+                await origChangeLanguage(lang);
+                await loadContent();
+            };
+        }
+
+        // Helper: fetch TMDB item with per-language cache and fallback
+        async function fetchTMDBItemWithFallback(id, type, lang) {
+            const endpoint = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+            let data = window.tmdbCache && window.tmdbCache.get(endpoint, lang);
+            if (!data) {
+                const url = `${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}&language=${lang}`;
+                const resp = await fetch(url);
+                data = await resp.json();
+                if (window.tmdbCache) window.tmdbCache.set(endpoint, lang, data);
+            }
+            // Fallback to en-US for missing fields
+            if (lang !== 'en-US' && (!data.title && !data.name || !data.overview)) {
+                let enData = window.tmdbCache && window.tmdbCache.get(endpoint, 'en-US');
+                if (!enData) {
+                    const enUrl = `${TMDB_BASE_URL}${endpoint}?api_key=${TMDB_API_KEY}&language=en-US`;
+                    const enResp = await fetch(enUrl);
+                    enData = await enResp.json();
+                    if (window.tmdbCache) window.tmdbCache.set(endpoint, 'en-US', enData);
+                }
+                data.title = data.title || data.name || enData.title || enData.name;
+                data.overview = data.overview || enData.overview || '';
+            }
+            return data;
+        }
+        // Show/hide keep watching loading spinner
+        function showKeepWatchingLoading(container) {
+            let spinner = document.getElementById('keep-watching-loading');
+            if (!spinner) {
+                spinner = document.createElement('div');
+                spinner.id = 'keep-watching-loading';
+                spinner.style = 'width:100%;height:120px;display:flex;align-items:center;justify-content:center;';
+                spinner.innerHTML = '<div class="loading-spinner"></div>';
+                container.appendChild(spinner);
+            }
+            spinner.style.display = 'flex';
+        }
+        function hideKeepWatchingLoading() {
+            const spinner = document.getElementById('keep-watching-loading');
+            if (spinner) spinner.style.display = 'none';
+        }
+        // Update loadKeepWatching to use language, cache, fallback
+        async function loadKeepWatching() {
+            const section = document.getElementById('keep-watching-section');
+            const container = document.getElementById('keep-watching-row');
+            if (!section || !container) return;
+            showKeepWatchingLoading(container);
+            let keepWatchingList = [];
+            try {
+                keepWatchingList = await fetchKeepWatching();
+            } catch (e) {
+                handleMyListApiError(e);
+                container.innerHTML = '<div class="error-state"><i class="material-icons">error_outline</i><h2>Failed to load Keep Watching</h2><p>Please try again later or check your connection.</p></div>';
+                hideKeepWatchingLoading();
+                return;
+            }
+            if (!keepWatchingList.length) {
+                showMyListEmpty(container);
+                section.style.display = 'none';
+                hideKeepWatchingLoading();
+                return;
+            }
+            section.style.display = 'block';
+            container.innerHTML = '';
+            const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+            for (const item of keepWatchingList) {
+                const tmdbData = await fetchTMDBItemWithFallback(item.id, item.type, lang);
+                const cardItem = {
+                    id: item.id,
+                    overview: tmdbData.overview,
+                    vote_average: tmdbData.vote_average,
+                    title: tmdbData.title || tmdbData.name,
+                    name: tmdbData.title || tmdbData.name,
+                    release_date: tmdbData.release_date,
+                    first_air_date: tmdbData.first_air_date,
+                    poster_path: tmdbData.poster_path,
+                };
+                const card = createContentCard(cardItem, item.type);
+                // Show remove button and hide mylist button for keep watching cards
+                const mylistBtn = card.querySelector('.mylist-btn');
+                const removeBtn = card.querySelector('.remove-btn');
+                if (mylistBtn) mylistBtn.style.display = 'none';
+                if (removeBtn) {
+                    removeBtn.style.display = 'flex';
+                    removeBtn.onclick = async (e) => {
+                        e.stopPropagation();
+                        await removeFromKeepWatchingWithUndo(item.id, item.type, card, async () => {
+                            // Undo: re-add the item
+                            await fetch(`${AUTH_API_URL}/user/keep-watching`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                                },
+                                body: JSON.stringify(item)
+                            });
+                            loadKeepWatching();
+                        });
+                        loadKeepWatching();
+                    };
+                }
+                container.appendChild(card);
+            }
+            hideKeepWatchingLoading();
+        }
+        // Listen for language changes and reload Keep Watching only
+        if (window.i18n) {
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = async function (lang) {
+                await origChangeLanguage(lang);
+                await loadKeepWatching();
+            };
+        }
+
+        // ... existing code ...
+        // Helper to truncate text at word boundary
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            let truncated = text.slice(0, maxLength);
+            // Try to cut at last space for word boundary
+            const lastSpace = truncated.lastIndexOf(' ');
+            if (lastSpace > 0) truncated = truncated.slice(0, lastSpace);
+            return truncated + '...';
+        }
+        // ... existing code ...
+
+        // Debounce helper
+        function debounce(fn, delay) {
+            let timer = null;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        // Unified TMDB content reload on language change
+        async function reloadAllTMDBContent() {
+            showHeroLoading && showHeroLoading();
+            await loadFeaturedContent();
+            await loadContent();
+            await loadKeepWatching && loadKeepWatching();
+            hideHeroLoading && hideHeroLoading();
+        }
+        // Listen for i18n language change event
+        if (window.i18next && typeof window.i18next.on === 'function') {
+            window.i18next.on('languageChanged', debounce(async (lng) => {
+                await reloadAllTMDBContent();
+            }, 200));
+        } else if (window.i18n) {
+            // Patch changeLanguage as fallback
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = debounce(async function (lang) {
+                await origChangeLanguage(lang);
+                await reloadAllTMDBContent();
+            }, 200);
+        }
+        // On page load, fetch all TMDB content in the current language
+        document.addEventListener('DOMContentLoaded', reloadAllTMDBContent);
+
+        // Show manual reload banner
+        function showManualReloadBanner() {
+            const banner = document.getElementById('manual-reload-banner');
+            if (banner) banner.style.display = 'block';
+            const btn = document.getElementById('dismiss-reload-banner');
+            if (btn) btn.onclick = () => { banner.style.display = 'none'; };
+        }
+        // Call this function to show the banner
+        showManualReloadBanner();
+    </script>
+    <script src="js/mylist.js"></script>
+    <script src="js/UAParser.min.js"></script>
+    <script src="js/adblocker-popup.js"></script>
+    <script>
+        // Wait for i18n to initialize before showing adblocker popup
+        if (window.i18n && typeof i18n.init === 'function') {
+            i18n.init().then(() => {
+                var adblockerScript = document.createElement('script');
+                adblockerScript.src = 'js/adblocker-popup.js';
+                document.body.appendChild(adblockerScript);
+            });
+        } else {
+            var adblockerScript = document.createElement('script');
+            adblockerScript.src = 'js/adblocker-popup.js';
+            document.body.appendChild(adblockerScript);
+        }
     </script>
 </body>
 

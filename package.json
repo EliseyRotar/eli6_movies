@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0"
+  }
+}

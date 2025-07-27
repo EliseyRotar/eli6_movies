@@ -338,18 +338,202 @@
             font-size: 14px;
             opacity: 0.8;
         }
+
+        .mylist-image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Modern overlay styles for My List */
+        .mylist-modern-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), backdrop-filter 0.35s;
+            background: linear-gradient(0deg, rgba(20, 20, 20, 0.92) 70%, rgba(20, 20, 20, 0.5) 100%, rgba(20, 20, 20, 0.0) 100%);
+            backdrop-filter: blur(16px) saturate(1.2);
+            -webkit-backdrop-filter: blur(16px) saturate(1.2);
+            z-index: 2;
+        }
+
+        .movie-card:hover .mylist-modern-overlay,
+        .movie-card:focus-within .mylist-modern-overlay,
+        .mylist-modern-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mylist-overlay-content {
+            width: 100%;
+            padding: 28px 18px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .mylist-overlay-buttons {
+            display: flex;
+            gap: 22px;
+            margin-bottom: 10px;
+        }
+
+        .overlay-btn {
+            background: rgba(229, 9, 20, 0.92);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+            outline: none;
+            position: relative;
+        }
+
+        .overlay-btn:hover,
+        .overlay-btn:focus {
+            background: #f40612;
+            transform: scale(1.08);
+            box-shadow: 0 8px 32px rgba(229, 9, 20, 0.25);
+        }
+
+        .overlay-btn .material-icons {
+            font-size: 32px;
+        }
+
+        .mylist-overlay-info {
+            width: 100%;
+            text-align: center;
+        }
+
+        .mylist-overlay-title {
+            color: #fff;
+            font-size: 1.18rem;
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+            margin-bottom: 6px;
+            letter-spacing: 0.01em;
+        }
+
+        .mylist-overlay-meta {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            font-size: 0.98rem;
+            color: #e5e5e5;
+            opacity: 0.92;
+            flex-wrap: wrap;
+        }
+
+        .mylist-overlay-type {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 0.93em;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .mylist-overlay-year {
+            font-weight: 500;
+        }
+
+        .mylist-overlay-rating {
+            color: #ffd700;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .mylist-overlay-rating .material-icons {
+            font-size: 18px;
+            vertical-align: middle;
+        }
+
+        .mylist-overlay-duration {
+            color: #e5e5e5;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .mylist-overlay-overview {
+            margin-top: 10px;
+            color: #e0e0e0;
+            font-size: 0.97rem;
+            line-height: 1.4;
+            text-align: center;
+            max-width: 95%;
+            max-height: 3.2em;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.85;
+        }
+
+        @media (max-width: 600px) {
+            .mylist-modern-overlay {
+                padding-bottom: 0;
+                align-items: flex-end;
+            }
+
+            .mylist-overlay-content {
+                padding: 18px 6px 10px 6px;
+                gap: 10px;
+            }
+
+            .overlay-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 24px;
+            }
+
+            .mylist-overlay-title {
+                font-size: 1rem;
+            }
+
+            .mylist-overlay-meta {
+                font-size: 0.85rem;
+                gap: 8px;
+            }
+        }
+
+        .watched-badge {
+            display: inline-block;
+            background: #2ecc71;
+            color: #fff;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-top: 6px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 
 <body>
     <nav class="navbar">
         <div style="display: flex; align-items: center; gap: 30px;">
-            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
             <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="movies.html">Movies</a>
-                <a href="tvshows.html">TV Shows</a>
-                <a href="mylist.html" class="active">My List</a>
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
+                <a href="mylist.html" class="active" data-i18n="nav.mylist">My List</a>
             </div>
         </div>
         <div class="nav-icons">
@@ -367,21 +551,21 @@
 
     <div class="mylist-container">
         <div class="mylist-header">
-            <h1 class="mylist-title">My List</h1>
+            <h1 class="mylist-title" data-i18n="mylist.title">My List</h1>
             <div class="mylist-stats">
-                <span class="total-items">0 items</span>
-                <span class="total-time">0h watched</span>
+                <span class="total-items" data-i18n="mylist.totalItems">0 items</span>
+                <span class="total-time" data-i18n="mylist.totalTime">0h watched</span>
             </div>
             <div class="mylist-filters">
                 <select id="content-type" class="filter-select">
-                    <option value="all">All Content</option>
-                    <option value="movie">Movies</option>
-                    <option value="tv">TV Shows</option>
+                    <option value="all" data-i18n="mylist.filters.allContent">All Content</option>
+                    <option value="movie" data-i18n="mylist.filters.movies">Movies</option>
+                    <option value="tv" data-i18n="mylist.filters.tvshows">TV Shows</option>
                 </select>
                 <select id="sort-by" class="filter-select">
-                    <option value="date-added">Date Added</option>
-                    <option value="title">Title</option>
-                    <option value="rating">Rating</option>
+                    <option value="date-added" data-i18n="mylist.filters.dateAdded">Date Added</option>
+                    <option value="title" data-i18n="mylist.filters.title">Title</option>
+                    <option value="rating" data-i18n="mylist.filters.rating">Rating</option>
                 </select>
             </div>
         </div>
@@ -389,21 +573,24 @@
         <div id="mylist-grid" class="mylist-grid">
             <div class="loading">
                 <div class="loading-spinner"></div>
-                Loading your list...
+                <span data-i18n="mylist.loading">Loading your list...</span>
             </div>
         </div>
 
+        <!-- Watched Section -->
+        <!-- Removed watched section as requested -->
+
         <div id="empty-state" class="empty-state" style="display: none;">
             <i class="material-icons">favorite_border</i>
-            <h2>Your list is empty</h2>
-            <p>Start adding movies and TV shows to your list to see them here.</p>
-            <a href="movies.html" class="browse-btn">Browse Content</a>
+            <h2 data-i18n="mylist.empty">Your list is empty</h2>
+            <p data-i18n="mylist.startAdding">Start adding movies and TV shows to your list to see them here.</p>
+            <a href="movies.html" class="browse-btn" data-i18n="mylist.browseContent">Browse Content</a>
         </div>
 
         <div id="error-state" class="error-state" style="display: none;">
             <i class="material-icons">error_outline</i>
-            <h2>Failed to load your list</h2>
-            <p>Please try again later or check your connection.</p>
+            <h2 data-i18n="mylist.failedToLoad">Failed to load your list</h2>
+            <p data-i18n="mylist.tryAgain">Please try again later or check your connection.</p>
         </div>
     </div>
 
@@ -446,6 +633,7 @@
             showLoading();
             await loadMyList();
             hideLoading();
+            // Removed renderWatchedSection();
         }
 
         async function loadMyList() {
@@ -475,6 +663,7 @@
 
                 updateStats();
                 filterAndSortItems();
+                // Removed await renderWatchedSection();
             } catch (error) {
                 console.error('Error loading my list:', error);
                 showError(error.message || 'Failed to load your list.');
@@ -521,65 +710,8 @@
             emptyState.style.display = 'none';
 
             items.forEach(item => {
-                mylistGrid.appendChild(createCard(item));
+                mylistGrid.appendChild(window.createCard(item));
             });
-        }
-
-        function createCard(item) {
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-
-            // Debug: Log the item to see its structure
-            console.log('Creating card for item:', item);
-
-            // Handle image path - explicit approach
-            let posterPath;
-            const originalPath = item.poster_path;
-
-            if (!originalPath) {
-                posterPath = 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image';
-            } else if (originalPath.startsWith('http')) {
-                posterPath = originalPath;
-            } else if (originalPath.startsWith('/w500/')) {
-                // If it already has /w500/, just add the base URL
-                posterPath = `https://image.tmdb.org/t/p${originalPath}`;
-            } else if (originalPath.startsWith('/')) {
-                // If it starts with / but not /w500/, add /w500/
-                posterPath = `https://image.tmdb.org/t/p/w500${originalPath}`;
-            } else {
-                // Just a filename, add the full path
-                posterPath = `https://image.tmdb.org/t/p/${originalPath}`;
-            }
-
-            console.log('Original poster_path:', originalPath);
-            console.log('Final poster path:', posterPath);
-
-            card.innerHTML = `
-                <div class="mylist-image-container">
-                    <img src="${posterPath}" 
-                         alt="${item.title}" 
-                         loading="lazy"
-                         onerror="this.src='https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'; this.classList.add('error'); console.log('Image failed to load:', '${posterPath}');">
-                </div>
-                <div class="mylist-item-info">
-                    <h3 class="mylist-item-title">${item.title}</h3>
-                    <div class="mylist-item-meta">
-                        <span class="mylist-item-type">${item.type === 'movie' ? 'Movie' : 'TV Show'}</span>
-                        <span>${item.year || ''}</span>
-                    </div>
-                    <div class="mylist-item-actions">
-                        <button class="play-button" onclick="playContent(${item.id}, '${item.type}')">
-                            <i class="material-icons">play_arrow</i>
-                            Play
-                        </button>
-                        <button class="remove-button" onclick="removeFromList(${item.id}, '${item.type}')">
-                            <i class="material-icons">remove</i>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            return card;
         }
 
         function playContent(id, type) {
@@ -598,40 +730,8 @@
             }
 
             // Navigate to player page
-            const playerUrl = `player.html?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
+            const playerUrl = `player.php?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
             window.location.href = playerUrl;
-        }
-
-        async function removeFromList(id, type) {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    showNotification('Please log in to use this feature', 'error');
-                    return;
-                }
-
-                const response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to remove item');
-                }
-
-                // Remove from local array
-                mylistItems = mylistItems.filter(item => !(item.id === id && item.type === type));
-
-                // Update UI
-                updateStats();
-                filterAndSortItems();
-                showNotification('Removed from My List', 'success');
-            } catch (error) {
-                console.error('Error removing item:', error);
-                showNotification('Failed to remove item', 'error');
-            }
         }
 
         function updateStats() {
@@ -650,7 +750,7 @@
             mylistGrid.innerHTML = `
                 <div class="loading">
                     <div class="loading-spinner"></div>
-                    Loading your list...
+                    <span data-i18n="mylist.loading">Loading your list...</span>
                 </div>
             `;
         }
@@ -664,22 +764,22 @@
             errorState.querySelector('p').textContent = message;
         }
 
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
+        // Removed renderWatchedSection function
 
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
+        function getTMDBLang() {
+            return window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+        }
 
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+        // Listen for language changes and reload my list content
+        if (window.i18n) {
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = async function (lang) {
+                await origChangeLanguage(lang);
+                await initializePage();
+            };
         }
     </script>
+    <script src="js/mylist.js"></script>
 </body>
 
 </html>

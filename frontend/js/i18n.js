@@ -26,6 +26,7 @@ class I18nManager {
 
         // Load translations for current language
         await this.loadTranslations();
+        console.log('Loaded language:', this.currentLanguage, this.translations); // DEBUG LOG
 
         // Apply translations to static content
         this.translateStaticContent();
@@ -169,6 +170,12 @@ class I18nManager {
             navbar.appendChild(navIcons);
         }
 
+        // Remove any existing language switcher to prevent duplicates
+        const existingSwitcher = navIcons.querySelector('.language-switcher');
+        if (existingSwitcher) {
+            existingSwitcher.remove();
+        }
+
         // Create language switcher
         const languageSwitcher = document.createElement('div');
         languageSwitcher.className = 'language-switcher';
@@ -188,13 +195,23 @@ class I18nManager {
                 `).join('')}
             </div>
         `;
-
         // Insert before the first nav-icon
         const firstIcon = navIcons.querySelector('.nav-icon');
         if (firstIcon) {
             navIcons.insertBefore(languageSwitcher, firstIcon);
         } else {
             navIcons.appendChild(languageSwitcher);
+        }
+
+        // Add reload-required message if not dismissed
+        if (!sessionStorage.getItem('reloadMsgDismissed')) {
+            let reloadMsg = document.createElement('span');
+            reloadMsg.className = 'reload-required-msg';
+            reloadMsg.innerHTML = i18n.t('') + ' <span class="reload-msg-dismiss""></span>';
+            reloadMsg.style = '';
+            reloadMsg.querySelector('.reload-msg-dismiss').onclick = function () {
+            };
+            // Insert before the language switcher button
         }
 
         // Add CSS for language switcher
@@ -209,7 +226,8 @@ class I18nManager {
         style.textContent = `
             .language-switcher {
                 position: relative;
-                display: inline-block;
+                display: inline-flex;
+                align-items: center;
             }
 
             .language-btn {
@@ -271,6 +289,26 @@ class I18nManager {
             .language-option i {
                 font-size: 16px;
             }
+
+            .reload-required-msg {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background: rgba(229, 9, 20, 0.12);
+                color: #fff;
+                padding: 2px 10px;
+                border-radius: 4px;
+                font-size: 0.95em;
+                margin-left: 10px;
+                vertical-align: middle;
+                z-index: 1001; /* Ensure it's above other elements */
+            }
+
+            .reload-msg-dismiss {
+                cursor: pointer;
+                font-weight: bold;
+                margin-left: 6px;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -309,7 +347,7 @@ class I18nManager {
         this.updateLanguageSwitcher();
 
         // Translate dynamic content
-        await this.translateDynamicContent();
+        await this.translateDynamicElements();
 
         // Close language menu
         this.toggleLanguageMenu();
@@ -492,6 +530,22 @@ class I18nManager {
             return content;
         }
     }
+
+    /**
+     * Get TMDB-compatible language code (en-US, it-IT, ru-RU)
+     */
+    getTMDBLanguage() {
+        switch (this.currentLanguage) {
+            case 'en':
+                return 'en-US';
+            case 'it':
+                return 'it-IT';
+            case 'ru':
+                return 'ru-RU';
+            default:
+                return 'en-US';
+        }
+    }
 }
 
 // Initialize i18n system
@@ -508,4 +562,33 @@ document.addEventListener('click', (e) => {
 });
 
 // Export for use in other scripts
-window.i18n = i18n; 
+window.i18n = i18n;
+
+// TMDB per-language cache utility
+window.tmdbCache = {
+    get(endpoint, lang) {
+        const key = `tmdb_${endpoint}_${lang}`;
+        const cached = localStorage.getItem(key);
+        if (window.tmdbDebug) console.log(`[TMDB CACHE] GET ${key}:`, !!cached);
+        if (!cached) return null;
+        try {
+            return JSON.parse(cached);
+        } catch (e) {
+            return null;
+        }
+    },
+    set(endpoint, lang, data) {
+        const key = `tmdb_${endpoint}_${lang}`;
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            if (window.tmdbDebug) console.log(`[TMDB CACHE] SET ${key}`);
+        } catch (e) { }
+    },
+    clear() {
+        Object.keys(localStorage).forEach(k => {
+            if (k.startsWith('tmdb_')) localStorage.removeItem(k);
+        });
+        if (window.tmdbDebug) console.log('[TMDB CACHE] CLEARED');
+    }
+};
+window.tmdbDebug = false; // Set true for debug panel 

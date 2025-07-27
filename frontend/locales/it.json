@@ -30,7 +30,25 @@
             "popular": "Film Popolari",
             "topRated": "Film Più Votati",
             "upcoming": "Film in Arrivo",
-            "nowPlaying": "Ora al Cinema"
+            "nowPlaying": "Ora al Cinema",
+            "action": "Film d'Azione",
+            "comedy": "Film Commedia",
+            "drama": "Film Drammatici",
+            "horror": "Film Horror",
+            "animation": "Film d'Animazione",
+            "scifi": "Film di Fantascienza",
+            "crime": "Film Crime",
+            "family": "Film per Famiglie",
+            "romance": "Film Romantici",
+            "mystery": "Film Mistero",
+            "fantasy": "Film Fantasy",
+            "documentary": "Documentari",
+            "adventure": "Film d'Avventura",
+            "history": "Film Storici",
+            "music": "Film Musicali",
+            "thriller": "Thriller",
+            "war": "Film di Guerra",
+            "western": "Western"
         }
     },
     "tvshows": {
@@ -38,7 +56,21 @@
         "sections": {
             "trending": "Serie TV di Tendenza",
             "popular": "Serie TV Popolari",
-            "topRated": "Serie TV Più Votate"
+            "topRated": "Serie TV Più Votate",
+            "action": "Serie TV d'Azione e Avventura",
+            "comedy": "Serie TV Comiche",
+            "drama": "Serie TV Drammatiche",
+            "horror": "Serie TV Mistero",
+            "animation": "Serie TV d'Animazione",
+            "scifi": "Serie TV di Fantascienza e Fantasy",
+            "crime": "Serie TV Crime",
+            "documentary": "Documentari TV",
+            "family": "Serie TV per Famiglie",
+            "kids": "Serie TV per Bambini",
+            "mystery": "Serie TV Mistero",
+            "reality": "Reality TV",
+            "warpolitics": "Serie TV Guerra e Politica",
+            "western": "Western TV"
         }
     },
     "search": {
@@ -50,6 +82,26 @@
             "all": "Tutto",
             "movies": "Film",
             "tvshows": "Serie TV"
+        },
+        "startSearching": "Inizia a cercare",
+        "enterTerm": "Inserisci un termine di ricerca sopra per trovare film, serie TV e altro.",
+        "trySomethingElse": "Prova a cercare qualcos'altro",
+        "noMatches": "Nessun risultato trovato per {query}",
+        "tryDifferentKeywords": "Prova a modificare il termine di ricerca o usa parole chiave diverse",
+        "errorOccurred": "Si è verificato un errore",
+        "tryAgainLater": "Per favore riprova più tardi",
+        "foundResults": "Trovati {count} risultati per \"{query}\"",
+        "noResultsFor": "Nessun risultato trovato per \"{query}\"",
+        "loading": "Caricamento della tua lista...",
+        "totalItems": "0 elementi",
+        "totalTime": "0h guardati",
+        "filters": {
+            "allContent": "Tutti i contenuti",
+            "movies": "Film",
+            "tvshows": "Serie TV",
+            "dateAdded": "Data di aggiunta",
+            "title": "Titolo",
+            "rating": "Valutazione"
         }
     },
     "mylist": {
@@ -58,7 +110,11 @@
         "addTo": "Aggiungi alla Mia Lista",
         "removeFrom": "Rimuovi dalla Mia Lista",
         "added": "Aggiunto alla Mia Lista",
-        "removed": "Rimosso dalla Mia Lista"
+        "removed": "Rimosso dalla Mia Lista",
+        "startAdding": "Inizia ad aggiungere film e serie TV alla tua lista per vederli qui.",
+        "browseContent": "Sfoglia contenuti",
+        "failedToLoad": "Impossibile caricare la tua lista",
+        "tryAgain": "Per favore riprova più tardi o controlla la connessione."
     },
     "player": {
         "close": "Chiudi",
@@ -66,7 +122,41 @@
         "selectSeason": "Seleziona Stagione",
         "play": "Riproduci",
         "loading": "Caricamento...",
-        "error": "Errore nel caricamento del contenuto"
+        "error": "Errore nel caricamento del contenuto",
+        "overview": "Trama",
+        "trailers": "Trailer",
+        "cast": "Cast",
+        "similar": "Simili",
+        "loading": "Caricamento...",
+        "na": "N/D",
+        "loadingContent": "Caricamento informazioni sul contenuto...",
+        "addToMyList": "La Mia Lista",
+        "server": "Server:",
+        "seasonShort": "S:",
+        "episodeShort": "E:",
+        "skipToNextEpisode": "Salta al prossimo episodio",
+        "trailersVideos": "Trailer e Video",
+        "castCrew": "Cast e Crew",
+        "moreLikeThis": "Simili",
+        "reportBrokenStream": "Segnala Stream Non Funzionante",
+        "reportBroken": "Segnala Problema",
+        "reloadPlayer": "Ricarica Player",
+        "synopsis": "Sinossi",
+        "details": "Dettagli",
+        "type": "Tipo:",
+        "tvOrMovie": "Serie TV o Film",
+        "year": "Anno:",
+        "rating": "Valutazione:",
+        "duration": "Durata:",
+        "genres": "Generi:",
+        "status": "Stato:",
+        "originalLanguage": "Lingua Originale:",
+        "productionCompanies": "Case di Produzione",
+        "languages": "Lingue",
+        "financialInfo": "Informazioni Finanziarie",
+        "budget": "Budget:",
+        "revenue": "Ricavi:",
+        "retry": "Riprova"
     },
     "account": {
         "title": "Account",
@@ -78,7 +168,31 @@
         "confirmPassword": "Conferma Password",
         "submit": "Invia",
         "profile": "Profilo",
-        "settings": "Impostazioni"
+        "settings": "Impostazioni",
+        "logo": "ELI6 MOVIES",
+        "loginTab": "Accedi",
+        "registerTab": "Registrati",
+        "signIn": "Accedi",
+        "signUp": "Registrati",
+        "signOut": "Esci",
+        "username": "Nome utente",
+        "registrationFailed": "Registrazione fallita. Riprova.",
+        "invalidEmailOrPassword": "Email o password non valida",
+        "welcomeTitle": "Benvenuto!",
+        "createAccount": "Crea il tuo account.",
+        "forFree": "Gratis!",
+        "usernameEmailLabel": "Nome utente/Email*",
+        "usernameEmailPlaceholder": "Nome utente o email",
+        "passwordLabel": "Password*",
+        "passwordPlaceholder": "Password",
+        "signIn": "Accedi",
+        "usernameLabel": "Nome utente*",
+        "usernamePlaceholder": "Nome utente",
+        "emailLabel": "Indirizzo email*",
+        "emailPlaceholder": "Email",
+        "signUp": "Registrati",
+        "forgotPassword": "Password dimenticata?",
+        "changePasswordBtn": "Cambia Password"
     },
     "settings": {
         "title": "Impostazioni",
@@ -131,11 +245,25 @@
         "about": "Informazioni",
         "terms": "Termini di Servizio",
         "privacy": "Informativa Privacy",
-        "cookies": "Informativa Cookie"
+        "cookies": "Informativa Cookie",
+        "reloadRequired": "Ricarica richiesta per cambiare lingua."
     },
     "languages": {
         "en": "English",
         "it": "Italiano",
         "ru": "Русский"
-    }
+    },
+    "adblocker": {
+        "title": "Migliora la tua esperienza: Installa un Adblocker",
+        "description": "Gli adblocker offrono un'esperienza più fluida e senza pubblicità e ti proteggono da annunci dannosi e tracker. Goditi lo streaming in sicurezza e senza virus!",
+        "download_recommended": "Scarica",
+        "download": "Scarica",
+        "learn_more": "Scopri di più",
+        "dont_show": "Non mostrare più",
+        "dismiss": "Chiudi"
+    },
+    "addToMyList": "Aggiungi alla Mia Lista",
+    "trendingTV": "Serie TV di Tendenza",
+    "nowPlaying": "Ora in Riproduzione",
+    "anime": "Anime"
 }

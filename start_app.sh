@@ -89,14 +89,17 @@ BACKEND_PID=$!
 echo "Waiting for backend to start..."
 sleep 5
 
-# Start frontend server
-echo "Starting frontend server..."
+# Start frontend PHP server
+echo "Starting frontend PHP server..."
 cd ../frontend
-npx live-server --port=5500 &
+# Get local IP address
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+php -S 0.0.0.0:5500 &
 FRONTEND_PID=$!
 
 echo "Application started successfully!"
-echo "Frontend: http://localhost:5500"
+echo "Frontend (local): http://localhost:5500"
+echo "Frontend (LAN):   http://$LOCAL_IP:5500"
 echo "Backend: http://localhost:3000"
 echo
 echo "Press Ctrl+C to stop all servers..."

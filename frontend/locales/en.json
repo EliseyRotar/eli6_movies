@@ -3,6 +3,7 @@
         "home": "Home",
         "movies": "Movies",
         "tvshows": "TV Shows",
+        "anime": "Anime",
         "mylist": "My List",
         "search": "Search",
         "settings": "Settings",
@@ -30,7 +31,25 @@
             "popular": "Popular Movies",
             "topRated": "Top Rated Movies",
             "upcoming": "Upcoming Movies",
-            "nowPlaying": "Now Playing"
+            "nowPlaying": "Now Playing",
+            "action": "Action Movies",
+            "comedy": "Comedy Movies",
+            "drama": "Drama Movies",
+            "horror": "Horror Movies",
+            "animation": "Animation Movies",
+            "scifi": "Science Fiction Movies",
+            "crime": "Crime Movies",
+            "family": "Family Movies",
+            "romance": "Romance Movies",
+            "mystery": "Mystery Movies",
+            "fantasy": "Fantasy Movies",
+            "documentary": "Documentary Movies",
+            "adventure": "Adventure Movies",
+            "history": "History Movies",
+            "music": "Music Movies",
+            "thriller": "Thriller Movies",
+            "war": "War Movies",
+            "western": "Western Movies"
         }
     },
     "tvshows": {
@@ -38,7 +57,21 @@
         "sections": {
             "trending": "Trending TV Shows",
             "popular": "Popular TV Shows",
-            "topRated": "Top Rated TV Shows"
+            "topRated": "Top Rated TV Shows",
+            "action": "Action & Adventure TV",
+            "comedy": "Comedy TV",
+            "drama": "Drama TV",
+            "horror": "Mistery TV",
+            "animation": "Animation TV",
+            "scifi": "Science Fiction & Fantasy TV",
+            "crime": "Crime TV",
+            "documentary": "Documentary TV",
+            "family": "Family TV",
+            "kids": "Kids TV",
+            "mystery": "Mystery TV",
+            "reality": "Reality TV",
+            "warpolitics": "War & Politics TV",
+            "western": "Western TV"
         }
     },
     "search": {
@@ -49,8 +82,33 @@
         "categories": {
             "all": "All",
             "movies": "Movies",
-            "tvshows": "TV Shows"
-        }
+            "tvshows": "TV Shows",
+            "anime": "Anime"
+        },
+        "startSearching": "Start searching",
+        "enterTerm": "Enter a search term above to find movies, TV shows, and more.",
+        "trySomethingElse": "Try searching for something else",
+        "noMatches": "No matches found for {query}",
+        "tryDifferentKeywords": "Try adjusting your search term or using different keywords",
+        "errorOccurred": "Error occurred",
+        "tryAgainLater": "Please try again later",
+        "foundResults": "Found {count} results for \"{query}\"",
+        "noResultsFor": "No results found for \"{query}\"",
+        "loading": "Loading your list...",
+        "totalItems": "0 items",
+        "totalTime": "0h watched",
+        "filters": {
+            "allContent": "All Content",
+            "movies": "Movies",
+            "tvshows": "TV Shows",
+            "dateAdded": "Date Added",
+            "title": "Title",
+            "rating": "Rating"
+        },
+        "startAdding": "Start adding movies and TV shows to your list to see them here.",
+        "browseContent": "Browse Content",
+        "failedToLoad": "Failed to load your list",
+        "tryAgain": "Please try again later or check your connection."
     },
     "mylist": {
         "title": "My List",
@@ -66,7 +124,41 @@
         "selectSeason": "Select Season",
         "play": "Play",
         "loading": "Loading...",
-        "error": "Error loading content"
+        "error": "Error loading content",
+        "overview": "Overview",
+        "trailers": "Trailers",
+        "cast": "Cast",
+        "similar": "More Like This",
+        "loading": "Loading...",
+        "na": "N/A",
+        "loadingContent": "Loading content information...",
+        "addToMyList": "My List",
+        "server": "Server:",
+        "seasonShort": "S:",
+        "episodeShort": "E:",
+        "skipToNextEpisode": "Skip to next episode",
+        "trailersVideos": "Trailers & Videos",
+        "castCrew": "Cast & Crew",
+        "moreLikeThis": "More Like This",
+        "reportBrokenStream": "Report Broken Stream",
+        "reportBroken": "Report Broken",
+        "reloadPlayer": "Reload Player",
+        "synopsis": "Synopsis",
+        "details": "Details",
+        "type": "Type:",
+        "tvOrMovie": "TV Series or Movie",
+        "year": "Year:",
+        "rating": "Rating:",
+        "duration": "Duration:",
+        "genres": "Genres:",
+        "status": "Status:",
+        "originalLanguage": "Original Language:",
+        "productionCompanies": "Production Companies",
+        "languages": "Languages",
+        "financialInfo": "Financial Information",
+        "budget": "Budget:",
+        "revenue": "Revenue:",
+        "retry": "Retry"
     },
     "account": {
         "title": "Account",
@@ -78,7 +170,31 @@
         "confirmPassword": "Confirm Password",
         "submit": "Submit",
         "profile": "Profile",
-        "settings": "Settings"
+        "settings": "Settings",
+        "logo": "ELI6 MOVIES",
+        "loginTab": "Sign In",
+        "registerTab": "Sign Up",
+        "signIn": "Sign In",
+        "signUp": "Sign Up",
+        "signOut": "Sign Out",
+        "username": "Username",
+        "registrationFailed": "Registration failed. Please try again.",
+        "invalidEmailOrPassword": "Invalid email or password",
+        "welcomeTitle": "Welcome!",
+        "createAccount": "Create your account.",
+        "forFree": "For Free!",
+        "usernameEmailLabel": "Username/Email address*",
+        "usernameEmailPlaceholder": "Username or email",
+        "passwordLabel": "Password*",
+        "passwordPlaceholder": "Password",
+        "signIn": "Sign In",
+        "usernameLabel": "Username*",
+        "usernamePlaceholder": "Username",
+        "emailLabel": "Email address*",
+        "emailPlaceholder": "Email",
+        "signUp": "Sign Up",
+        "forgotPassword": "Forgot password?",
+        "changePasswordBtn": "Change Password"
     },
     "settings": {
         "title": "Settings",
@@ -137,5 +253,36 @@
         "en": "English",
         "it": "Italiano",
         "ru": "Русский"
+    },
+    "adblocker": {
+        "title": "Enhance Your Experience: Install an Adblocker",
+        "description": "Adblockers provide a smoother, ad-free experience and protect you from malicious ads and trackers. Stay safe and virus-free while you stream!",
+        "download_recommended": "Download",
+        "download": "Download",
+        "learn_more": "Learn More",
+        "dont_show": "Don't show again",
+        "dismiss": "Dismiss"
+    },
+    "addToMyList": "Add to My List",
+    "trendingTV": "Trending TV",
+    "nowPlaying": "Now Playing",
+    "anime": {
+        "title": "Anime",
+        "subtitle": "Discover the best anime series and movies",
+        "sections": {
+            "trending": "Trending Anime",
+            "popular": "Popular Anime",
+            "topRated": "Top Rated Anime",
+            "action": "Action Anime",
+            "comedy": "Comedy Anime",
+            "drama": "Drama Anime",
+            "fantasy": "Fantasy Anime",
+            "romance": "Romance Anime",
+            "thisSeason": "This Season"
+        }
+    },
+    "animeSearch": {
+        "title": "Anime Search",
+        "subtitle": "Find your favorite anime series and movies"
     }
 }

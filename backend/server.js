@@ -11,6 +11,7 @@ const User = require('./models/User');
 // Load environment variables from .env file if it exists
 try {
     require('dotenv').config();
+    console.log('Environment loaded. JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'NOT SET');
 } catch (err) {
     console.log('No .env file found, using default values');
 }
@@ -64,7 +65,7 @@ const auth = async (req, res, next) => {
 
         console.log('Verifying token:', token); // Debug log
 
-        const decoded = jwt.verify(token, 'your_jwt_secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret');
         console.log('Decoded token:', decoded); // Debug log
 
         const user = await User.findOne({ _id: decoded.userId });
@@ -75,10 +76,23 @@ const auth = async (req, res, next) => {
         }
 
         req.user = user;
+        req.userRole = decoded.role; // Include role from token
         next();
     } catch (error) {
         console.error('Auth error:', error.message); // Debug log
         res.status(401).json({ error: 'Please authenticate.' });
+    }
+};
+
+// Admin-only middleware
+const adminOnly = async (req, res, next) => {
+    try {
+        if (!req.userRole || req.userRole !== 'admin') {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+        next();
+    } catch (error) {
+        res.status(403).json({ error: 'Admin access required' });
     }
 };
 
@@ -90,6 +104,7 @@ app.get('/api/user/profile', auth, async (req, res) => {
         res.json({
             username: req.user.username,
             email: req.user.email,
+            role: req.user.role,
             myList: req.user.myList || []
         });
     } catch (error) {
@@ -131,7 +146,7 @@ app.post('/api/user/mylist', auth, async (req, res) => {
         }
 
         // Add the item
-        req.user.myList.push({
+        req.user.myList.unshift({
             id,
             title,
             type,
@@ -139,7 +154,10 @@ app.post('/api/user/mylist', auth, async (req, res) => {
             overview: overview || '',
             addedAt: new Date()
         });
-
+        // Enforce max 100 items
+        if (req.user.myList.length > 100) {
+            req.user.myList = req.user.myList.slice(0, 100);
+        }
         // Save with validation
         await req.user.save();
 
@@ -193,14 +211,15 @@ app.post('/api/register', async (req, res) => {
         await user.save();
 
         // Generate token for the new user
-        const token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '7d' });
+        const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '7d' });
 
         // Send both token and user data
         res.status(201).json({
             token,
             user: {
                 username: user.username,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
         });
     } catch (error) {
@@ -223,14 +242,15 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '7d' });
+        const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET || 'your_jwt_secret', { expiresIn: '7d' });
 
         // Send both token and user data
         res.json({
             token,
             user: {
                 username: user.username,
-                email: user.email
+                email: user.email,
+                role: user.role
             }
         });
     } catch (error) {
@@ -256,6 +276,20 @@ app.post('/api/user/watch-history', auth, async (req, res) => {
         res.json(user.watchHistory);
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Remove item from watch history
+app.delete('/api/user/watch-history', auth, async (req, res) => {
+    try {
+        const { id, type } = req.body;
+        if (!id || !type) return res.status(400).json({ error: 'id and type required' });
+        const user = req.user;
+        user.watchHistory = user.watchHistory.filter(item => !(item.id === id && item.type === type));
+        await user.save();
+        res.json(user.watchHistory);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -306,7 +340,7 @@ app.get('/api/movies/:type', async (req, res) => {
 });
 
 // Automatic fix endpoint for legacy myList corruption
-app.post('/api/admin/fix-mylist', async (req, res) => {
+app.post('/api/admin/fix-mylist', adminOnly, async (req, res) => {
     try {
         const User = require('./models/User');
         const users = await User.find({});
@@ -319,6 +353,108 @@ app.post('/api/admin/fix-mylist', async (req, res) => {
             }
         }
         res.json({ message: `Fixed ${fixed} user(s)` });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Get all users endpoint (admin)
+app.get('/api/admin/users', auth, adminOnly, async (req, res) => {
+    try {
+        const users = await User.find({}, { password: 0 }); // Exclude password field
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Create new user (admin)
+app.post('/api/admin/users', auth, adminOnly, async (req, res) => {
+    try {
+        const { username, email, password, role } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: 'Username, email, and password are required' });
+        }
+        const existing = await User.findOne({ $or: [{ username }, { email }] });
+        if (existing) {
+            return res.status(400).json({ error: 'Username or email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({ username, email, password: hashedPassword, role: role || 'user' });
+        await user.save();
+        res.status(201).json({ message: 'User created successfully', user: { _id: user._id, username: user.username, email: user.email, role: user.role } });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Debug endpoint: List all user IDs and usernames
+app.get('/api/admin/debug/user-ids', auth, adminOnly, async (req, res) => {
+    try {
+        const users = await User.find({}, { _id: 1, username: 1, email: 1 });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Delete user by ID (admin)
+app.delete('/api/admin/users/:id', auth, adminOnly, async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.params.id);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User deleted successfully', user: { _id: user._id, username: user.username, email: user.email } });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Edit user by ID (admin)
+app.put('/api/admin/users/:id', auth, adminOnly, async (req, res) => {
+    try {
+        const { username, email } = req.body;
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: { username, email } },
+            { new: true, fields: { password: 0 } }
+        );
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'User updated successfully', user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reset user password by ID (admin)
+app.put('/api/admin/users/:id/reset-password', auth, adminOnly, async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        if (!newPassword) return res.status(400).json({ error: 'New password is required' });
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: { password: hashedPassword } },
+            { new: true, fields: { password: 0 } }
+        );
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'Password reset successfully', user });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update user role by ID (admin)
+app.put('/api/admin/users/:id/role', auth, adminOnly, async (req, res) => {
+    try {
+        const { role } = req.body;
+        if (!role) return res.status(400).json({ error: 'Role is required' });
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { $set: { role } },
+            { new: true, fields: { password: 0 } }
+        );
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ message: 'Role updated successfully', user });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -339,22 +475,37 @@ app.post('/api/user/keep-watching', auth, async (req, res) => {
         const item = req.body;
 
         const keepWatchingList = req.user.keepWatching || [];
+        const watchHistory = req.user.watchHistory || [];
 
+        // Update keepWatching
         const existingItemIndex = keepWatchingList.findIndex(i => i.id === item.id && i.type === item.type);
-
         if (existingItemIndex > -1) {
             keepWatchingList.splice(existingItemIndex, 1);
         }
-
         keepWatchingList.unshift(item);
-
         if (keepWatchingList.length > 20) {
             keepWatchingList.pop();
         }
-
         req.user.keepWatching = keepWatchingList;
-        await req.user.save();
 
+        // Update watchHistory
+        const whIndex = watchHistory.findIndex(i => i.id === item.id && i.type === item.type);
+        if (whIndex > -1) {
+            watchHistory[whIndex].last_watched = new Date();
+            watchHistory[whIndex].progress = item.progress || 0;
+        } else {
+            watchHistory.unshift({
+                ...item,
+                last_watched: new Date(),
+                progress: item.progress || 0
+            });
+        }
+        if (watchHistory.length > 100) {
+            watchHistory.pop();
+        }
+        req.user.watchHistory = watchHistory;
+
+        await req.user.save();
         res.json(req.user.keepWatching);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -375,6 +526,77 @@ app.delete('/api/user/keep-watching/:id/:type', auth, async (req, res) => {
         res.json(req.user.keepWatching);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// Get Watched List
+app.get('/api/user/watched', auth, async (req, res) => {
+    try {
+        res.json(req.user.watchHistory || []);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update User Profile Endpoint
+app.put('/api/user/update', auth, async (req, res) => {
+    try {
+        const { username, email } = req.body;
+
+        // Check if username or email already exists (excluding current user)
+        if (username && username !== req.user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Username already exists.' });
+            }
+        }
+
+        if (email && email !== req.user.email) {
+            const existingUser = await User.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ error: 'Email already exists.' });
+            }
+        }
+
+        // Update user fields
+        if (username) req.user.username = username;
+        if (email) req.user.email = email;
+
+        await req.user.save();
+
+        res.json({
+            message: 'Profile updated successfully.',
+            user: {
+                username: req.user.username,
+                email: req.user.email,
+                role: req.user.role
+            }
+        });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        res.status(500).json({ error: 'Failed to update profile.' });
+    }
+});
+
+// Change Password Endpoint
+app.put('/api/user/password', auth, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current and new password are required.' });
+        }
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, req.user.password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Current password is incorrect.' });
+        }
+        // Hash and update new password
+        req.user.password = await bcrypt.hash(newPassword, 10);
+        await req.user.save();
+        res.json({ message: 'Password updated successfully.' });
+    } catch (error) {
+        console.error('Error changing password:', error);
+        res.status(500).json({ error: 'Failed to change password.' });
     }
 });
 

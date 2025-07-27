@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELI6 MOVIES - Anime Search</title>
+    <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="css/theme.css">
+    <script src="js/i18n.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Netflix Sans', Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-top: 80px;
+            overflow-x: hidden;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            background: var(--nav-bg-scrolled);
+        }
+
+        .logo {
+            color: var(--accent-color);
+            font-size: 28px;
+            font-weight: bold;
+            text-decoration: none;
+            text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 16px;
+            transition: all 0.3s;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-links a:hover {
+            color: #fff;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #e50914;
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-icon {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .nav-icon:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .search-container {
+            padding: 40px 50px;
+        }
+
+        .search-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .search-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .search-form {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.3);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-btn:hover {
+            background: #c40812;
+            transform: translateY(-2px);
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .results-container {
+            margin-top: 40px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .sort-select {
+            padding: 8px 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 6px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .content-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .content-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-poster {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover .card-poster {
+            transform: scale(1.1);
+        }
+
+        .card-info {
+            padding: 15px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            line-height: 1.3;
+        }
+
+        .card-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .card-rating i {
+            color: #ffd700;
+            font-size: 14px;
+        }
+
+        .mylist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0;
+        }
+
+        .content-card:hover .mylist-btn {
+            opacity: 1;
+        }
+
+        .mylist-btn:hover {
+            background: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .mylist-btn.in-list {
+            background: var(--accent-color);
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            border: 3px solid var(--bg-secondary);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: var(--error-color);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-results i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 40px;
+        }
+
+        .pagination-btn {
+            padding: 10px 15px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .pagination-btn.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
+
+            .search-container {
+                padding: 20px;
+            }
+
+            .search-title {
+                font-size: 32px;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .content-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .card-poster {
+                height: 225px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div style="display: flex; align-items: center; gap: 30px;">
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
+                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
+            </div>
+        </div>
+        <div class="nav-icons">
+            <a href="search.html" class="nav-icon">
+                <i class="material-icons">search</i>
+            </a>
+            <a href="settings.html" class="nav-icon">
+                <i class="material-icons">settings</i>
+            </a>
+            <a href="account.html" class="nav-icon">
+                <i class="material-icons">account_circle</i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="search-container">
+        <div class="search-header">
+            <h1 class="search-title" data-i18n="animeSearch.title">Anime Search</h1>
+            <p class="search-subtitle" data-i18n="animeSearch.subtitle">Find your favorite anime series and movies</p>
+        </div>
+
+        <form class="search-form" onsubmit="searchAnime(event)">
+            <input type="text" id="searchQuery" class="search-input" placeholder="Search for anime..." required>
+            <button type="submit" class="search-btn">
+                <i class="material-icons">search</i>
+                Search
+            </button>
+        </form>
+
+        <div class="filters">
+            <select id="typeFilter" class="filter-select" onchange="searchAnime()">
+                <option value="">All Types</option>
+                <option value="tv">TV</option>
+                <option value="movie">Movie</option>
+                <option value="ova">OVA</option>
+                <option value="special">Special</option>
+                <option value="ona">ONA</option>
+                <option value="music">Music</option>
+            </select>
+
+            <select id="statusFilter" class="filter-select" onchange="searchAnime()">
+                <option value="">All Status</option>
+                <option value="airing">Airing</option>
+                <option value="complete">Complete</option>
+                <option value="upcoming">Upcoming</option>
+            </select>
+
+            <select id="ratingFilter" class="filter-select" onchange="searchAnime()">
+                <option value="">All Ratings</option>
+                <option value="g">G - All Ages</option>
+                <option value="pg">PG - Children</option>
+                <option value="pg13">PG-13 - Teens 13+</option>
+                <option value="r17">R - 17+</option>
+                <option value="r">R+ - Mild Nudity</option>
+            </select>
+
+            <select id="orderByFilter" class="filter-select" onchange="searchAnime()">
+                <option value="popularity">Popularity</option>
+                <option value="score">Score</option>
+                <option value="title">Title</option>
+                <option value="start_date">Start Date</option>
+                <option value="end_date">End Date</option>
+                <option value="episodes">Episodes</option>
+            </select>
+        </div>
+
+        <div class="results-container" id="resultsContainer" style="display: none;">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount"></div>
+                <select id="sortSelect" class="sort-select" onchange="sortResults()">
+                    <option value="popularity">Sort by Popularity</option>
+                    <option value="score">Sort by Score</option>
+                    <option value="title">Sort by Title</option>
+                    <option value="start_date">Sort by Date</option>
+                </select>
+            </div>
+
+            <div class="content-grid" id="resultsGrid"></div>
+
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <i class="material-icons">search_off</i>
+            <h3>No anime found</h3>
+            <p>Try adjusting your search terms or filters</p>
+        </div>
+    </div>
+
+    <script>
+        const JIKAN_API_URL = 'https://api.jikan.moe/v4';
+        const AUTH_API_URL = 'http://localhost:3000/api';
+
+        let myList = [];
+        let currentResults = [];
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        async function initializePage() {
+            await syncMyList();
+        }
+
+        // Sync MyList from backend
+        async function syncMyList() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const response = await fetch(`${AUTH_API_URL}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    myList = data.myList || [];
+                    localStorage.setItem('myList', JSON.stringify(myList));
+                }
+            } catch (e) {
+                myList = [];
+                localStorage.setItem('myList', '[]');
+            }
+        }
+
+        // Search anime
+        async function searchAnime(event) {
+            if (event) event.preventDefault();
+
+            const query = document.getElementById('searchQuery').value.trim();
+            if (!query) return;
+
+            const type = document.getElementById('typeFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const rating = document.getElementById('ratingFilter').value;
+            const orderBy = document.getElementById('orderByFilter').value;
+
+            showLoading();
+
+            try {
+                let url = `${JIKAN_API_URL}/anime?q=${encodeURIComponent(query)}&page=${currentPage}&limit=20`;
+
+                if (type) url += `&type=${type}`;
+                if (status) url += `&status=${status}`;
+                if (rating) url += `&rating=${rating}`;
+                if (orderBy) url += `&order_by=${orderBy}`;
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentResults = data.data || [];
+                totalPages = data.pagination?.last_visible_page || 1;
+
+                displayResults();
+            } catch (error) {
+                console.error('Error searching anime:', error);
+                showError('Failed to search anime. Please try again.');
+            }
+        }
+
+        // Display search results
+        function displayResults() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const noResults = document.getElementById('noResults');
+            const resultsGrid = document.getElementById('resultsGrid');
+            const resultsCount = document.getElementById('resultsCount');
+
+            if (currentResults.length === 0) {
+                resultsContainer.style.display = 'none';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            resultsContainer.style.display = 'block';
+            noResults.style.display = 'none';
+
+            resultsCount.textContent = `Found ${currentResults.length} anime`;
+
+            resultsGrid.innerHTML = '';
+            currentResults.forEach(item => {
+                const card = createAnimeCard(item);
+                resultsGrid.appendChild(card);
+            });
+
+            renderPagination();
+        }
+
+        // Create anime card
+        function createAnimeCard(item) {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+
+            const posterPath = item.images?.jpg?.image_url ||
+                item.images?.webp?.image_url ||
+                'img/no-poster.jpg';
+
+            const title = item.title || item.title_english || item.title_japanese || 'Unknown Title';
+            const rating = item.score ? item.score.toFixed(1) : 'N/A';
+            const year = item.year || item.aired?.from?.split('-')[0] || 'N/A';
+            const episodes = item.episodes || '?';
+            const type = item.type || 'Unknown';
+
+            const isInList = myList.some(listItem =>
+                listItem.id === item.mal_id && listItem.type === 'anime'
+            );
+
+            card.innerHTML = `
+                <img src="${posterPath}" alt="${title}" class="card-poster" onerror="this.src='img/no-poster.jpg'" />
+                <button class="mylist-btn ${isInList ? 'in-list' : ''}" 
+                        onclick="toggleMyList(${item.mal_id}, 'anime', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
+                    <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                </button>
+                <div class="card-info">
+                    <div class="card-title">${title}</div>
+                    <div class="card-meta">
+                        <span>${year} • ${type} • ${episodes} eps</span>
+                        <div class="card-rating">
+                            <i class="material-icons">star</i>
+                            <span>${rating}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('.mylist-btn')) {
+                    playContent(item.mal_id, 'anime');
+                }
+            });
+
+            return card;
+        }
+
+        // Toggle MyList
+        async function toggleMyList(id, type, title, posterPath, year) {
+            const button = event.currentTarget;
+            const isInList = myList.some(listItem => listItem.id === id && listItem.type === type);
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                window.location.href = 'account.html';
+                return;
+            }
+
+            try {
+                const item = {
+                    id: parseInt(id),
+                    title: title,
+                    type: type,
+                    poster_path: posterPath,
+                    overview: '',
+                };
+
+                let response;
+                if (isInList) {
+                    response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } else {
+                    response = await fetch(`${AUTH_API_URL}/user/mylist`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(item)
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Failed to ${isInList ? 'remove from' : 'add to'} list`);
+                }
+
+                // Update local state
+                if (isInList) {
+                    myList = myList.filter(listItem => !(listItem.id === id && listItem.type === type));
+                } else {
+                    myList.unshift(item);
+                }
+                localStorage.setItem('myList', JSON.stringify(myList));
+
+                // Update button
+                button.classList.toggle('in-list');
+                const icon = button.querySelector('i');
+                icon.textContent = isInList ? 'add' : 'check';
+
+            } catch (error) {
+                console.error('Error toggling my list:', error);
+                alert(error.message);
+            }
+        }
+
+        // Play content
+        function playContent(id, type) {
+            window.location.href = `player.php?type=${type}&id=${id}`;
+        }
+
+        // Sort results
+        function sortResults() {
+            const sortBy = document.getElementById('sortSelect').value;
+
+            currentResults.sort((a, b) => {
+                switch (sortBy) {
+                    case 'score':
+                        return (b.score || 0) - (a.score || 0);
+                    case 'title':
+                        return (a.title || '').localeCompare(b.title || '');
+                    case 'start_date':
+                        return new Date(b.aired?.from || 0) - new Date(a.aired?.from || 0);
+                    default:
+                        return (b.popularity || 0) - (a.popularity || 0);
+                }
+            });
+
+            displayResults();
+        }
+
+        // Render pagination
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'pagination-btn';
+            prevBtn.textContent = 'Previous';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    searchAnime();
+                }
+            };
+            pagination.appendChild(prevBtn);
+
+            // Page numbers
+            const startPage = Math.max(1, currentPage - 2);
+            const endPage = Math.min(totalPages, currentPage + 2);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    searchAnime();
+                };
+                pagination.appendChild(pageBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'pagination-btn';
+            nextBtn.textContent = 'Next';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    searchAnime();
+                }
+            };
+            pagination.appendChild(nextBtn);
+        }
+
+        // Show loading
+        function showLoading() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const noResults = document.getElementById('noResults');
+            const resultsGrid = document.getElementById('resultsGrid');
+
+            resultsContainer.style.display = 'block';
+            noResults.style.display = 'none';
+            resultsGrid.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span>Searching anime...</span>
+                </div>
+            `;
+        }
+
+        // Show error
+        function showError(message) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const noResults = document.getElementById('noResults');
+            const resultsGrid = document.getElementById('resultsGrid');
+
+            resultsContainer.style.display = 'none';
+            noResults.style.display = 'block';
+            noResults.innerHTML = `
+                <i class="material-icons">error</i>
+                <h3>Error</h3>
+                <p>${message}</p>
+            `;
+        }
+    </script>
+</body>
+
+</html>

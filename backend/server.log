@@ -1,7 +1,26 @@
 nohup: ignoring input
+Environment loaded. JWT_SECRET: SET
+node:events:491
+      throw er; // Unhandled 'error' event
+      ^
 
-> eli6_movies-backend@1.0.0 start
-> node server.js
-
-Server is running on port 3000
-Connected to MongoDB
+Error: listen EADDRINUSE: address already in use :::3000
+    at Server.setupListenHandle [as _listen2] (node:net:1463:16)
+    at listenInCluster (node:net:1511:12)
+    at Server.listen (node:net:1599:7)
+    at Function.listen (/home/eli6/Documents/!streaming_app/backend/node_modules/express/lib/application.js:635:24)
+    at Object.<anonymous> (/home/eli6/Documents/!streaming_app/backend/server.js:550:5)
+    at Module._compile (node:internal/modules/cjs/loader:1198:14)
+    at Object.Module._extensions..js (node:internal/modules/cjs/loader:1252:10)
+    at Module.load (node:internal/modules/cjs/loader:1076:32)
+    at Function.Module._load (node:internal/modules/cjs/loader:911:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:1490:8)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21) {
+  code: 'EADDRINUSE',
+  errno: -98,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}

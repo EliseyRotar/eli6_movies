@@ -330,6 +330,79 @@
             box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
         }
 
+        /* Avatar Upload Styles */
+        .avatar-upload {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-color);
+        }
+
+        .avatar-options {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .avatar-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            background: var(--input-bg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .avatar-option:hover {
+            border-color: var(--accent-color);
+            transform: scale(1.05);
+        }
+
+        .avatar-option img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .avatar-option span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Privacy and Advanced Settings */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 8px 0;
+        }
+
+        .checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-color);
+        }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -455,6 +528,7 @@
                 <a href="index.html">Home</a>
                 <a href="movies.html">Movies</a>
                 <a href="tvshows.html">TV Shows</a>
+                <a href="anime.html">Anime</a>
                 <a href="mylist.html">My List</a>
             </div>
         </div>
@@ -500,15 +574,30 @@
                         <label for="email">Email</label>
                         <input type="email" id="email" placeholder="Enter new email">
                     </div>
-                    <div class="form-group">
-                        <label for="currentPassword">Current Password</label>
-                        <input type="password" id="currentPassword" placeholder="Enter current password">
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">New Password</label>
-                        <input type="password" id="newPassword" placeholder="Enter new password">
-                    </div>
                     <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+                <hr style="margin: 30px 0; border: none; border-top: 1.5px solid var(--input-border);">
+                <form id="changePasswordForm" onsubmit="changePassword(event)" style="margin-top: 10px;">
+                    <h3
+                        style="margin-bottom: 18px; color: var(--accent-color); font-size: 1.2rem; display: flex; align-items: center;">
+                        <i class="material-icons" style="margin-right: 8px;">lock</i>Change Password
+                    </h3>
+                    <div class="form-group">
+                        <label for="currentPwd">Current Password</label>
+                        <input type="password" id="currentPwd" placeholder="Enter current password" required
+                            autocomplete="current-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="newPwd">New Password</label>
+                        <input type="password" id="newPwd" placeholder="Enter new password" required
+                            autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPwd">Confirm New Password</label>
+                        <input type="password" id="confirmPwd" placeholder="Confirm new password" required
+                            autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
                 </form>
             </div>
 
@@ -607,6 +696,124 @@
                     Once you delete your account, there is no going back. Please be certain.
                 </p>
                 <button class="btn btn-danger" onclick="showDeleteConfirmation()">Delete Account</button>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="material-icons">account_circle</i>Profile Avatar</h2>
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <div class="avatar-upload">
+                        <img id="avatarPreview" src="img/default-avatar.png" alt="Profile Avatar"
+                            class="avatar-preview">
+                        <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('avatarUpload').click()">
+                            <i class="material-icons">upload</i>Upload Avatar
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Avatar Options</label>
+                    <div class="avatar-options">
+                        <button type="button" class="avatar-option" onclick="selectAvatar('default')">
+                            <img src="img/default-avatar.png" alt="Default">
+                            <span>Default</span>
+                        </button>
+                        <button type="button" class="avatar-option" onclick="selectAvatar('anime')">
+                            <img src="img/anime-avatar.png" alt="Anime">
+                            <span>Anime</span>
+                        </button>
+                        <button type="button" class="avatar-option" onclick="selectAvatar('movie')">
+                            <img src="img/movie-avatar.png" alt="Movie">
+                            <span>Movie</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="material-icons">security</i>Privacy Settings</h2>
+                <div class="form-group">
+                    <label>Profile Visibility</label>
+                    <select id="profileVisibility" class="form-select" onchange="updatePrivacySettings()">
+                        <option value="public">Public</option>
+                        <option value="friends">Friends Only</option>
+                        <option value="private">Private</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Watch History</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="shareWatchHistory" onchange="updatePrivacySettings()">
+                            Share watch history with friends
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="showMyList" onchange="updatePrivacySettings()">
+                            Show my list to others
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Data Collection</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="analyticsOptIn" onchange="updatePrivacySettings()">
+                            Allow analytics and recommendations
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="personalizedAds" onchange="updatePrivacySettings()">
+                            Personalized advertisements
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-card">
+                <h2><i class="material-icons">tune</i>Advanced Options</h2>
+                <div class="form-group">
+                    <label>Content Filtering</label>
+                    <select id="contentFilter" class="form-select" onchange="updateAdvancedSettings()">
+                        <option value="all">Show All Content</option>
+                        <option value="family">Family Friendly</option>
+                        <option value="mature">Mature Content Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Auto-Play Settings</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="autoPlayTrailers" onchange="updateAdvancedSettings()">
+                            Auto-play trailers
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="autoPlayPreviews" onchange="updateAdvancedSettings()">
+                            Auto-play previews
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Performance</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox">
+                            <input type="checkbox" id="lowBandwidthMode" onchange="updateAdvancedSettings()">
+                            Low bandwidth mode
+                        </label>
+                        <label class="checkbox">
+                            <input type="checkbox" id="hardwareAcceleration" onchange="updateAdvancedSettings()">
+                            Hardware acceleration
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cache Management</label>
+                    <button type="button" class="btn btn-secondary" onclick="clearCache()">
+                        <i class="material-icons">clear_all</i>Clear Cache
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="exportData()">
+                        <i class="material-icons">download</i>Export Data
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -734,8 +941,6 @@
 
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
 
             try {
                 const response = await fetch(`${API_URL}/user/update`, {
@@ -746,9 +951,7 @@
                     },
                     body: JSON.stringify({
                         username,
-                        email,
-                        currentPassword,
-                        newPassword
+                        email
                     })
                 });
 
@@ -757,12 +960,105 @@
                 }
 
                 showNotification('Profile updated successfully');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
+                // Reload profile to show updated username/email
+                loadUserProfile();
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showNotification('Failed to update profile', 'error');
             }
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('token');
+            if (!token) return showNotification('You must be logged in.', 'error');
+            const currentPwd = document.getElementById('currentPwd').value;
+            const newPwd = document.getElementById('newPwd').value;
+            const confirmPwd = document.getElementById('confirmPwd').value;
+            if (newPwd !== confirmPwd) {
+                showNotification('New passwords do not match.', 'error');
+                return;
+            }
+            if (newPwd.length < 8) {
+                showNotification('New password must be at least 8 characters.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('http://localhost:3000/api/user/password', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd })
+                });
+                if (!response.ok) {
+                    let errorMsg = 'Failed to change password.';
+                    try {
+                        const data = await response.json();
+                        errorMsg = data.error || errorMsg;
+                    } catch (e) {
+                        try {
+                            errorMsg = await response.text();
+                        } catch (e2) { }
+                    }
+                    throw new Error(errorMsg);
+                }
+                showNotification('Password changed successfully.');
+                document.getElementById('changePasswordForm').reset();
+                document.getElementById('passwordStrengthBar').style.width = '0%';
+                document.getElementById('passwordStrengthText').textContent = '';
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        // Scroll to password form if hash is #change-password
+        if (window.location.hash === '#change-password') {
+            document.addEventListener('DOMContentLoaded', function () {
+                const pwdForm = document.getElementById('changePasswordForm');
+                if (pwdForm) {
+                    pwdForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    pwdForm.querySelector('input[type="password"]').focus();
+                }
+            });
+        }
+
+        // Password strength meter for new password
+        const newPwdInput = document.getElementById('newPwd');
+        if (newPwdInput) {
+            const bar = document.createElement('div');
+            bar.id = 'passwordStrengthBar';
+            bar.style.height = '6px';
+            bar.style.width = '0%';
+            bar.style.background = 'var(--error-color)';
+            bar.style.borderRadius = '4px';
+            bar.style.marginTop = '4px';
+            bar.style.transition = 'width 0.3s, background 0.3s';
+            newPwdInput.parentNode.appendChild(bar);
+            const text = document.createElement('div');
+            text.id = 'passwordStrengthText';
+            text.style.fontSize = '0.95em';
+            text.style.marginTop = '4px';
+            text.style.color = 'var(--text-secondary)';
+            newPwdInput.parentNode.appendChild(text);
+            newPwdInput.addEventListener('input', function () {
+                const val = newPwdInput.value;
+                let score = 0;
+                if (val.length >= 8) score++;
+                if (/[A-Z]/.test(val)) score++;
+                if (/[0-9]/.test(val)) score++;
+                if (/[^A-Za-z0-9]/.test(val)) score++;
+                let percent = score * 25;
+                let color = 'var(--error-color)';
+                let label = 'Weak';
+                if (score === 2) { color = '#ff9800'; label = 'Medium'; }
+                if (score >= 3) { color = 'var(--success-color)'; label = 'Strong'; }
+                bar.style.width = percent + '%';
+                bar.style.background = color;
+                text.textContent = val ? label : '';
+                text.style.color = color;
+            });
         }
 
         function showDeleteConfirmation() {
@@ -908,6 +1204,105 @@
             document.documentElement.lang = displayLang;
 
             showNotification('Language settings updated. Some changes may require a page reload.');
+        }
+
+        // Avatar Functions
+        function selectAvatar(type) {
+            const avatarPreview = document.getElementById('avatarPreview');
+            const avatarMap = {
+                'default': 'img/default-avatar.png',
+                'anime': 'img/anime-avatar.png',
+                'movie': 'img/movie-avatar.png'
+            };
+
+            if (avatarMap[type]) {
+                avatarPreview.src = avatarMap[type];
+                localStorage.setItem('selectedAvatar', type);
+                showNotification('Avatar updated successfully');
+            }
+        }
+
+        // Handle avatar upload
+        document.addEventListener('DOMContentLoaded', function () {
+            const avatarUpload = document.getElementById('avatarUpload');
+            if (avatarUpload) {
+                avatarUpload.addEventListener('change', function (e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            document.getElementById('avatarPreview').src = e.target.result;
+                            localStorage.setItem('customAvatar', e.target.result);
+                            showNotification('Avatar uploaded successfully');
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            }
+        });
+
+        // Privacy Settings
+        function updatePrivacySettings() {
+            const settings = {
+                profileVisibility: document.getElementById('profileVisibility').value,
+                shareWatchHistory: document.getElementById('shareWatchHistory').checked,
+                showMyList: document.getElementById('showMyList').checked,
+                analyticsOptIn: document.getElementById('analyticsOptIn').checked,
+                personalizedAds: document.getElementById('personalizedAds').checked
+            };
+
+            localStorage.setItem('privacySettings', JSON.stringify(settings));
+            showNotification('Privacy settings updated');
+        }
+
+        // Advanced Settings
+        function updateAdvancedSettings() {
+            const settings = {
+                contentFilter: document.getElementById('contentFilter').value,
+                autoPlayTrailers: document.getElementById('autoPlayTrailers').checked,
+                autoPlayPreviews: document.getElementById('autoPlayPreviews').checked,
+                lowBandwidthMode: document.getElementById('lowBandwidthMode').checked,
+                hardwareAcceleration: document.getElementById('hardwareAcceleration').checked
+            };
+
+            localStorage.setItem('advancedSettings', JSON.stringify(settings));
+            showNotification('Advanced settings updated');
+        }
+
+        // Cache Management
+        function clearCache() {
+            if (confirm('Are you sure you want to clear all cached data? This will log you out.')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                showNotification('Cache cleared successfully');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            }
+        }
+
+        function exportData() {
+            const userData = {
+                myList: JSON.parse(localStorage.getItem('myList') || '[]'),
+                settings: {
+                    privacy: JSON.parse(localStorage.getItem('privacySettings') || '{}'),
+                    advanced: JSON.parse(localStorage.getItem('advancedSettings') || '{}'),
+                    playback: JSON.parse(localStorage.getItem('userSettings') || '{}')
+                },
+                avatar: localStorage.getItem('customAvatar') || localStorage.getItem('selectedAvatar')
+            };
+
+            const dataStr = JSON.stringify(userData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'eli6-movies-data.json';
+            link.click();
+
+            URL.revokeObjectURL(url);
+            showNotification('Data exported successfully');
         }
 
         // Initialize

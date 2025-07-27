@@ -2,7 +2,7 @@ import http.server
 import socketserver
 import socket
 
-PORT = 8000  # Change this port if needed
+PORT = 1234  # Change this port if needed
 
 # Get your local IP address
 hostname = socket.gethostname()

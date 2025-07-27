@@ -8,6 +8,7 @@
     <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="css/theme.css">
+    <script src="js/i18n.js"></script>
     <style>
         * {
             margin: 0;
@@ -118,7 +119,7 @@
 
         .search-input-wrapper {
             position: relative;
-            margin-bottom: 40px;
+            margin-bottom: 10px;
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
@@ -173,6 +174,7 @@
             opacity: 0;
             transform: translateY(-30px);
             pointer-events: none;
+            display: none;
         }
 
         .search-prompt h2 {
@@ -188,12 +190,13 @@
         }
 
         .results-info {
-            padding: 20px 50px;
+            padding: 0 50px 0 50px;
             color: rgba(255, 255, 255, 0.9);
             font-size: 18px;
             text-align: left;
             font-weight: 500;
-            margin-bottom: 20px;
+            margin-bottom: 8px;
+            margin-top: 0;
         }
 
         .movies-grid {
@@ -397,7 +400,7 @@
             display: flex;
             justify-content: center;
             gap: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 0;
             padding: 0 20px;
         }
 
@@ -769,12 +772,12 @@
 <body>
     <nav class="navbar">
         <div style="display: flex; align-items: center; gap: 30px;">
-            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
             <div class="nav-links">
-                <a href="index.html">Home</a>
-                <a href="movies.html">Movies</a>
-                <a href="tvshows.html">TV Shows</a>
-                <a href="mylist.html">My List</a>
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
             </div>
         </div>
         <div class="nav-icons">
@@ -791,20 +794,23 @@
     </nav>
 
     <div class="search-container">
-        <div class="search-input-wrapper">
-            <input type="text" id="searchInput" placeholder="Search for movies, TV shows, and more..." autofocus>
-            <i class="material-icons search-icon">search</i>
-        </div>
+        <form id="searchForm" class="search-input-wrapper" autocomplete="off">
+            <input type="text" id="searchInput" placeholder="" data-i18n-placeholder="search.placeholder" autofocus>
+            <button type="submit" id="searchButton" aria-label="Search"
+                style="position:absolute;right:0;top:0;height:100%;background:#e50914;border:none;color:#fff;padding:0 24px;border-radius:0 12px 12px 0;font-size:18px;cursor:pointer;outline:none;"><i
+                    class="material-icons">search</i></button>
+        </form>
 
         <div class="filter-tabs">
-            <div class="filter-tab active" data-filter="all">All</div>
-            <div class="filter-tab" data-filter="movie">Movies</div>
-            <div class="filter-tab" data-filter="tv">TV Shows</div>
+            <div class="filter-tab active" data-filter="all" data-i18n="search.categories.all">All</div>
+            <div class="filter-tab" data-filter="movie" data-i18n="search.categories.movies">Movies</div>
+            <div class="filter-tab" data-filter="tv" data-i18n="search.categories.tvshows">TV Shows</div>
+            <div class="filter-tab" data-filter="anime" data-i18n="search.categories.anime">Anime</div>
         </div>
 
         <div class="search-prompt">
-            <h2>Start searching</h2>
-            <p>Enter a search term above to find movies, TV shows, and more.</p>
+            <h2 data-i18n="search.startSearching">Start searching</h2>
+            <p data-i18n="search.enterTerm">Enter a search term above to find movies, TV shows, and more.</p>
         </div>
 
         <div class="results-info"></div>
@@ -826,18 +832,27 @@
         const moviesGrid = document.querySelector('.movies-grid');
         const resultsInfo = document.querySelector('.results-info');
         const filterTabs = document.querySelectorAll('.filter-tab');
+        const searchForm = document.getElementById('searchForm');
+        const searchButton = document.getElementById('searchButton');
+        // Attach submit event listener in JS for robust handling
+        searchForm.addEventListener('submit', handleSearch);
 
-        // Search input handler
+        // Search input handler (input event)
         searchInput.addEventListener('input', function (e) {
             const query = e.target.value.trim();
-
             if (query === '') {
+                if (!document.body.contains(searchPrompt)) {
+                    document.querySelector('.search-container').insertBefore(searchPrompt, resultsInfo);
+                }
                 searchPrompt.classList.remove('hidden');
                 clearResults();
             } else {
                 searchPrompt.classList.add('hidden');
+                // Remove from DOM to ensure no vertical space
+                if (document.body.contains(searchPrompt)) {
+                    searchPrompt.parentNode.removeChild(searchPrompt);
+                }
             }
-
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
                 if (query && query.length >= 2) {
@@ -845,6 +860,24 @@
                 }
             }, 300);
         });
+        // Keydown event for Enter key (for Android TV/remote)
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (query && query.length >= 2) {
+                    performSearch(query);
+                }
+            }
+        });
+        // Form submit handler (for button or Enter)
+        function handleSearch(event) {
+            event.preventDefault();
+            const query = searchInput.value.trim();
+            if (query && query.length >= 2) {
+                performSearch(query);
+            }
+        }
 
         // Filter tabs handler
         filterTabs.forEach(tab => {
@@ -866,8 +899,8 @@
             if (allResults.length === 0) {
                 moviesGrid.innerHTML = `
                     <div class="no-results">
-                        <h3>No results found</h3>
-                        <p>Try searching for something else</p>
+                        <h3 data-i18n="search.noResults">No results found</h3>
+                        <p data-i18n="search.trySomethingElse">Try searching for something else</p>
                     </div>
                 `;
                 return;
@@ -883,8 +916,8 @@
             if (filteredResults.length === 0) {
                 moviesGrid.innerHTML = `
                     <div class="no-results">
-                        <h3>No ${currentFilter === 'all' ? '' : currentFilter === 'movie' ? 'movies' : 'TV shows'} found</h3>
-                        <p>Try adjusting your search term or using different keywords</p>
+                        <h3 data-i18n="search.noMatches" data-i18n-query="${query}">No matches found for "${query}"</h3>
+                        <p data-i18n="search.tryDifferentKeywords">Try adjusting your search term or using different keywords</p>
                     </div>
                 `;
                 return;
@@ -895,12 +928,15 @@
 
         async function performSearch(query) {
             try {
-                resultsInfo.textContent = 'Searching...';
-                moviesGrid.innerHTML = '<div class="loading"><div class="loading-spinner"></div>Loading results...</div>';
+                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+                resultsInfo.textContent = i18n.t('search.searching');
+                moviesGrid.innerHTML = '<div class="loading"><div class="loading-spinner"></div>' + i18n.t('common.loading') + '</div>';
 
-                const [moviesResponse, showsResponse] = await Promise.all([
-                    fetch(`${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=en-US&page=1&include_adult=false`),
-                    fetch(`${TMDB_API_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=en-US&page=1&include_adult=false`)
+                // Search for movies, TV shows, and anime
+                const [moviesResponse, showsResponse, animeResponse] = await Promise.all([
+                    fetch(`${TMDB_API_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=${lang}&page=1&include_adult=false`),
+                    fetch(`${TMDB_API_URL}/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=${lang}&page=1&include_adult=false`),
+                    fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=20`)
                 ]);
 
                 if (!moviesResponse.ok || !showsResponse.ok) {
@@ -909,31 +945,47 @@
 
                 const moviesData = await moviesResponse.json();
                 const showsData = await showsResponse.json();
+                const animeData = animeResponse.ok ? await animeResponse.json() : { data: [] };
 
                 allResults = [
                     ...moviesData.results.map(item => ({ ...item, media_type: 'movie' })),
-                    ...showsData.results.map(item => ({ ...item, media_type: 'tv' }))
+                    ...showsData.results.map(item => ({ ...item, media_type: 'tv' })),
+                    ...animeData.data.map(item => ({
+                        ...item,
+                        media_type: 'anime',
+                        id: item.mal_id,
+                        title: item.title || item.title_english || item.title_japanese,
+                        poster_path: item.images?.jpg?.image_url || item.images?.webp?.image_url,
+                        vote_average: item.score,
+                        release_date: item.aired?.from?.split('T')[0] || item.year?.toString(),
+                        overview: item.synopsis
+                    }))
                 ];
 
                 if (allResults.length > 0) {
-                    resultsInfo.textContent = `Found ${allResults.length} results for "${query}"`;
+                    let foundResultsText = i18n.t('search.foundResults', { count: allResults.length, query });
+                    // If translation is missing or not interpolated, fallback to English
+                    if (foundResultsText.includes('{count}') || foundResultsText.includes('{query}')) {
+                        foundResultsText = `Found ${allResults.length} results for "${query}"`;
+                    }
+                    resultsInfo.textContent = foundResultsText;
                     displayFilteredResults();
                 } else {
-                    resultsInfo.textContent = `No results found for "${query}"`;
+                    resultsInfo.textContent = i18n.t('search.noResultsFor', { query });
                     moviesGrid.innerHTML = `
                         <div class="no-results">
-                            <h3>No matches found for "${query}"</h3>
-                            <p>Try adjusting your search term or using different keywords</p>
+                            <h3 data-i18n="search.noMatches" data-i18n-query="${query}">No matches found for "${query}"</h3>
+                            <p data-i18n="search.tryDifferentKeywords">Try adjusting your search term or using different keywords</p>
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('Search error:', error);
-                resultsInfo.textContent = 'An error occurred while searching';
+                resultsInfo.textContent = i18n.t('search.errorOccurred');
                 moviesGrid.innerHTML = `
                     <div class="no-results">
-                        <h3>Error occurred</h3>
-                        <p>Please try again later</p>
+                        <h3 data-i18n="search.errorOccurred">Error occurred</h3>
+                        <p data-i18n="search.tryAgainLater">Please try again later</p>
                     </div>
                 `;
             }
@@ -944,15 +996,34 @@
                 const title = item.title || item.name;
                 const year = (item.release_date || item.first_air_date || '').split('-')[0] || 'N/A';
                 const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                let duration = 'N/A';
+
+                // Handle different media types
+                if (item.media_type === 'anime') {
+                    duration = item.episodes ? `${item.episodes} eps` : 'N/A';
+                } else if (typeof item.runtime === 'number') {
+                    duration = `${item.runtime} min`;
+                } else if (item.media_type === 'tv' && item.episode_run_time && item.episode_run_time.length > 0) {
+                    duration = `${item.episode_run_time[0]} min`;
+                }
+
                 const overview = item.overview ? item.overview.substring(0, 100) + (item.overview.length > 100 ? '...' : '') : '';
 
                 const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
                 const isInList = myListArr.some(listItem => listItem.id === item.id && listItem.type === item.media_type);
 
+                // Handle image source for different media types
+                let imageSrc = '';
+                if (item.media_type === 'anime') {
+                    imageSrc = item.poster_path || 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image';
+                } else {
+                    imageSrc = `${TMDB_IMAGE_BASE_URL}${item.poster_path}`;
+                }
+
                 return `
                     <div class="movie-card">
                         <div class="movie-image-container">
-                            <img src="${TMDB_IMAGE_BASE_URL}${item.poster_path}" 
+                            <img src="${imageSrc}" 
                                  alt="${title}"
                                  loading="lazy"
                                  onerror="this.src='https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'; this.classList.add('error');">
@@ -960,10 +1031,12 @@
                         <div class="movie-info">
                             <h3 class="movie-title">${title}</h3>
                             <div class="movie-meta">
-                                <span class="rating">
-                                    <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                                </span>
+                                <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${rating}</span>
+                                <span>|</span>
                                 <span>${year}</span>
+                                <span>|</span>
+                                <span class="duration">${duration}</span>
+                                ${item.media_type === 'anime' ? '<span>|</span><span class="anime-type">Anime</span>' : ''}
                             </div>
                             <p class="movie-overview">${overview}</p>
                             <div class="movie-actions">
@@ -971,8 +1044,7 @@
                                     <i class="material-icons">play_arrow</i>
                                     Play
                                 </button>
-                                <button onclick="toggleMyList(${item.id}, '${item.media_type}', '${title.replace(/'/g, "\\'")}', '${TMDB_IMAGE_BASE_URL}${item.poster_path}', '${year}')" 
-                                        class="list-button ${isInList ? 'in-list' : ''}">
+                                <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${item.id},"title":"${title}","type":"${item.media_type}","poster_path":"${item.poster_path}","overview":"${overview}"}'>
                                     <i class="material-icons">${isInList ? 'check' : 'add'}</i>
                                 </button>
                             </div>
@@ -980,79 +1052,52 @@
                     </div>
                 `;
             }).join('');
+            window.initMyListButtons();
+        }
+
+        async function fetchAndSetSearchDuration(item, card) {
+            try {
+                let url = '';
+                if (item.media_type === 'movie') {
+                    url = `${TMDB_API_URL}/movie/${item.id}?api_key=${TMDB_API_KEY}`;
+                } else if (item.media_type === 'tv') {
+                    url = `${TMDB_API_URL}/tv/${item.id}?api_key=${TMDB_API_KEY}`;
+                }
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                let duration = 'N/A';
+                if (item.media_type === 'movie' && typeof data.runtime === 'number') {
+                    duration = `${data.runtime} min`;
+                } else if (item.media_type === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
+                    duration = `${data.episode_run_time[0]} min`;
+                }
+                const durationSpan = card.querySelector('.duration');
+                if (durationSpan) durationSpan.textContent = duration;
+            } catch (e) { }
         }
 
         function playContent(id, mediaType) {
             // Store content info in localStorage
+            const item = allResults.find(item => item.id === id);
+            let poster = '';
+            if (mediaType === 'anime') {
+                poster = item.poster_path || '';
+            } else {
+                poster = `${TMDB_IMAGE_BASE_URL}${item.poster_path}`;
+            }
             localStorage.setItem('currentContent', JSON.stringify({
                 id: id,
                 type: mediaType,
-                poster: `${TMDB_IMAGE_BASE_URL}${allResults.find(item => item.id === id)?.poster_path}`,
-                overview: allResults.find(item => item.id === id)?.overview,
-                releaseDate: allResults.find(item => item.id === id)?.release_date || allResults.find(item => item.id === id)?.first_air_date,
-                rating: allResults.find(item => item.id === id)?.vote_average
+                poster: poster,
+                overview: item?.overview,
+                releaseDate: item?.release_date || item?.first_air_date,
+                rating: item?.vote_average
             }));
 
             // Navigate to player page
-            const playerUrl = `player.html?type=${encodeURIComponent(mediaType)}&id=${encodeURIComponent(id)}`;
+            const playerUrl = `player.php?type=${encodeURIComponent(mediaType)}&id=${encodeURIComponent(id)}`;
             window.location.href = playerUrl;
-        }
-
-        async function toggleMyList(id, type, title, posterPath, year) {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showNotification('Please log in to use this feature', 'error');
-                return;
-            }
-
-            try {
-                const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-                const isInList = myListArr.some(listItem => listItem.id === id && listItem.type === type);
-
-                const item = {
-                    id: parseInt(id),
-                    title: title,
-                    type: type,
-                    poster_path: posterPath.includes('/t/p/') ? posterPath.split('/t/p/')[1] : posterPath,
-                    overview: '',
-                };
-
-                let response;
-                if (isInList) {
-                    response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                } else {
-                    response = await fetch(`${AUTH_API_URL}/user/mylist`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(item)
-                    });
-                }
-
-                if (!response.ok) {
-                    throw new Error('Failed to update list');
-                }
-
-                const updatedList = await response.json();
-                localStorage.setItem('myList', JSON.stringify(updatedList));
-
-                // Update UI
-                const button = event.currentTarget;
-                button.classList.toggle('in-list', !isInList);
-                button.querySelector('i').textContent = !isInList ? 'check' : 'add';
-
-                showNotification(!isInList ? 'Added to My List' : 'Removed from My List', 'success');
-            } catch (error) {
-                console.error('Error updating list:', error);
-                showNotification('Failed to update list', 'error');
-            }
         }
 
         function showNotification(message, type = 'success') {
@@ -1091,7 +1136,38 @@
                 performSearch(query);
             }
         });
+
+        // Debounce helper
+        function debounce(fn, delay) {
+            let timer = null;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        // Unified TMDB content reload on language change
+        async function reloadAllTMDBContent() {
+            if (searchInput.value && searchInput.value.trim().length >= 2) {
+                await performSearch(searchInput.value.trim());
+            }
+        }
+        // Listen for i18n language change event
+        if (window.i18next && typeof window.i18next.on === 'function') {
+            window.i18next.on('languageChanged', debounce(async (lng) => {
+                await reloadAllTMDBContent();
+            }, 200));
+        } else if (window.i18n) {
+            // Patch changeLanguage as fallback
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = debounce(async function (lang) {
+                await origChangeLanguage(lang);
+                await reloadAllTMDBContent();
+            }, 200);
+        }
+        // On page load, fetch all TMDB content in the current language
+        document.addEventListener('DOMContentLoaded', reloadAllTMDBContent);
     </script>
+    <script src="js/mylist.js"></script>
 </body>
 
 </html>

@@ -1,4 +1,16 @@
-language switcher, (ru/it/en)
+<?php
+if (!defined('PLAYER_PHP_INCLUDED')) {
+    define('PLAYER_PHP_INCLUDED', true);
+
+    // ... existing code ...
+    {{ // Your player logic and HTML here, ensure no recursive includes
+    }}
+    // ... existing code ...
+
+}
+?>NEXT PROJECT: SOME COOL TRACKING HAND MOVEMENTS SHIT WITH THE CAMERA!!!
+
+language switcher, (ru/it/en) FATTO 90%
 
 cutom pages for movie , tv shows, my list FATTO
 
@@ -11,13 +23,15 @@ custom page anime  FATTO
 more movies FATTO
 fix the section of genres of movies in movies.html FATTO
 
-add russian movies support 
+add russian movies support FATTO
 
 add italian movies support FATTO
 
 account support?? FATTO
 
 custom search??  FATTO
+
+remove the double language selector in index.html FATTO
 
 FIX THE SEARCH.HTML FATTO
 
@@ -31,22 +45,111 @@ ADD ANOTHER SERVER (VIXSRC) FATTO
 
 IMPROVE CARDS HOVER OVERLAY (rating, animations, ecc) FATTO
 
-fix card ovelay in my list
+fix card ovelay in my list FATTO
 
-in the netflix carousel add rating system
+add cast feature to player.html FATTO
 
-fix the remove of keep watching
+make a mobile interface FATTO 50%
+
+in the netflix carousel add rating system FATTO
+
+add anime section in the index as a section like the rest FATTO
+
+remove the N/A from the cards in tvshows.html FATTO
+
+i dont want to manual reload the page so i can change the language FATTO
+
+fix the remove of keep watching FATTO
 
 add another page for the streaming of live sports (calcio per ora), 
-USE DADDYLIVE
+USE DADDYLIVE (2000 dollars a month)
 add sport selector on the top
 multiple servers per match
 auto-refreshing the matches and adds new automatically
 
+make everything work in settings.html
 
+add the two more servers (2embed.cc, superembed.stream, lulustream, doodstream, mixdrop)  FATTO
 
+add a popup at the front page for installing an adblocker FATTO
 
+add overlays to the player (server switching and season/episode selector) FATTO
 
+make sure that the buttons in the netflix carousel are working (play and add to my list), and also sostituisci "more info" with add to my list FATTO
+
+move the movies/tvshows from the left side to a little bit off the left side, same thing do it for the right side FATTO
+
+use mysql instead of mongodb (in my case whats better?): stick for mongodb FATTO
+
+Auto Next Episode
+Automatically play the next episode when current one ends FATTO
+
+add genre in movies and tv shows FATTO
+
+make the account.html a lot better FATTO
+
+allow login with username
+
+make the control panel accesible only by admins
+
+add pfp support to accounts
+
+ADD A COLOR PALETTE THAT THE USER CAN CHOOSE WHAT COLOR HE WANTS TO THE WEBSITE BE
+
+trailer,cast and more like this are not working in player.html
+
+full black backround of every page
+
+generate with chatgpt a favicon.ico
+
+fix the search issue for the android tv FATTO
+
+add a mini animation when u first enter the website
+
+Advanced Content Features
+Anime Section - Dedicated anime browsing and streaming
+Documentaries Hub - Educational and documentary content
+Kids Mode - Child-safe interface with parental controls
+Live TV Integration - Stream live channels
+Podcast Section - Audio content streaming
+
+3. Technical Enhancements
+Offline Download - Download content for offline viewing
+Multi-language Audio Tracks - Multiple audio language options
+Advanced Subtitles - Customizable subtitle settings
+Picture-in-Picture Mode - Watch while browsing
+Screen Casting - Cast to TV/Chromecast
+
+4. Admin & Management
+Content Management System - Add/edit/remove content
+User Analytics Dashboard - View user statistics
+Content Upload System - Upload your own content
+Bulk Operations - Manage multiple users/content at once
+
+5. Personalization
+Custom Themes - More color schemes and layouts
+Notification Center - New content alerts
+
+Multiple Watchlists
+Create custom lists (Favorites, Watch Later, etc.)
+List management and organization
+6. Rating & Review System
+Rate content (1-5 stars)
+Write and read reviews
+Average ratings display
+7. Social Features
+Share recommendations
+Friend system
+Activity feed
+8. Offline Download
+Download content for offline viewing
+Download management
+9. Multi-language Audio Tracks
+Multiple audio language options
+Subtitle management
+10. Picture-in-Picture Mode
+Watch while browsing
+Mini player functionality
 
 
 

@@ -2,12 +2,13 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ELI6 MOVIES - Anime</title>
     <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="css/theme.css">
+    <script src="js/i18n.js"></script>
     <style>
         * {
             margin: 0;
@@ -24,22 +25,6 @@
             overflow-x: hidden;
         }
 
-        /* Enhanced scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(229, 9, 20, 0.5);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(229, 9, 20, 0.8);
-        }
-
         .navbar {
             position: fixed;
             top: 0;
@@ -51,7 +36,6 @@
             background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
             z-index: 1000;
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             transition: all 0.3s ease;
         }
 
@@ -68,22 +52,15 @@
             transition: all 0.3s ease;
         }
 
-        .logo:hover {
-            transform: scale(1.05);
-            text-shadow: 0 0 20px rgba(229, 9, 20, 0.8);
-        }
-
         .nav-links {
             display: flex;
             gap: 30px;
-            margin-left: 40px;
         }
 
         .nav-links a {
             color: #e5e5e5;
             text-decoration: none;
             font-size: 16px;
-            font-weight: 400;
             transition: all 0.3s;
             position: relative;
             padding: 5px 0;
@@ -91,11 +68,6 @@
 
         .nav-links a:hover {
             color: #fff;
-        }
-
-        .nav-links a.active {
-            color: #fff;
-            font-weight: 500;
         }
 
         .nav-links a::after {
@@ -108,44 +80,92 @@
             background-color: #e50914;
             transform: scaleX(0);
             transition: transform 0.3s ease;
-            transform-origin: center;
         }
 
-        .nav-links a:hover::after,
-        .nav-links a.active::after {
+        .nav-links a:hover::after {
             transform: scaleX(1);
         }
 
-        /* Anime Section Styles */
-        .anime-section {
-            padding: 20px 0;
-            margin-bottom: 40px;
+        .nav-icons {
+            display: flex;
+            gap: 20px;
         }
 
-        .section-header {
-            padding: 0 50px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .nav-icon {
+            color: #e5e5e5;
+            text-decoration: none;
+            font-size: 24px;
+            transition: all 0.3s;
+        }
+
+        .nav-icon:hover {
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .anime-section {
+            padding: 40px 60px;
+            position: relative;
+        }
+
+        .anime-header {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .anime-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .anime-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .content-section {
+            margin-bottom: 60px;
         }
 
         .section-title {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
+            margin-bottom: 20px;
             color: #fff;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .anime-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        .section-title i {
+            color: var(--accent-color);
+        }
+
+        .content-row {
+            display: flex;
             gap: 20px;
-            padding: 0 50px;
+            overflow-x: auto;
+            padding: 20px 0;
+            scroll-behavior: smooth;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            margin: 0 -30px;
+            padding-left: 30px;
+            padding-right: 30px;
         }
 
-        .movie-card {
-            position: relative;
+        .content-row::-webkit-scrollbar {
+            display: none;
+        }
+
+        .content-card {
+            min-width: 200px;
             height: 300px;
             border-radius: 8px;
             overflow: hidden;
@@ -156,13 +176,13 @@
             transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        .movie-card:hover {
+        .content-card:hover {
             transform: scale(1.1);
             z-index: 10;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
         }
 
-        .movie-card::after {
+        .content-card::after {
             content: '';
             position: absolute;
             top: 0;
@@ -174,17 +194,17 @@
             transform: skewX(-25deg);
         }
 
-        .movie-card:hover::after {
+        .content-card:hover::after {
             left: 150%;
         }
 
-        .movie-card img {
+        .card-poster {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        .movie-info {
+        .card-info {
             position: absolute;
             bottom: 0;
             left: 0;
@@ -197,409 +217,405 @@
             opacity: 0;
         }
 
-        .movie-card:hover .movie-info {
+        .content-card:hover .card-info {
             transform: translateY(0);
             opacity: 1;
         }
 
-        .movie-card .card-actions,
-        .movie-card .movie-title,
-        .movie-card .card-meta,
-        .movie-card .movie-overview {
+        .content-card .card-actions,
+        .content-card .card-title,
+        .content-card .card-meta,
+        .content-card .card-overview {
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.3s ease-in-out;
         }
 
-        .movie-card:hover .movie-info>* {
+        .content-card:hover .card-info>* {
             opacity: 1;
             transform: translateY(0);
         }
 
-        .movie-card:hover .card-actions {
+        .content-card:hover .card-actions {
             transition-delay: 0.1s;
         }
 
-        .movie-card:hover .movie-title {
+        .content-card:hover .card-title {
             transition-delay: 0.15s;
         }
 
-        .movie-card:hover .card-meta {
+        .content-card:hover .card-meta {
             transition-delay: 0.2s;
         }
 
-        .movie-card:hover .movie-overview {
+        .content-card:hover .card-overview {
             transition-delay: 0.25s;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #ffd700;
+        }
+
+        .card-overview {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
         }
 
         .card-actions {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            align-items: center;
         }
 
-        .action-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            background: rgba(0, 0, 0, 0.5);
-            color: #fff;
+        .play-button {
+            background: #e50914;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
+            gap: 4px;
             transition: all 0.3s ease;
         }
 
-        .action-btn:hover {
-            background: #e50914;
-            border-color: #e50914;
+        .play-button:hover {
+            background: #f40612;
+            transform: scale(1.05);
+        }
+
+        .mylist-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mylist-btn:hover {
+            background: var(--accent-color);
             transform: scale(1.1);
         }
 
-        .action-btn.in-list {
-            background: #e50914;
-            border-color: #e50914;
+        .mylist-btn.in-list {
+            background: var(--accent-color);
         }
 
-        .movie-title {
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
             font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 10px;
+            color: var(--text-secondary);
         }
 
-        .card-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 14px;
-            color: #b3b3b3;
-            margin-top: 10px;
+        .loading-spinner {
+            border: 3px solid var(--bg-secondary);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
         }
 
-        .card-meta .rating {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #46d369;
-            font-weight: bold;
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
-        .movie-overview {
-            font-size: 13px;
-            color: #e5e5e5;
-            margin-top: 10px;
-            line-height: 1.5;
-            height: 4.5em;
-            /* Limit to 3 lines */
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: var(--error-color);
         }
 
-        /* Additional styles for anime page */
-        .anime-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-            padding: 0 50px;
-            transform: translateY(100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-        }
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px 20px;
+            }
 
-        .movie-card:hover .movie-info {
-            transform: translateY(0);
-            opacity: 1;
-        }
+            .anime-section {
+                padding: 20px 15px;
+            }
 
-        .movie-title {
-            font-size: 14px;
-            opacity: 0.8;
+            .anime-title {
+                font-size: 32px;
+            }
+
+            .content-row {
+                gap: 15px;
+                padding: 15px 0;
+                margin: 0 -15px;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .content-card {
+                min-width: 150px;
+                height: 250px;
+            }
+
+            .card-info {
+                padding: 15px;
+            }
+
+            .card-title {
+                font-size: 14px;
+            }
+
+            .card-meta {
+                font-size: 12px;
+            }
+
+            .card-overview {
+                font-size: 12px;
+                -webkit-line-clamp: 2;
+            }
+
+            .play-button {
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+
+            .mylist-btn {
+                width: 28px;
+                height: 28px;
+            }
         }
     </style>
 </head>
 
 <body>
     <nav class="navbar">
-        <a href="index.html" class="logo">ELI6</a>
-        <div class="nav-links">
-            <a href="index.html">Home</a>
-            <a href="movies.html">Movies</a>
-            <a href="tvshows.html">TV Shows</a>
-            <a href="anime.html" class="active">Anime</a>
-            <a href="sports.html">Sports</a>
-            <a href="mylist.html">My List</a>
+        <div style="display: flex; align-items: center; gap: 30px;">
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" class="active" data-i18n="nav.anime">Anime</a>
+                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
+            </div>
+        </div>
+        <div class="nav-icons">
+            <a href="search.html" class="nav-icon">
+                <i class="material-icons">search</i>
+            </a>
+            <a href="settings.html" class="nav-icon">
+                <i class="material-icons">settings</i>
+            </a>
+            <a href="account.html" class="nav-icon">
+                <i class="material-icons">account_circle</i>
+            </a>
         </div>
     </nav>
 
-    <main>
-        <section class="anime-section">
-            <div class="section-header">
-                <h2 class="section-title">Popular Anime</h2>
-            </div>
-            <div class="anime-grid" id="popular-anime"></div>
-        </section>
-
-        <section class="anime-section">
-            <div class="section-header">
-                <h2 class="section-title">New Episodes</h2>
-            </div>
-            <div class="anime-grid" id="latest-anime"></div>
-        </section>
-
-        <section class="anime-section">
-            <div class="section-header">
-                <h2 class="section-title">Continuing Series</h2>
-            </div>
-            <div class="anime-grid" id="top-rated-anime"></div>
-        </section>
-    </main>
-
-    <div id="player-container" class="player-container">
-        <div class="player-content">
-            <button class="close-player" onclick="closePlayer()">×</button>
-            <div class="player-wrapper">
-                <div class="loading">Loading player...</div>
-            </div>
-            <div class="episode-selector">
-                <div class="episode-selector-header">
-                    <h3>Episodes</h3>
-                </div>
-                <div id="episodes-list" class="episodes-list"></div>
+    <div class="anime-section">
+        <div class="anime-header">
+            <h1 class="anime-title" data-i18n="anime.title">Anime</h1>
+            <p class="anime-subtitle" data-i18n="anime.subtitle">Discover the best anime series and movies</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="anime-search.html" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 12px 24px;
+                    background: var(--accent-color);
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.background='#c40812'"
+                    onmouseout="this.style.background='var(--accent-color)'">
+                    <i class="material-icons">search</i>
+                    Search Anime
+                </a>
             </div>
         </div>
+
+        <!-- Trending Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">trending_up</i>
+                <span data-i18n="anime.sections.trending">Trending Anime</span>
+            </h2>
+            <div class="content-row" id="trending-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Popular Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">star</i>
+                <span data-i18n="anime.sections.popular">Popular Anime</span>
+            </h2>
+            <div class="content-row" id="popular-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Top Rated Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">emoji_events</i>
+                <span data-i18n="anime.sections.topRated">Top Rated Anime</span>
+            </h2>
+            <div class="content-row" id="top-rated-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Action Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">flash_on</i>
+                <span data-i18n="anime.sections.action">Action Anime</span>
+            </h2>
+            <div class="content-row" id="action-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comedy Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">sentiment_satisfied</i>
+                <span data-i18n="anime.sections.comedy">Comedy Anime</span>
+            </h2>
+            <div class="content-row" id="comedy-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Drama Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">theater_comedy</i>
+                <span data-i18n="anime.sections.drama">Drama Anime</span>
+            </h2>
+            <div class="content-row" id="drama-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fantasy Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">auto_awesome</i>
+                <span data-i18n="anime.sections.fantasy">Fantasy Anime</span>
+            </h2>
+            <div class="content-row" id="fantasy-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Romance Anime -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">favorite</i>
+                <span data-i18n="anime.sections.romance">Romance Anime</span>
+            </h2>
+            <div class="content-row" id="romance-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- This Season -->
+        <section class="content-section">
+            <h2 class="section-title">
+                <i class="material-icons">schedule</i>
+                <span data-i18n="anime.sections.thisSeason">This Season</span>
+            </h2>
+            <div class="content-row" id="this-season-anime">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <span data-i18n="common.loading">Loading...</span>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
-        const TMDB_API_URL = 'https://api.themoviedb.org/3';
-        const TMDB_API_KEY = '8c247ea0b4b56ed2ff7d41c9a833aa77';
-        const VIDSRC_API_URL = 'https://vidsrc.to/embed';
-        let currentAnime = null;
+        const JIKAN_API_URL = 'https://api.jikan.moe/v4';
+        const AUTH_API_URL = 'http://localhost:3000/api';
 
-        // Function to create anime card
-        function createAnimeCard(anime) {
-            const posterPath = anime.poster_path ? `https://image.tmdb.org/t/p/w500${anime.poster_path}` : 'https://via.placeholder.com/200x300?text=No+Image';
-            const year = anime.first_air_date ? anime.first_air_date.split('-')[0] : 'N/A';
-            const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-            const isInList = myListArr.some(listItem => listItem.id === anime.id && listItem.type === 'tv');
-            const rating = anime.vote_average ? anime.vote_average.toFixed(1) : 'N/A';
-            const title = anime.name;
-            const overview = anime.overview ? anime.overview.substring(0, 100) + (anime.overview.length > 100 ? '...' : '') : '';
+        let myList = [];
 
-            const card = document.createElement('div');
-            card.className = 'movie-card';
-            card.innerHTML = `
-                <img src="${posterPath}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
-                <div class="movie-info">
-                    <div class="card-actions">
-                        <button class="action-btn play-btn" onclick="playContent(${anime.id}, 'tv')">
-                            <i class="material-icons">play_arrow</i>
-                        </button>
-                        <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${anime.id}, 'tv', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
-                            <i class="material-icons">${isInList ? 'check' : 'add'}</i>
-                        </button>
-                    </div>
-                    <div class="movie-title">${title}</div>
-                    <div class="card-meta">
-                        <span class="rating">
-                            <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                        </span>
-                        <span>${year}</span>
-                    </div>
-                    <p class="movie-overview">${overview}</p>
-                </div>
-            `;
-
-            card.addEventListener('click', (e) => {
-                if (e.target.closest('.action-btn')) return;
-                playContent(anime.id, 'tv');
-            });
-
-            return card;
-        }
-
-        // Function to toggle My List
-        async function toggleMyList(id, type, title, posterPath, year) {
-            event.stopPropagation();
-            if (!checkAuth()) return;
-
-            const button = event.currentTarget;
-            const icon = button.querySelector('.material-icons');
-            const isInList = button.classList.contains('in-list') || icon.textContent === 'check';
-
-            try {
-                const response = await fetch('/api/mylist', {
-                    method: isInList ? 'DELETE' : 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ id, type })
-                });
-
-                if (response.ok) {
-                    button.classList.toggle('in-list', !isInList);
-                    icon.textContent = !isInList ? 'check' : 'add';
-                    button.querySelector('span:last-child').textContent = !isInList ? 'In List' : 'My List';
-                    showNotification(isInList ? 'Removed from My List' : 'Added to My List', 'success');
-                } else {
-                    throw new Error('Failed to update My List');
-                }
-            } catch (error) {
-                console.error('Error updating My List:', error);
-                showNotification('Failed to update My List', 'error');
-            }
-        }
-
-        // Function to show notification
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
-
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        }
-
-        // Function to check authentication
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                showNotification('Please log in to use this feature', 'error');
-                return false;
-            }
-            return true;
-        }
-
-        // Function to fetch anime from TMDB
-        async function fetchAnime(endpoint) {
-            try {
-                // Use discover endpoint with anime-specific filters
-                const response = await fetch(
-                    `${TMDB_API_URL}/discover/tv?api_key=${TMDB_API_KEY}` +
-                    '&with_genres=16' +
-                    '&with_origin_country=JP' +
-                    '&with_keywords=210024' +
-                    '&with_original_language=ja' +
-                    '&sort_by=popularity.desc' +
-                    '&page=1'
-                );
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                // Additional filtering to ensure we only get anime
-                const animeResults = data.results.filter(show => {
-                    // Check if the show has anime-related keywords
-                    const isAnime = show.genre_ids.includes(16) && // Animation genre
-                        show.origin_country.includes('JP') && // Japanese origin
-                        show.original_language === 'ja'; // Japanese language
-
-                    // Additional check for anime titles (common anime title patterns)
-                    const title = show.name.toLowerCase();
-                    const isAnimeTitle = title.includes('anime') ||
-                        title.includes('no') || // Common in anime titles
-                        title.includes('ga') || // Common in anime titles
-                        title.includes('wa') || // Common in anime titles
-                        title.includes('de') || // Common in anime titles
-                        title.includes('ni') || // Common in anime titles
-                        title.includes('wo'); // Common in anime titles
-
-                    return isAnime && isAnimeTitle;
-                });
-
-                return animeResults;
-            } catch (error) {
-                console.error('Error fetching anime:', error);
-                return [];
-            }
-        }
-
-        // Function to load anime content
-        async function loadAnimeContent() {
-            try {
-                // Fetch popular anime
-                const popularAnime = await fetchAnime('/tv/popular');
-                const popularContainer = document.getElementById('popular-anime');
-                if (popularAnime.length > 0) {
-                    popularContainer.innerHTML = '';
-                    popularAnime.forEach(anime => {
-                        popularContainer.appendChild(createAnimeCard(anime));
-                    });
-                } else {
-                    popularContainer.innerHTML = '<div class="error">Failed to load popular anime</div>';
-                }
-
-                // Fetch latest episodes (airing today)
-                const latestAnime = await fetchAnime('/tv/airing_today');
-                const latestContainer = document.getElementById('latest-anime');
-                if (latestAnime.length > 0) {
-                    latestContainer.innerHTML = '';
-                    latestAnime.forEach(anime => {
-                        latestContainer.appendChild(createAnimeCard(anime));
-                    });
-                } else {
-                    latestContainer.innerHTML = '<div class="error">Failed to load latest episodes</div>';
-                }
-
-                // Fetch top rated anime
-                const topRatedAnime = await fetchAnime('/tv/top_rated');
-                const topRatedContainer = document.getElementById('top-rated-anime');
-                if (topRatedAnime.length > 0) {
-                    topRatedContainer.innerHTML = '';
-                    topRatedAnime.forEach(anime => {
-                        topRatedContainer.appendChild(createAnimeCard(anime));
-                    });
-                } else {
-                    topRatedContainer.innerHTML = '<div class="error">Failed to load top rated anime</div>';
-                }
-            } catch (error) {
-                console.error('Error loading anime content:', error);
-                document.querySelectorAll('.anime-grid').forEach(container => {
-                    container.innerHTML = '<div class="error">Error loading content. Please try again later.</div>';
-                });
-            }
-        }
-
-        // Function to open player
-        function openPlayer(anime) {
-            // Store anime info in localStorage
-            localStorage.setItem('currentContent', JSON.stringify({
-                id: anime.id,
-                title: anime.name,
-                type: 'tv',
-                poster: `https://image.tmdb.org/t/p/w500${anime.poster_path}`,
-                overview: anime.overview,
-                releaseDate: anime.first_air_date,
-                rating: anime.vote_average
-            }));
-
-            // Redirect to player page
-            window.location.href = './player.html';
-        }
-
-        // Function to close player
-        function closePlayer() {
-            const playerContainer = document.getElementById('player-container');
-            playerContainer.classList.remove('active');
-            currentAnime = null;
-        }
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            initializePage();
+        });
 
         // Navbar scroll effect
-        window.addEventListener('scroll', function () {
+        window.addEventListener('scroll', () => {
             const navbar = document.querySelector('.navbar');
             if (window.scrollY > 50) {
                 navbar.classList.add('scrolled');
@@ -608,14 +624,209 @@
             }
         });
 
-        // Initialize page
-        document.addEventListener('DOMContentLoaded', () => {
+        async function initializePage() {
+            await syncMyList();
             loadAnimeContent();
-            checkAuth();
-        });
+        }
 
+        // Sync MyList from backend
+        async function syncMyList() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const response = await fetch(`${AUTH_API_URL}/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    myList = data.myList || [];
+                    localStorage.setItem('myList', JSON.stringify(myList));
+                }
+            } catch (e) {
+                myList = [];
+                localStorage.setItem('myList', '[]');
+            }
+        }
+
+        // Load anime content using Jikan API
+        async function loadAnimeContent() {
+            // Load different anime sections
+            await Promise.all([
+                loadSection('trending-anime', 'top/anime?filter=airing&limit=20'),
+                loadSection('popular-anime', 'top/anime?filter=bypopularity&limit=20'),
+                loadSection('top-rated-anime', 'top/anime?filter=favorite&limit=20'),
+                loadSection('action-anime', 'anime?genres=1&order_by=popularity&sort=desc&limit=20'),
+                loadSection('comedy-anime', 'anime?genres=4&order_by=popularity&sort=desc&limit=20'),
+                loadSection('drama-anime', 'anime?genres=8&order_by=popularity&sort=desc&limit=20'),
+                loadSection('fantasy-anime', 'anime?genres=10&order_by=popularity&sort=desc&limit=20'),
+                loadSection('romance-anime', 'anime?genres=22&order_by=popularity&sort=desc&limit=20'),
+                loadSection('this-season-anime', 'seasons/now?limit=20')
+            ]);
+        }
+
+        // Load content for a specific section
+        async function loadSection(containerId, endpoint) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            try {
+                const content = await fetchAnimeContent(endpoint);
+                renderContent(container, content);
+            } catch (error) {
+                console.error(`Error loading ${containerId}:`, error);
+                container.innerHTML = `<div class="error">Failed to load content</div>`;
+            }
+        }
+
+        // Fetch content from Jikan API
+        async function fetchAnimeContent(endpoint) {
+            try {
+                const url = `${JIKAN_API_URL}/${endpoint}`;
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.data || [];
+            } catch (error) {
+                console.error('Error fetching anime content:', error);
+                return [];
+            }
+        }
+
+        // Render content cards
+        function renderContent(container, content) {
+            container.innerHTML = '';
+
+            if (!content || content.length === 0) {
+                container.innerHTML = '<div class="error">No content available</div>';
+                return;
+            }
+
+            content.forEach(item => {
+                const card = createAnimeCard(item);
+                container.appendChild(card);
+            });
+        }
+
+        // Create anime content card
+        function createAnimeCard(item) {
+            const card = document.createElement('div');
+            card.className = 'content-card';
+
+            const posterPath = item.images?.jpg?.image_url ||
+                item.images?.webp?.image_url ||
+                'img/no-poster.jpg';
+
+            const title = item.title || item.title_english || item.title_japanese || 'Unknown Title';
+            const rating = item.score ? item.score.toFixed(1) : 'N/A';
+            const year = item.year || item.aired?.from?.split('-')[0] || 'N/A';
+            const episodes = item.episodes || '?';
+            const type = item.type || 'Unknown';
+            const overview = item.synopsis ? item.synopsis.substring(0, 100) + (item.synopsis.length > 100 ? '...' : '') : '';
+
+            const isInList = myList.some(listItem =>
+                listItem.id === item.mal_id && listItem.type === 'anime'
+            );
+
+            card.innerHTML = `
+                <img src="${posterPath}" alt="${title}" class="card-poster" onerror="this.src='img/no-poster.jpg'" />
+                <div class="card-info">
+                    <div class="card-actions">
+                        <button onclick="playContent(${item.mal_id}, 'anime')" class="play-button">
+                            <i class="material-icons">play_arrow</i>
+                            Play
+                        </button>
+                        <button class="mylist-btn ${isInList ? 'in-list' : ''}" 
+                                onclick="toggleMyList(${item.mal_id}, 'anime', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
+                            <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                        </button>
+                    </div>
+                    <h3 class="card-title">${title}</h3>
+                    <div class="card-meta">
+                        <span class="card-rating">
+                            <i class="material-icons">star</i>
+                            ${rating}
+                        </span>
+                        <span>•</span>
+                        <span>${year}</span>
+                        <span>•</span>
+                        <span>${type}</span>
+                        <span>•</span>
+                        <span>${episodes} eps</span>
+                    </div>
+                    <p class="card-overview">${overview}</p>
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Toggle MyList
+        async function toggleMyList(id, type, title, posterPath, year) {
+            const button = event.currentTarget;
+            const isInList = myList.some(listItem => listItem.id === id && listItem.type === type);
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                window.location.href = 'account.html';
+                return;
+            }
+
+            try {
+                const item = {
+                    id: parseInt(id),
+                    title: title,
+                    type: type,
+                    poster_path: posterPath,
+                    overview: '',
+                };
+
+                let response;
+                if (isInList) {
+                    response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                } else {
+                    response = await fetch(`${AUTH_API_URL}/user/mylist`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(item)
+                    });
+                }
+
+                if (!response.ok) {
+                    throw new Error(`Failed to ${isInList ? 'remove from' : 'add to'} list`);
+                }
+
+                // Update local state
+                if (isInList) {
+                    myList = myList.filter(listItem => !(listItem.id === id && listItem.type === type));
+                } else {
+                    myList.unshift(item);
+                }
+                localStorage.setItem('myList', JSON.stringify(myList));
+
+                // Update button
+                button.classList.toggle('in-list');
+                const icon = button.querySelector('i');
+                icon.textContent = isInList ? 'add' : 'check';
+
+            } catch (error) {
+                console.error('Error toggling my list:', error);
+                alert(error.message);
+            }
+        }
+
+        // Play content
         function playContent(id, type) {
-            window.location.href = `player.html?type=${type}&id=${id}`;
+            window.location.href = `player.php?type=${type}&id=${id}`;
         }
     </script>
 </body>

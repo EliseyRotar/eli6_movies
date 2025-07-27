@@ -1,0 +1,52 @@
+{
+  "myList": [
+    {
+      "id": 1061474,
+      "title": "Superman",
+      "type": "movie",
+      "poster_path": "https://image.tmdb.org/t/p/w500/ombsmhYUqR4qqOLOxAyr5V8hbyv.jpg",
+      "overview": "Superman, a journalist in Metropolis, embarks on a journey to reconcile his Kryptonian heritage with...",
+      "addedAt": "2025-07-20T12:56:33.859Z",
+      "_id": "687ce781573f3456bfe0752c"
+    },
+    {
+      "id": 1241436,
+      "title": "Warfare",
+      "type": "movie",
+      "poster_path": "/srj9rYrjefyWqkLc6l2xjTGeBGO.jpg",
+      "overview": "A platoon of Navy SEALs embarks on a dangerous mission in Ramadi, Iraq, with the chaos and brotherhood of war retold through their memories of the event.",
+      "addedAt": "2025-07-20T12:53:03.888Z",
+      "_id": "687ce6af573f3456bfe07427"
+    },
+    {
+      "id": 1011477,
+      "title": "Karate Kid: Legends",
+      "type": "movie",
+      "poster_path": "https://image.tmdb.org/t/p/w500/AEgggzRr1vZCLY86MAp93li43z.jpg",
+      "overview": "After a family tragedy, kung fu prodigy Li Fong is uprooted from his home in Beijing and forced to m...",
+      "addedAt": "2025-07-12T09:12:52.769Z",
+      "_id": "68722714f264801ccdf258e1"
+    }
+  ],
+  "settings": {
+    "privacy": {},
+    "advanced": {},
+    "playback": {
+      "videoQuality": "auto",
+      "autoplay": true,
+      "skipIntro": true,
+      "notifications": {
+        "newContent": true,
+        "watchlist": true,
+        "newsletter": false,
+        "browser": false
+      },
+      "language": {
+        "display": "en",
+        "subtitle": "en",
+        "region": "us"
+      }
+    }
+  },
+  "avatar": "movie"
+}

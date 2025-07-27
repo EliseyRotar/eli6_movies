@@ -494,9 +494,9 @@
             scroll-behavior: smooth;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            margin: 0 -60px;
-            padding-left: 0;
-            padding-right: 60px;
+            margin: 0 -30px;
+            padding-left: 30px;
+            padding-right: 30px;
         }
 
         .content-row::-webkit-scrollbar {
@@ -595,9 +595,9 @@
             }
 
             .content-row {
-                margin: 0 -40px;
-                padding-left: 0;
-                padding-right: 40px;
+                margin: 0 -20px;
+                padding-left: 20px;
+                padding-right: 20px;
             }
 
             .content-card {
@@ -840,11 +840,12 @@
 <body>
     <nav class="navbar">
         <div style="display: flex; align-items: center; gap: 30px;">
-            <a href="index.html" class="logo">ELI6 MOVIES</a>
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
             <div class="nav-links">
                 <a href="index.html" data-i18n="nav.home">Home</a>
                 <a href="movies.html" data-i18n="nav.movies">Movies</a>
                 <a href="tvshows.html" class="active" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
                 <a href="mylist.html" data-i18n="nav.mylist">My List</a>
             </div>
         </div>
@@ -891,6 +892,133 @@
         </div>
     </section>
 
+    <section id="action-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">local_fire_department</i>
+            <span data-i18n="tvshows.sections.action">Action & Adventure TV</span>
+        </h2>
+        <div class="content-row" id="action-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading action & adventure TV shows...</div>
+        </div>
+    </section>
+    <section id="comedy-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">sentiment_very_satisfied</i>
+            <span data-i18n="tvshows.sections.comedy">Comedy TV</span>
+        </h2>
+        <div class="content-row" id="comedy-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading comedy TV shows...</div>
+        </div>
+    </section>
+    <section id="drama-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">theater_comedy</i>
+            <span data-i18n="tvshows.sections.drama">Drama TV</span>
+        </h2>
+        <div class="content-row" id="drama-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading drama TV shows...</div>
+        </div>
+    </section>
+    <section id="horror-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">nightlight</i>
+            <span data-i18n="tvshows.sections.horror">Mistery TV</span>
+        </h2>
+        <div class="content-row" id="horror-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading mistery TV shows...</div>
+        </div>
+    </section>
+    <section id="animation-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">animation</i>
+            <span data-i18n="tvshows.sections.animation">Animation TV</span>
+        </h2>
+        <div class="content-row" id="animation-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading animation TV shows...</div>
+        </div>
+    </section>
+    <section id="scifi-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">science</i>
+            <span data-i18n="tvshows.sections.scifi">Science Fiction & Fantasy TV</span>
+        </h2>
+        <div class="content-row" id="scifi-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading science fiction & fantasy TV shows...</div>
+        </div>
+    </section>
+    <section id="crime-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">gavel</i>
+            <span data-i18n="tvshows.sections.crime">Crime TV</span>
+        </h2>
+        <div class="content-row" id="crime-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading crime TV shows...</div>
+        </div>
+    </section>
+    <section id="documentary-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">menu_book</i>
+            <span data-i18n="tvshows.sections.documentary">Documentary TV</span>
+        </h2>
+        <div class="content-row" id="documentary-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading documentary TV shows...</div>
+        </div>
+    </section>
+    <section id="family-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">family_restroom</i>
+            <span data-i18n="tvshows.sections.family">Family TV</span>
+        </h2>
+        <div class="content-row" id="family-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading family TV shows...</div>
+        </div>
+    </section>
+    <section id="kids-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">child_care</i>
+            <span data-i18n="tvshows.sections.kids">Kids TV</span>
+        </h2>
+        <div class="content-row" id="kids-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading kids TV shows...</div>
+        </div>
+    </section>
+    <section id="mystery-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">help_outline</i>
+            <span data-i18n="tvshows.sections.mystery">Mystery TV</span>
+        </h2>
+        <div class="content-row" id="mystery-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading mystery TV shows...</div>
+        </div>
+    </section>
+    <section id="reality-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">emoji_people</i>
+            <span data-i18n="tvshows.sections.reality">Reality TV</span>
+        </h2>
+        <div class="content-row" id="reality-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading reality TV shows...</div>
+        </div>
+    </section>
+    <section id="warpolitics-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">military_tech</i>
+            <span data-i18n="tvshows.sections.warpolitics">War & Politics TV</span>
+        </h2>
+        <div class="content-row" id="warpolitics-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading war & politics TV shows...</div>
+        </div>
+    </section>
+    <section id="western-tv" class="content-section">
+        <h2 class="section-title">
+            <i class="material-icons">terrain</i>
+            <span data-i18n="tvshows.sections.western">Western TV</span>
+        </h2>
+        <div class="content-row" id="western-tv-row">
+            <div class="loading" data-i18n="common.loading">Loading western TV shows...</div>
+        </div>
+    </section>
+
     <!-- Player Container -->
     <div id="player-container" class="player-container">
         <div class="player-content">
@@ -909,6 +1037,7 @@
     </div>
 
     <script>
+        console.log('JS IS RUNNING - TEST');
         const TMDB_API_URL = 'https://api.themoviedb.org/3';
         const TMDB_API_KEY = '8c247ea0b4b56ed2ff7d41c9a833aa77';
         const AUTH_API_URL = 'http://localhost:3000/api';
@@ -932,7 +1061,8 @@
         function createContentCard(show) {
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.onclick = () => {
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.mylist-btn, .action-btn')) return;
                 // Store show info in localStorage
                 localStorage.setItem('currentContent', JSON.stringify({
                     id: show.id,
@@ -945,39 +1075,47 @@
                 }));
 
                 // Navigate to player page
-                window.location.href = `player.html?type=tv&id=${show.id}`;
-            };
+                window.location.href = `player.php?type=tv&id=${show.id}`;
+            });
 
             // Use localStorage for checking list status (like movies do) - no API call
             const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
             const isInList = myListArr.some(listItem => listItem.id === show.id && listItem.type === 'tv');
 
-            const year = show.first_air_date ? show.first_air_date.split('-')[0] : 'N/A';
-            const rating = show.vote_average ? show.vote_average.toFixed(1) : 'N/A';
+            const year = show.first_air_date ? show.first_air_date.split('-')[0] : '';
+            const rating = show.vote_average ? show.vote_average.toFixed(1) : '';
+            let duration = '';
+            if (show.episode_run_time && show.episode_run_time.length > 0) {
+                duration = `${show.episode_run_time[0]} min`;
+            }
             const title = show.name;
             const overview = show.overview ? show.overview.substring(0, 100) + (show.overview.length > 100 ? '...' : '') : '';
 
+            // Build meta parts dynamically, skipping empty values
+            const metaParts = [];
+            if (rating) metaParts.push(`<span class=\"rating\"><i class=\"material-icons\" style=\"font-size: 16px;\">star</i> ${rating}</span>`);
+            if (year) metaParts.push(`<span>${year}</span>`);
+            if (duration) metaParts.push(`<span class=\"duration\">${duration}</span>`);
+
             card.innerHTML = `
-                <img src="${show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : 'placeholder.jpg'}" alt="${title}">
-                <div class="movie-info">
-                    <div class="card-actions">
-                        <button class="action-btn play-btn" onclick="playContent(${show.id}, 'tv')">
-                            <i class="material-icons">play_arrow</i>
-                        </button>
-                        <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${show.id}, 'tv', '${title.replace(/'/g, "\\'")}', '${show.poster_path}', '${year}')">
-                            <i class="material-icons">${isInList ? 'check' : 'add'}</i>
-                        </button>
-                    </div>
-                    <div class="movie-title" data-dynamic-translate="true" data-original-text="${title}">${title}</div>
-                    <div class="card-meta">
-                        <span class="rating">
-                            <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                        </span>
-                        <span>${year}</span>
-                    </div>
-                    <p class="movie-overview" data-dynamic-translate="true" data-original-text="${overview}">${overview}</p>
+            <img src="${show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : 'placeholder.jpg'}" alt="${title}">
+            <div class="movie-info">
+                <div class="card-actions">
+                    <button class="action-btn play-btn" onclick="playContent(${show.id}, 'tv')">
+                        <i class="material-icons">play_arrow</i>
+                    </button>
+                    <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${show.id},"title":"${title}","type":"tv","poster_path":"${show.poster_path}","overview":"${overview}"}'>
+                        <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                    </button>
                 </div>
-            `;
+                <div class="movie-title" data-dynamic-translate="true" data-original-text="${title}">${title}</div>
+                <div class="card-meta">
+                    ${metaParts.join('<span>|</span>')}
+                </div>
+                <p class="movie-overview" data-dynamic-translate="true" data-original-text="${overview}">${overview}</p>
+            </div>
+        `;
+
             return card;
         }
 
@@ -1035,8 +1173,8 @@
                 // Update UI
                 button.classList.toggle('in-list', !isInList);
                 button.innerHTML = `
-                    <i class="material-icons">${!isInList ? 'check' : 'add'}</i>
-                `;
+                <i class="material-icons">${!isInList ? 'check' : 'add'}</i>
+            `;
                 showNotification(!isInList ? 'Added to My List' : 'Removed from My List');
             } catch (error) {
                 console.error('Error updating list:', error);
@@ -1050,16 +1188,16 @@
             notification.className = `notification ${type}`;
             notification.textContent = message;
             notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 10px 20px;
-                background: ${type === 'success' ? '#2ecc71' : '#e74c3c'};
-                color: white;
-                border-radius: 4px;
-                z-index: 9999;
-                animation: fadeInOut 3s forwards;
-            `;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: ${type === 'success' ? '#2ecc71' : '#e74c3c'};
+            color: white;
+            border-radius: 4px;
+            z-index: 9999;
+            animation: fadeInOut 3s forwards;
+        `;
 
             document.body.appendChild(notification);
 
@@ -1069,16 +1207,24 @@
         }
 
         // Function to fetch content from TMDB
-        async function fetchContent(endpoint) {
+        async function fetchContent(endpoint, lang) {
             try {
-                const response = await fetch(`${TMDB_API_URL}${endpoint}?api_key=${TMDB_API_KEY}`);
+                let url = `${TMDB_API_URL}${endpoint}`;
+                url += (url.includes('?') ? '&' : '?') + `api_key=${TMDB_API_KEY}`;
+                if (lang) {
+                    url += `&language=${lang}`;
+                }
+                console.log('[DEBUG] Fetching:', url);
+                const response = await fetch(url);
+                console.log('[DEBUG] Response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log('[DEBUG] Data received:', data);
                 return data.results;
             } catch (error) {
-                console.error(`Error fetching content:`, error);
+                console.error('[DEBUG] Error fetching content:', error);
                 return [];
             }
         }
@@ -1110,11 +1256,14 @@
         // Function to load content (optimized for performance)
         async function loadContent() {
             try {
-                console.log('🚀 Starting TV shows content loading (optimized version)...');
+                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+                console.log('[DEBUG] Starting TV shows content loading...');
                 const startTime = performance.now();
 
                 // Fetch trending TV shows
-                const trendingShows = await fetchContent('/trending/tv/week');
+                console.log('[DEBUG] Fetching trending TV shows...');
+                const trendingShows = await fetchContent('/trending/tv/week', lang);
+                console.log('[DEBUG] Trending shows:', trendingShows);
                 const trendingContainer = document.getElementById('trending-tv-row');
                 if (trendingContainer) {
                     trendingContainer.innerHTML = '';
@@ -1122,10 +1271,13 @@
                         const card = createContentCard(show);
                         trendingContainer.appendChild(card);
                     });
+                    window.initMyListButtons && window.initMyListButtons();
                 }
 
                 // Fetch popular TV shows
-                const popularShows = await fetchContent('/tv/popular');
+                console.log('[DEBUG] Fetching popular TV shows...');
+                const popularShows = await fetchContent('/tv/popular', lang);
+                console.log('[DEBUG] Popular shows:', popularShows);
                 const popularContainer = document.getElementById('popular-tv-row');
                 if (popularContainer) {
                     popularContainer.innerHTML = '';
@@ -1133,10 +1285,13 @@
                         const card = createContentCard(show);
                         popularContainer.appendChild(card);
                     });
+                    window.initMyListButtons && window.initMyListButtons();
                 }
 
                 // Fetch top rated TV shows
-                const topRatedShows = await fetchContent('/tv/top_rated');
+                console.log('[DEBUG] Fetching top rated TV shows...');
+                const topRatedShows = await fetchContent('/tv/top_rated', lang);
+                console.log('[DEBUG] Top rated shows:', topRatedShows);
                 const topRatedContainer = document.getElementById('top-rated-tv-row');
                 if (topRatedContainer) {
                     topRatedContainer.innerHTML = '';
@@ -1144,17 +1299,188 @@
                         const card = createContentCard(show);
                         topRatedContainer.appendChild(card);
                     });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch action & adventure TV shows
+                console.log('[DEBUG] Fetching action & adventure TV shows...');
+                const actionShows = await fetchContent('/discover/tv?with_genres=10759&sort_by=popularity.desc', lang);
+                console.log('[DEBUG] Action shows:', actionShows);
+                const actionContainer = document.getElementById('action-tv-row');
+                if (actionContainer) {
+                    actionContainer.innerHTML = '';
+                    actionShows.forEach(show => {
+                        const card = createContentCard(show);
+                        actionContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch comedy TV shows
+                console.log('[DEBUG] Fetching comedy TV shows...');
+                const comedyShows = await fetchContent('/discover/tv?with_genres=35&sort_by=popularity.desc', lang);
+                console.log('[DEBUG] Comedy shows:', comedyShows);
+                const comedyContainer = document.getElementById('comedy-tv-row');
+                if (comedyContainer) {
+                    comedyContainer.innerHTML = '';
+                    comedyShows.forEach(show => {
+                        const card = createContentCard(show);
+                        comedyContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch drama TV shows
+                console.log('[DEBUG] Fetching drama TV shows...');
+                const dramaShows = await fetchContent('/discover/tv?with_genres=18&sort_by=popularity.desc', lang);
+                console.log('[DEBUG] Drama shows:', dramaShows);
+                const dramaContainer = document.getElementById('drama-tv-row');
+                if (dramaContainer) {
+                    dramaContainer.innerHTML = '';
+                    dramaShows.forEach(show => {
+                        const card = createContentCard(show);
+                        dramaContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch horror TV shows
+                console.log('[DEBUG] Fetching horror TV shows...');
+                const horrorShows = await fetchContent('/discover/tv?with_genres=9648&sort_by=popularity.desc', lang);
+                console.log('[DEBUG] Horror shows:', horrorShows);
+                const horrorContainer = document.getElementById('horror-tv-row');
+                if (horrorContainer) {
+                    horrorContainer.innerHTML = '';
+                    horrorShows.forEach(show => {
+                        const card = createContentCard(show);
+                        horrorContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch animation TV shows
+                console.log('[DEBUG] Fetching animation TV shows...');
+                const animationShows = await fetchContent('/discover/tv?with_genres=16&sort_by=popularity.desc', lang);
+                console.log('[DEBUG] Animation shows:', animationShows);
+                const animationContainer = document.getElementById('animation-tv-row');
+                if (animationContainer) {
+                    animationContainer.innerHTML = '';
+                    animationShows.forEach(show => {
+                        const card = createContentCard(show);
+                        animationContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+
+                // Fetch science fiction & fantasy TV shows
+                const scifiShows = await fetchContent('/discover/tv?with_genres=10765&sort_by=popularity.desc', lang);
+                const scifiContainer = document.getElementById('scifi-tv-row');
+                if (scifiContainer) {
+                    scifiContainer.innerHTML = '';
+                    scifiShows.forEach(show => {
+                        const card = createContentCard(show);
+                        scifiContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Crime TV shows
+                const crimeShows = await fetchContent('/discover/tv?with_genres=80&sort_by=popularity.desc', lang);
+                const crimeContainer = document.getElementById('crime-tv-row');
+                if (crimeContainer) {
+                    crimeContainer.innerHTML = '';
+                    crimeShows.forEach(show => {
+                        const card = createContentCard(show);
+                        crimeContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Documentary TV shows
+                const documentaryShows = await fetchContent('/discover/tv?with_genres=99&sort_by=popularity.desc', lang);
+                const documentaryContainer = document.getElementById('documentary-tv-row');
+                if (documentaryContainer) {
+                    documentaryContainer.innerHTML = '';
+                    documentaryShows.forEach(show => {
+                        const card = createContentCard(show);
+                        documentaryContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Family TV shows
+                const familyShows = await fetchContent('/discover/tv?with_genres=10751&sort_by=popularity.desc', lang);
+                const familyContainer = document.getElementById('family-tv-row');
+                if (familyContainer) {
+                    familyContainer.innerHTML = '';
+                    familyShows.forEach(show => {
+                        const card = createContentCard(show);
+                        familyContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Kids TV shows
+                const kidsShows = await fetchContent('/discover/tv?with_genres=10762&sort_by=popularity.desc', lang);
+                const kidsContainer = document.getElementById('kids-tv-row');
+                if (kidsContainer) {
+                    kidsContainer.innerHTML = '';
+                    kidsShows.forEach(show => {
+                        const card = createContentCard(show);
+                        kidsContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Mystery TV shows
+                const mysteryShows = await fetchContent('/discover/tv?with_genres=9648&sort_by=popularity.desc', lang);
+                const mysteryContainer = document.getElementById('mystery-tv-row');
+                if (mysteryContainer) {
+                    mysteryContainer.innerHTML = '';
+                    mysteryShows.forEach(show => {
+                        const card = createContentCard(show);
+                        mysteryContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Reality TV shows
+                const realityShows = await fetchContent('/discover/tv?with_genres=10764&sort_by=popularity.desc', lang);
+                const realityContainer = document.getElementById('reality-tv-row');
+                if (realityContainer) {
+                    realityContainer.innerHTML = '';
+                    realityShows.forEach(show => {
+                        const card = createContentCard(show);
+                        realityContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch War & Politics TV shows
+                const warPoliticsShows = await fetchContent('/discover/tv?with_genres=10768&sort_by=popularity.desc', lang);
+                const warPoliticsContainer = document.getElementById('warpolitics-tv-row');
+                if (warPoliticsContainer) {
+                    warPoliticsContainer.innerHTML = '';
+                    warPoliticsShows.forEach(show => {
+                        const card = createContentCard(show);
+                        warPoliticsContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
+                }
+                // Fetch Western TV shows
+                const westernShows = await fetchContent('/discover/tv?with_genres=37&sort_by=popularity.desc', lang);
+                const westernContainer = document.getElementById('western-tv-row');
+                if (westernContainer) {
+                    westernContainer.innerHTML = '';
+                    westernShows.forEach(show => {
+                        const card = createContentCard(show);
+                        westernContainer.appendChild(card);
+                    });
+                    window.initMyListButtons && window.initMyListButtons();
                 }
 
                 const endTime = performance.now();
-                console.log(`✅ TV shows loaded in ${(endTime - startTime).toFixed(2)}ms (optimized)`);
+                console.log(`[DEBUG] TV shows loaded in ${(endTime - startTime).toFixed(2)}ms`);
 
                 // Translate dynamic content after loading
                 if (window.i18n && window.i18n.currentLanguage !== 'en') {
                     await window.i18n.translateDynamicElements();
                 }
             } catch (error) {
-                console.error('Error loading content:', error);
+                console.error('[DEBUG] Error loading content:', error);
             }
         }
 
@@ -1172,127 +1498,103 @@
             }));
 
             // Navigate to player page
-            window.location.href = `player.html?type=tv&id=${show.id}`;
+            window.location.href = `player.php?type=tv&id=${show.id}`;
         }
 
         // Function to create show card
         function createShowCard(show) {
             const posterPath = show.poster_path ? `https://image.tmdb.org/t/p/w500${show.poster_path}` : 'https://via.placeholder.com/200x300?text=No+Image';
-            const year = show.first_air_date ? show.first_air_date.split('-')[0] : 'N/A';
+            const year = show.first_air_date ? show.first_air_date.split('-')[0] : '';
             const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
             const isInList = myListArr.some(listItem => listItem.id === show.id && listItem.type === 'tv');
-            const rating = show.vote_average ? show.vote_average.toFixed(1) : 'N/A';
+            const rating = show.vote_average ? show.vote_average.toFixed(1) : '';
             const title = show.name;
             const overview = show.overview ? show.overview.substring(0, 100) + (show.overview.length > 100 ? '...' : '') : '';
 
+            // Build meta parts dynamically, skipping empty values
+            const metaParts = [];
+            if (rating) metaParts.push(`<span class=\"rating\"><i class=\"material-icons\" style=\"font-size: 16px;\">star</i> ${rating}</span>`);
+            if (year) metaParts.push(`<span>${year}</span>`);
+
             const card = document.createElement('div');
             card.className = 'movie-card';
-            card.innerHTML = `
-                <img src="${posterPath}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
-                <div class="movie-info">
-                    <div class="card-actions">
-                        <button class="action-btn play-btn" onclick="playContent(${show.id}, 'tv')">
-                            <i class="material-icons">play_arrow</i>
-                        </button>
-                        <button class="action-btn add-btn ${isInList ? 'in-list' : ''}" onclick="event.stopPropagation(); toggleMyList(${show.id}, 'tv', '${title.replace(/'/g, "\\'")}', '${posterPath}', '${year}')">
-                            <i class="material-icons">${isInList ? 'check' : 'add'}</i>
-                        </button>
-                    </div>
-                    <div class="movie-title" data-dynamic-translate="true" data-original-text="${title}">${title}</div>
-                    <div class="card-meta">
-                        <span class="rating">
-                            <i class="material-icons" style="font-size: 16px;">star</i> ${rating}
-                        </span>
-                        <span>${year}</span>
-                    </div>
-                    <p class="movie-overview" data-dynamic-translate="true" data-original-text="${overview}">${overview}</p>
-                </div>
-            `;
-
             card.addEventListener('click', (e) => {
-                if (e.target.closest('.action-btn')) return;
+                if (e.target.closest('.mylist-btn, .action-btn')) return;
                 playContent(show.id, 'tv');
             });
+
+            card.innerHTML = `
+            <img src="${posterPath}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
+            <div class="movie-info">
+                <div class="card-actions">
+                    <button class="action-btn play-btn" onclick="playContent(${show.id}, 'tv')">
+                        <i class="material-icons">play_arrow</i>
+                    </button>
+                    <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${show.id},"title":"${title}","type":"tv","poster_path":"${posterPath}","overview":"${overview}"}'>
+                        <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                    </button>
+                </div>
+                <div class="movie-title" data-dynamic-translate="true" data-original-text="${title}">${title}</div>
+                <div class="card-meta">
+                    ${metaParts.join('<span>|</span>')}
+                </div>
+                <p class="movie-overview" data-dynamic-translate="true" data-original-text="${overview}">${overview}</p>
+            </div>
+        `;
 
             return card;
         }
 
         function playContent(id, type) {
-            window.location.href = `player.html?type=${type}&id=${id}`;
+            window.location.href = `player.php?type=${type}&id=${id}`;
         }
 
-        // Add scroll buttons functionality
-        document.querySelectorAll('.content-row').forEach(row => {
-            const leftBtn = document.createElement('button');
-            leftBtn.className = 'scroll-button scroll-left';
-            leftBtn.innerHTML = '<i class="material-icons">chevron_left</i>';
-            leftBtn.onclick = () => row.scrollBy({ left: -200, behavior: 'smooth' });
-
-            const rightBtn = document.createElement('button');
-            rightBtn.className = 'scroll-button scroll-right';
-            rightBtn.innerHTML = '<i class="material-icons">chevron_right</i>';
-            rightBtn.onclick = () => row.scrollBy({ left: 200, behavior: 'smooth' });
-
-            row.parentElement.appendChild(leftBtn);
-            row.parentElement.appendChild(rightBtn);
-        });
-
-        // Navbar scroll effect
-        window.addEventListener('scroll', () => {
-            const navbar = document.querySelector('.navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        // Load content when page loads
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Refresh user list first for optimal performance
-            await refreshUserList();
-            // Then load content
-            loadContent();
-        });
-
-        async function addToMyList(show) {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Please log in to add shows to your list');
-                return;
-            }
-
+        async function fetchAndSetShowDuration(show, card) {
             try {
-                const response = await fetch(`${AUTH_API_URL}/user/mylist`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id: show.id,
-                        title: show.name,
-                        type: 'tv',
-                        poster_path: show.poster_path,
-                        overview: show.overview
-                    })
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Failed to add to My List');
+                const url = `${TMDB_API_URL}/tv/${show.id}?api_key=${TMDB_API_KEY}`;
+                const response = await fetch(url);
+                if (!response.ok) return;
+                const data = await response.json();
+                let duration = 'N/A';
+                if (data.episode_run_time && data.episode_run_time.length > 0) {
+                    duration = `${data.episode_run_time[0]} min`;
                 }
-
-                const updatedList = await response.json();
-                console.log('Added to My List:', updatedList);
-                alert('Added to My List successfully!');
-            } catch (error) {
-                console.error('Error adding to My List:', error);
-                alert(error.message || 'Failed to add to My List');
-            }
+                const durationSpan = card.querySelector('.duration');
+                if (durationSpan) durationSpan.textContent = duration;
+            } catch (e) { }
         }
+
+        // Debounce helper
+        function debounce(fn, delay) {
+            let timer = null;
+            return function (...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        // Unified TMDB content reload on language change
+        async function reloadAllTMDBContent() {
+            // Optionally show a loading spinner here
+            await loadContent();
+            // Optionally hide loading spinner here
+        }
+        // Listen for i18n language change event
+        if (window.i18next && typeof window.i18next.on === 'function') {
+            window.i18next.on('languageChanged', debounce(async (lng) => {
+                await reloadAllTMDBContent();
+            }, 200));
+        } else if (window.i18n) {
+            // Patch changeLanguage as fallback
+            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
+            window.i18n.changeLanguage = debounce(async function (lang) {
+                await origChangeLanguage(lang);
+                await reloadAllTMDBContent();
+            }, 200);
+        }
+        // On page load, fetch all TMDB content in the current language
+        document.addEventListener('DOMContentLoaded', reloadAllTMDBContent);
     </script>
+    <script src="js/mylist.js"></script>
 </body>
 
 </html>

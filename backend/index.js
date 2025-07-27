@@ -39,7 +39,7 @@ app.get("/api/search/movies", async (req, res) => {
         const tmdbRes = await axios.get(
             `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(
                 query
-            )}&api_key=${TMDB_API_KEY}`
+            )}&api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -55,7 +55,7 @@ app.get("/api/search/tv", async (req, res) => {
         const tmdbRes = await axios.get(
             `https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(
                 query
-            )}&api_key=${TMDB_API_KEY}`
+            )}&api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -86,7 +86,7 @@ app.get("/api/movies/:category", async (req, res) => {
         }
 
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/movie/${endpoint}?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/movie/${endpoint}?api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -117,7 +117,7 @@ app.get("/api/tv/:category", async (req, res) => {
         }
 
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/tv/${endpoint}?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/tv/${endpoint}?api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -130,7 +130,7 @@ app.get("/api/trending/:mediaType/:timeWindow", async (req, res) => {
     const { mediaType, timeWindow } = req.params;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/trending/${mediaType}/${timeWindow}?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/trending/${mediaType}/${timeWindow}?api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -143,7 +143,7 @@ app.get("/api/tv/:id/seasons", async (req, res) => {
     const showId = req.params.id;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/tv/${showId}?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/tv/${showId}?api_key=${TMDB_API_KEY}&language=it-IT`
         );
         res.json(tmdbRes.data.seasons);
     } catch (err) {
@@ -156,7 +156,7 @@ app.get("/api/movies/discover", async (req, res) => {
     const { with_genres } = req.query;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${with_genres}&sort_by=popularity.desc`
+            `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${with_genres}&sort_by=popularity.desc&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -169,7 +169,7 @@ app.get("/api/tv/discover", async (req, res) => {
     const { with_genres } = req.query;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${with_genres}&sort_by=popularity.desc`
+            `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${with_genres}&sort_by=popularity.desc&language=it-IT`
         );
         res.json(tmdbRes.data.results);
     } catch (err) {
@@ -184,14 +184,14 @@ app.get("/api/search", async (req, res) => {
     try {
         if (query === 'popular') {
             const tmdbRes = await axios.get(
-                `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}`
+                `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_API_KEY}&language=it-IT`
             );
             res.json(tmdbRes.data.results);
         } else {
             const tmdbRes = await axios.get(
                 `https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(
                     query
-                )}&api_key=${TMDB_API_KEY}`
+                )}&api_key=${TMDB_API_KEY}&language=it-IT`
             );
             res.json(tmdbRes.data.results);
         }
@@ -204,8 +204,9 @@ app.get("/api/search", async (req, res) => {
 app.get("/api/movies/genres", async (req, res) => {
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB_API_KEY}&language=it-IT`
         );
+        console.log('TMDB Genres Response:', tmdbRes.data);
         res.json(tmdbRes.data.genres);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch movie genres" });
@@ -216,8 +217,9 @@ app.get("/api/movies/genres", async (req, res) => {
 app.get("/api/tv/genres", async (req, res) => {
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/genre/tv/list?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/genre/tv/list?api_key=${TMDB_API_KEY}&language=it-IT`
         );
+        console.log('TMDB TV Genres Response:', tmdbRes.data);
         res.json(tmdbRes.data.genres);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch TV show genres" });
@@ -229,13 +231,24 @@ app.get("/api/tv/genre/:id", async (req, res) => {
     const genreId = req.params.id;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${genreId}&sort_by=popularity.desc`
+            `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_genres=${genreId}&sort_by=popularity.desc&language=it-IT`
         );
+        console.log('TMDB TV by Genre Response:', tmdbRes.data);
         res.json(tmdbRes.data.results);
     } catch (err) {
         res.status(500).json({ error: "Failed to fetch TV shows by genre" });
     }
 });
+
+// Helper to check if a string is likely Italian
+function isLikelyItalian(str) {
+    if (!str) return false;
+    // Check for common Italian words or accented characters
+    const italianWords = ['il', 'la', 'un', 'una', 'che', 'di', 'e', 'non', 'per', 'con', 'su', 'come', 'ma', 'più', 'questo', 'quello'];
+    const hasItalianWord = italianWords.some(word => str.toLowerCase().includes(word));
+    const hasAccent = /[àèéìòù]/i.test(str);
+    return hasItalianWord || hasAccent;
+}
 
 // Anime Routes
 
@@ -244,12 +257,16 @@ app.get("/api/anime/popular", async (req, res) => {
     try {
         const cacheKey = 'popular_anime';
         const animes = await getCachedData(cacheKey, async () => {
-            // Try both movie and TV endpoints
             try {
                 const response = await axios.get(
-                    `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&sort_by=popularity.desc`
+                    `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&sort_by=popularity.desc&language=it-IT`
                 );
-                console.log('TMDB Response:', response.data); // Debug log
+                console.log('TMDB Anime Popular Response:', response.data);
+                response.data.results.forEach(anime => {
+                    if (!isLikelyItalian(anime.overview)) {
+                        console.warn('Anime overview not in Italian:', anime.overview);
+                    }
+                });
                 return response.data.results.map(anime => ({
                     id: `tv/${anime.id}`,
                     title: anime.name,
@@ -284,8 +301,13 @@ app.get("/api/anime/:id/episodes", async (req, res) => {
         const cacheKey = `anime_episodes_${animeId}`;
         const episodes = await getCachedData(cacheKey, async () => {
             const response = await axios.get(
-                `https://api.themoviedb.org/3/tv/${id}/season/1?api_key=${TMDB_API_KEY}`
+                `https://api.themoviedb.org/3/tv/${id}/season/1?api_key=${TMDB_API_KEY}&language=it-IT`
             );
+            response.data.episodes.forEach(episode => {
+                if (!isLikelyItalian(episode.overview)) {
+                    console.warn('Anime episode overview not in Italian:', episode.overview);
+                }
+            });
             return response.data.episodes.map(episode => ({
                 id: episode.id,
                 title: episode.name,
@@ -312,8 +334,13 @@ app.get("/api/search/anime", async (req, res) => {
         const cacheKey = `search_anime_${query}`;
         const animes = await getCachedData(cacheKey, async () => {
             const response = await axios.get(
-                `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&with_keywords=210024`
+                `https://api.themoviedb.org/3/search/tv?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&with_keywords=210024&language=it-IT`
             );
+            response.data.results.forEach(anime => {
+                if (!isLikelyItalian(anime.overview)) {
+                    console.warn('Anime search overview not in Italian:', anime.overview);
+                }
+            });
             return response.data.results.map(anime => ({
                 id: `tv/${anime.id}`,
                 title: anime.name,
@@ -356,14 +383,19 @@ app.get("/api/anime/category/:category", async (req, res) => {
 
             const genreId = genreMap[category.toLowerCase()];
             if (category.toLowerCase() === 'all') {
-                endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&sort_by=popularity.desc`;
+                endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&sort_by=popularity.desc&language=it-IT`;
             } else if (genreId) {
-                endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&with_genres=${genreId}&sort_by=popularity.desc`;
+                endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_API_KEY}&with_keywords=210024&with_genres=${genreId}&sort_by=popularity.desc&language=it-IT`;
             } else {
                 throw new Error("Invalid category");
             }
 
             const response = await axios.get(endpoint);
+            response.data.results.forEach(anime => {
+                if (!isLikelyItalian(anime.overview)) {
+                    console.warn('Anime category overview not in Italian:', anime.overview);
+                }
+            });
             return response.data.results.map(anime => ({
                 id: anime.id,
                 title: anime.name,
@@ -389,8 +421,12 @@ app.get("/api/movies/:id", async (req, res) => {
     const movieId = req.params.id;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&language=it-IT`
         );
+        console.log('TMDB Movie Details Response:', tmdbRes.data);
+        if (!isLikelyItalian(tmdbRes.data.overview)) {
+            console.warn('Movie overview not in Italian:', tmdbRes.data.overview);
+        }
         res.json(tmdbRes.data);
     } catch (err) {
         console.error('Error fetching movie details:', err);
@@ -403,8 +439,9 @@ app.get("/api/movies/:id/credits", async (req, res) => {
     const movieId = req.params.id;
     try {
         const tmdbRes = await axios.get(
-            `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}`
+            `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=it-IT`
         );
+        console.log('TMDB Movie Credits Response:', tmdbRes.data);
         res.json(tmdbRes.data);
     } catch (err) {
         console.error('Error fetching movie credits:', err);
