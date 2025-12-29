@@ -1,11 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 
-require('dotenv').config();
-
-const rateLimit = require('./middleware/rateLimit');
+// const rateLimit = require('./middleware/rateLimit'); // Rate limiting disabled
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -62,7 +61,7 @@ app.use((req, res, next) => {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
-app.use(rateLimit);
+// app.use(rateLimit); // Rate limiting disabled
 
 // Mount routers (support both /api and /api/v1 prefixes for compatibility/versioning)
 app.use('/api', authRoutes);

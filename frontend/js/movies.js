@@ -1,6 +1,35 @@
-const AUTH_API_URL = 'https://streaming.ecolens.me/api';
-const TMDB_BASE_URL = `${AUTH_API_URL}/tmdb`;
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const AUTH_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+    ? `http://${window.location.hostname}:3000/api`
+    : '/api';
+const TMDB_BASE_URL = `${AUTH_API_URL}/tmdb`;
+
+class FetchQueue {
+    constructor(concurrency = 3) {
+        this.concurrency = concurrency;
+        this.running = 0;
+        this.queue = [];
+    }
+    add(task) {
+        this.queue.push(task);
+        this.next();
+    }
+    async next() {
+        if (this.running >= this.concurrency || this.queue.length === 0) return;
+        this.running++;
+        const task = this.queue.shift();
+        try {
+            await task();
+        } finally {
+            this.running--;
+            // Delay between tasks to avoid rate limiting (2000ms for sections, 500ms for durations)
+            const delay = this === sectionQueue ? 2000 : 500;
+            setTimeout(() => this.next(), delay);
+        }
+    }
+}
+const durationQueue = new FetchQueue(1); // Reduced to 1 to avoid overwhelming backend
+const sectionQueue = new FetchQueue(1); // Load sections one at a time to avoid rate limiting
 
 function checkAuth() {
     const token = localStorage.getItem('token');
@@ -72,7 +101,7 @@ async function fetchAndSetMovieDuration(movie, card) {
         }
         const durationSpan = card.querySelector('.duration');
         if (durationSpan) durationSpan.textContent = duration;
-    } catch (e) {}
+    } catch (e) { }
 }
 
 function playContent(id, type) {
@@ -100,355 +129,134 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-async function fetchContent(endpoint, lang) {
+async function fetchContent(endpoint, lang, retryCount = 0) {
     try {
         let url = `${TMDB_BASE_URL}${endpoint}`;
-        url += url.includes('?') ? '&' : '?';
+        // Fix double & issue - check if URL already ends with & or ?
         if (lang) {
-            url += `&language=${lang}`;
+            if (url.includes('?')) {
+                // URL already has query params, add & if not already there
+                url += url.endsWith('&') ? '' : '&';
+                url += `language=${lang}`;
+            } else {
+                url += `?language=${lang}`;
+            }
         }
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            // Handle rate limiting (429) with retry
+            if (response.status === 429) {
+                const retryAfter = response.headers.get('Retry-After');
+                const retryAfterSeconds = retryAfter ? parseInt(retryAfter) : 0;
+                // Only retry if retry-after is reasonable (< 60 seconds) and we haven't retried too many times
+                if (retryCount < 2 && retryAfterSeconds > 0 && retryAfterSeconds < 60) {
+                    const delay = retryAfterSeconds * 1000;
+                    console.warn(`Rate limited for ${endpoint}, retrying after ${retryAfterSeconds}s (attempt ${retryCount + 1}/2)`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchContent(endpoint, lang, retryCount + 1);
+                }
+                // Rate limit is too long or we've retried enough - return special error code
+                console.error(`Rate limited for ${endpoint}, retry-after: ${retryAfterSeconds}s`);
+                return { error: 'RATE_LIMITED', retryAfter: retryAfterSeconds };
+            }
+            console.error(`HTTP error! status: ${response.status} for ${endpoint}`);
+            return null; // Return null for HTTP errors
         }
         const data = await response.json();
-        return data.results;
-    } catch (error) {
-        console.error(`Error fetching content:`, error);
+        // Check if this is an error response from the backend (has error property)
+        if (data.error) {
+            console.error(`Backend error for ${endpoint}:`, data.error);
+            return null; // Return null for backend errors
+        }
+        // Check if response has the expected structure (results array)
+        // For discover/trending endpoints, results should always be an array
+        if (data.results !== undefined) {
+            return Array.isArray(data.results) ? data.results : [];
+        }
+        // If no results property, it might be a different endpoint structure
+        // Return empty array as fallback (not an error)
         return [];
+    } catch (error) {
+        console.error(`Error fetching content for ${endpoint}:`, error);
+        return null;
     }
 }
 
 async function loadContent() {
-    try {
-        const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-        const trendingMovies = await fetchContent('/trending/movie/week', lang);
-        const trendingContainer = document.getElementById('trending-movies-row');
-        if (trendingContainer && trendingMovies.length > 0) {
-            trendingContainer.innerHTML = '';
-            trendingMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                trendingContainer.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (trendingContainer) {
-            trendingContainer.innerHTML = '<div class="loading">No trending movies found</div>';
-        }
+    const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+    const sections = [
+        { id: 'trending-movies-row', endpoint: '/trending/movie/week', i18nKey: 'movies.sections.trending' },
+        { id: 'action-movies-row', endpoint: '/discover/movie?with_genres=28&sort_by=popularity.desc', i18nKey: 'movies.sections.action' },
+        { id: 'comedy-movies-row', endpoint: '/discover/movie?with_genres=35&sort_by=popularity.desc', i18nKey: 'movies.sections.comedy' },
+        { id: 'drama-movies-row', endpoint: '/discover/movie?with_genres=18&sort_by=popularity.desc', i18nKey: 'movies.sections.drama' },
+        { id: 'horror-movies-row', endpoint: '/discover/movie?with_genres=27&sort_by=popularity.desc', i18nKey: 'movies.sections.horror' },
+        { id: 'animation-movies-row', endpoint: '/discover/movie?with_genres=16&sort_by=popularity.desc', i18nKey: 'movies.sections.animation' },
+        { id: 'scifi-movies-row', endpoint: '/discover/movie?with_genres=878&sort_by=popularity.desc', i18nKey: 'movies.sections.scifi' },
+        { id: 'crime-movies-row', endpoint: '/discover/movie?with_genres=80&sort_by=popularity.desc', i18nKey: 'movies.sections.crime' },
+        { id: 'family-movies-row', endpoint: '/discover/movie?with_genres=10751&sort_by=popularity.desc', i18nKey: 'movies.sections.family' },
+        { id: 'romance-movies-row', endpoint: '/discover/movie?with_genres=10749&sort_by=popularity.desc', i18nKey: 'movies.sections.romance' },
+        { id: 'mystery-movies-row', endpoint: '/discover/movie?with_genres=9648&sort_by=popularity.desc', i18nKey: 'movies.sections.mystery' },
+        { id: 'fantasy-movies-row', endpoint: '/discover/movie?with_genres=14&sort_by=popularity.desc', i18nKey: 'movies.sections.fantasy' },
+        { id: 'documentary-movies-row', endpoint: '/discover/movie?with_genres=99&sort_by=popularity.desc', i18nKey: 'movies.sections.documentary' },
+        { id: 'adventure-movies-row', endpoint: '/discover/movie?with_genres=12&sort_by=popularity.desc', i18nKey: 'movies.sections.adventure' },
+        { id: 'history-movies-row', endpoint: '/discover/movie?with_genres=36&sort_by=popularity.desc', i18nKey: 'movies.sections.history' },
+        { id: 'music-movies-row', endpoint: '/discover/movie?with_genres=10402&sort_by=popularity.desc', i18nKey: 'movies.sections.music' },
+        { id: 'thriller-movies-row', endpoint: '/discover/movie?with_genres=53&sort_by=popularity.desc', i18nKey: 'movies.sections.thriller' },
+        { id: 'war-movies-row', endpoint: '/discover/movie?with_genres=10752&sort_by=popularity.desc', i18nKey: 'movies.sections.war' },
+        { id: 'western-movies-row', endpoint: '/discover/movie?with_genres=37&sort_by=popularity.desc', i18nKey: 'movies.sections.western' }
+    ];
 
-        const actionMovies = await fetchContent(
-            '/discover/movie?with_genres=28&sort_by=popularity.desc',
-            lang
-        );
-        const actionMoviesRow = document.getElementById('action-movies-row');
-        if (actionMoviesRow && actionMovies.length > 0) {
-            actionMoviesRow.innerHTML = '';
-            actionMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                actionMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (actionMoviesRow) {
-            actionMoviesRow.innerHTML = '<div class="loading">No action movies found</div>';
-        }
+    const loadSection = async (section) => {
+        const container = document.getElementById(section.id);
+        if (!container) return;
 
-        const comedyMovies = await fetchContent(
-            '/discover/movie?with_genres=35&sort_by=popularity.desc',
-            lang
-        );
-        const comedyMoviesRow = document.getElementById('comedy-movies-row');
-        if (comedyMoviesRow && comedyMovies.length > 0) {
-            comedyMoviesRow.innerHTML = '';
-            comedyMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                comedyMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (comedyMoviesRow) {
-            comedyMoviesRow.innerHTML = '<div class="loading">No comedy movies found</div>';
+        try {
+            const results = await fetchContent(section.endpoint, lang);
+            if (results === null) {
+                // Fetch failed (server error)
+                container.innerHTML = `<div class="loading">${window.i18n ? window.i18n.t('search.errorOccurred') : 'Error loading content'}</div>`;
+            } else if (results && results.error === 'RATE_LIMITED') {
+                // Rate limited - show specific message
+                const retryAfter = results.retryAfter || 0;
+                const minutes = Math.ceil(retryAfter / 60);
+                const rateLimitMsg = window.i18n 
+                    ? `Rate limit exceeded. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`
+                    : `Rate limit exceeded. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`;
+                container.innerHTML = `<div class="loading">${rateLimitMsg}</div>`;
+            } else if (Array.isArray(results) && results.length > 0) {
+                container.innerHTML = '';
+                results.forEach((movie, index) => {
+                    const card = createMovieCard(movie);
+                    container.appendChild(card);
+                    // Duration fetches disabled to prevent backend overload
+                    // if (index < 5) {
+                    //     durationQueue.add(() => fetchAndSetMovieDuration(movie, card));
+                    // }
+                });
+                if (window.initMyListButtons) window.initMyListButtons();
+                // Initialize scroll buttons for this section
+                initScrollButtons(container);
+            } else {
+                // Empty array or invalid response
+                const sectionName = window.i18n ? window.i18n.t(section.i18nKey) : section.i18nKey;
+                const noResultsMsg = window.i18n
+                    ? window.i18n.t('search.noResultsFor').replace('{query}', sectionName)
+                    : `No ${sectionName} found`;
+                container.innerHTML = `<div class="loading">${noResultsMsg}</div>`;
+            }
+        } catch (error) {
+            console.error(`Error loading section ${section.id}:`, error);
+            container.innerHTML = `<div class="loading">${window.i18n ? window.i18n.t('search.errorOccurred') : 'Error loading content'}</div>`;
         }
+    };
 
-        const dramaMovies = await fetchContent(
-            '/discover/movie?with_genres=18&sort_by=popularity.desc',
-            lang
-        );
-        const dramaMoviesRow = document.getElementById('drama-movies-row');
-        if (dramaMoviesRow && dramaMovies.length > 0) {
-            dramaMoviesRow.innerHTML = '';
-            dramaMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                dramaMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (dramaMoviesRow) {
-            dramaMoviesRow.innerHTML = '<div class="loading">No drama movies found</div>';
-        }
-
-        const horrorMovies = await fetchContent(
-            '/discover/movie?with_genres=27&sort_by=popularity.desc',
-            lang
-        );
-        const horrorMoviesRow = document.getElementById('horror-movies-row');
-        if (horrorMoviesRow && horrorMovies.length > 0) {
-            horrorMoviesRow.innerHTML = '';
-            horrorMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                horrorMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (horrorMoviesRow) {
-            horrorMoviesRow.innerHTML = '<div class="loading">No horror movies found</div>';
-        }
-
-        const animationMovies = await fetchContent(
-            '/discover/movie?with_genres=16&sort_by=popularity.desc',
-            lang
-        );
-        const animationMoviesRow = document.getElementById('animation-movies-row');
-        if (animationMoviesRow && animationMovies.length > 0) {
-            animationMoviesRow.innerHTML = '';
-            animationMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                animationMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (animationMoviesRow) {
-            animationMoviesRow.innerHTML = '<div class="loading">No animation movies found</div>';
-        }
-
-        const scifiMovies = await fetchContent(
-            '/discover/movie?with_genres=878&sort_by=popularity.desc',
-            lang
-        );
-        const scifiMoviesRow = document.getElementById('scifi-movies-row');
-        if (scifiMoviesRow && scifiMovies.length > 0) {
-            scifiMoviesRow.innerHTML = '';
-            scifiMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                scifiMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (scifiMoviesRow) {
-            scifiMoviesRow.innerHTML = '<div class="loading">No science fiction movies found</div>';
-        }
-
-        const crimeMovies = await fetchContent(
-            '/discover/movie?with_genres=80&sort_by=popularity.desc',
-            lang
-        );
-        const crimeMoviesRow = document.getElementById('crime-movies-row');
-        if (crimeMoviesRow && crimeMovies.length > 0) {
-            crimeMoviesRow.innerHTML = '';
-            crimeMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                crimeMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (crimeMoviesRow) {
-            crimeMoviesRow.innerHTML = '<div class="loading">No crime movies found</div>';
-        }
-
-        const familyMovies = await fetchContent(
-            '/discover/movie?with_genres=10751&sort_by=popularity.desc',
-            lang
-        );
-        const familyMoviesRow = document.getElementById('family-movies-row');
-        if (familyMoviesRow && familyMovies.length > 0) {
-            familyMoviesRow.innerHTML = '';
-            familyMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                familyMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (familyMoviesRow) {
-            familyMoviesRow.innerHTML = '<div class="loading">No family movies found</div>';
-        }
-
-        const romanceMovies = await fetchContent(
-            '/discover/movie?with_genres=10749&sort_by=popularity.desc',
-            lang
-        );
-        const romanceMoviesRow = document.getElementById('romance-movies-row');
-        if (romanceMoviesRow && romanceMovies.length > 0) {
-            romanceMoviesRow.innerHTML = '';
-            romanceMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                romanceMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (romanceMoviesRow) {
-            romanceMoviesRow.innerHTML = '<div class="loading">No romance movies found</div>';
-        }
-
-        const mysteryMovies = await fetchContent(
-            '/discover/movie?with_genres=9648&sort_by=popularity.desc',
-            lang
-        );
-        const mysteryMoviesRow = document.getElementById('mystery-movies-row');
-        if (mysteryMoviesRow && mysteryMovies.length > 0) {
-            mysteryMoviesRow.innerHTML = '';
-            mysteryMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                mysteryMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (mysteryMoviesRow) {
-            mysteryMoviesRow.innerHTML = '<div class="loading">No mystery movies found</div>';
-        }
-
-        const fantasyMovies = await fetchContent(
-            '/discover/movie?with_genres=14&sort_by=popularity.desc',
-            lang
-        );
-        const fantasyMoviesRow = document.getElementById('fantasy-movies-row');
-        if (fantasyMoviesRow && fantasyMovies.length > 0) {
-            fantasyMoviesRow.innerHTML = '';
-            fantasyMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                fantasyMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (fantasyMoviesRow) {
-            fantasyMoviesRow.innerHTML = '<div class="loading">No fantasy movies found</div>';
-        }
-
-        const documentaryMovies = await fetchContent(
-            '/discover/movie?with_genres=99&sort_by=popularity.desc',
-            lang
-        );
-        const documentaryMoviesRow = document.getElementById('documentary-movies-row');
-        if (documentaryMoviesRow && documentaryMovies.length > 0) {
-            documentaryMoviesRow.innerHTML = '';
-            documentaryMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                documentaryMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (documentaryMoviesRow) {
-            documentaryMoviesRow.innerHTML =
-                '<div class="loading">No documentary movies found</div>';
-        }
-
-        const adventureMovies = await fetchContent(
-            '/discover/movie?with_genres=12&sort_by=popularity.desc',
-            lang
-        );
-        const adventureMoviesRow = document.getElementById('adventure-movies-row');
-        if (adventureMoviesRow && adventureMovies.length > 0) {
-            adventureMoviesRow.innerHTML = '';
-            adventureMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                adventureMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (adventureMoviesRow) {
-            adventureMoviesRow.innerHTML = '<div class="loading">No adventure movies found</div>';
-        }
-
-        const historyMovies = await fetchContent(
-            '/discover/movie?with_genres=36&sort_by=popularity.desc',
-            lang
-        );
-        const historyMoviesRow = document.getElementById('history-movies-row');
-        if (historyMoviesRow && historyMovies.length > 0) {
-            historyMoviesRow.innerHTML = '';
-            historyMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                historyMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (historyMoviesRow) {
-            historyMoviesRow.innerHTML = '<div class="loading">No history movies found</div>';
-        }
-
-        const musicMovies = await fetchContent(
-            '/discover/movie?with_genres=10402&sort_by=popularity.desc',
-            lang
-        );
-        const musicMoviesRow = document.getElementById('music-movies-row');
-        if (musicMoviesRow && musicMovies.length > 0) {
-            musicMoviesRow.innerHTML = '';
-            musicMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                musicMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (musicMoviesRow) {
-            musicMoviesRow.innerHTML = '<div class="loading">No music movies found</div>';
-        }
-
-        const thrillerMovies = await fetchContent(
-            '/discover/movie?with_genres=53&sort_by=popularity.desc',
-            lang
-        );
-        const thrillerMoviesRow = document.getElementById('thriller-movies-row');
-        if (thrillerMoviesRow && thrillerMovies.length > 0) {
-            thrillerMoviesRow.innerHTML = '';
-            thrillerMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                thrillerMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (thrillerMoviesRow) {
-            thrillerMoviesRow.innerHTML = '<div class="loading">No thriller movies found</div>';
-        }
-
-        const warMovies = await fetchContent(
-            '/discover/movie?with_genres=10752&sort_by=popularity.desc',
-            lang
-        );
-        const warMoviesRow = document.getElementById('war-movies-row');
-        if (warMoviesRow && warMovies.length > 0) {
-            warMoviesRow.innerHTML = '';
-            warMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                warMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (warMoviesRow) {
-            warMoviesRow.innerHTML = '<div class="loading">No war movies found</div>';
-        }
-
-        const westernMovies = await fetchContent(
-            '/discover/movie?with_genres=37&sort_by=popularity.desc',
-            lang
-        );
-        const westernMoviesRow = document.getElementById('western-movies-row');
-        if (westernMoviesRow && westernMovies.length > 0) {
-            westernMoviesRow.innerHTML = '';
-            westernMovies.forEach((movie) => {
-                const card = createMovieCard(movie);
-                westernMoviesRow.appendChild(card);
-                fetchAndSetMovieDuration(movie, card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (westernMoviesRow) {
-            westernMoviesRow.innerHTML = '<div class="loading">No western movies found</div>';
-        }
-    } catch (error) {
-        console.error('Error loading content:', error);
-        document.querySelectorAll('.movie-row').forEach((row) => {
-            row.innerHTML =
-                '<div class="loading">Error loading content. Please try again later.</div>';
+    // Load sections using queue with initial delay to avoid hitting rate limits
+    // Wait 2 seconds before starting to let any previous rate limit buckets reset
+    setTimeout(() => {
+        sections.forEach(section => {
+            sectionQueue.add(() => loadSection(section));
         });
-    }
+    }, 2000);
 }
 
 function debounce(fn, delay) {
@@ -489,7 +297,13 @@ window.addEventListener('scroll', () => {
     }
 });
 
-document.querySelectorAll('.movie-row').forEach((row) => {
+function initScrollButtons(row) {
+    // Check if buttons already exist to avoid duplicates
+    const parent = row.parentElement;
+    if (parent.querySelector('.scroll-button')) {
+        return; // Buttons already exist
+    }
+
     const leftBtn = document.createElement('button');
     leftBtn.className = 'scroll-button scroll-left';
     leftBtn.innerHTML = '<i class="material-icons">chevron_left</i>';
@@ -500,14 +314,14 @@ document.querySelectorAll('.movie-row').forEach((row) => {
     rightBtn.innerHTML = '<i class="material-icons">chevron_right</i>';
     rightBtn.onclick = () => row.scrollBy({ left: 200, behavior: 'smooth' });
 
-    row.parentElement.appendChild(leftBtn);
-    row.parentElement.appendChild(rightBtn);
+    parent.appendChild(leftBtn);
+    parent.appendChild(rightBtn);
+}
+
+// Initialize scroll buttons for any existing rows (for initial page load)
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.movie-row').forEach((row) => {
+        initScrollButtons(row);
+    });
 });
 
-if (window.i18n) {
-    const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
-    window.i18n.changeLanguage = async function (lang) {
-        await origChangeLanguage(lang);
-        await loadContent();
-    };
-}

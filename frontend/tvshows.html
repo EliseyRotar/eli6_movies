@@ -1137,9 +1137,38 @@
 
     <script>
         console.log('JS IS RUNNING - TEST');
-        const TMDB_API_URL = 'https://streaming.ecolens.me/api/tmdb';
+        const AUTH_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+            ? `http://${window.location.hostname}:3000/api`
+            : '/api';
+        const TMDB_API_URL = `${AUTH_API_URL}/tmdb`;
         const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-        const AUTH_API_URL = 'https://streaming.ecolens.me/api';
+
+        class FetchQueue {
+            constructor(concurrency = 3) {
+                this.concurrency = concurrency;
+                this.running = 0;
+                this.queue = [];
+            }
+            add(task) {
+                this.queue.push(task);
+                this.next();
+            }
+            async next() {
+                if (this.running >= this.concurrency || this.queue.length === 0) return;
+                this.running++;
+                const task = this.queue.shift();
+                try {
+                    await task();
+                } finally {
+                    this.running--;
+                    // Delay between tasks to avoid rate limiting (2000ms for sections, 500ms for durations)
+                    const delay = this === sectionQueue ? 2000 : 500;
+                    setTimeout(() => this.next(), delay);
+                }
+            }
+        }
+        const durationQueue = new FetchQueue(1); // Reduced to 1 to avoid overwhelming backend
+        const sectionQueue = new FetchQueue(1);
 
         // Current show being played
         let currentShow = null;
@@ -1328,25 +1357,54 @@
         }
 
         // Function to fetch content from TMDB
-        async function fetchContent(endpoint, lang) {
+        async function fetchContent(endpoint, lang, retryCount = 0) {
             try {
                 let url = `${TMDB_API_URL}${endpoint}`;
-                url += url.includes('?') ? '&' : '?';
+                // Fix double & issue - check if URL already ends with & or ?
                 if (lang) {
-                    url += `&language=${lang}`;
+                    if (url.includes('?')) {
+                        // URL already has query params, add & if not already there
+                        url += url.endsWith('&') ? '' : '&';
+                        url += `language=${lang}`;
+                    } else {
+                        url += `?language=${lang}`;
+                    }
                 }
-                console.log('[DEBUG] Fetching:', url);
                 const response = await fetch(url);
-                console.log('[DEBUG] Response status:', response.status);
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    // Handle rate limiting (429) with retry
+                    if (response.status === 429) {
+                        const retryAfter = response.headers.get('Retry-After');
+                        const retryAfterSeconds = retryAfter ? parseInt(retryAfter) : 0;
+                        // Only retry if retry-after is reasonable (< 60 seconds) and we haven't retried too many times
+                        if (retryCount < 2 && retryAfterSeconds > 0 && retryAfterSeconds < 60) {
+                            const delay = retryAfterSeconds * 1000;
+                            console.warn(`Rate limited for ${endpoint}, retrying after ${retryAfterSeconds}s (attempt ${retryCount + 1}/2)`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return fetchContent(endpoint, lang, retryCount + 1);
+                        }
+                        // Rate limit is too long or we've retried enough - return special error code
+                        console.error(`Rate limited for ${endpoint}, retry-after: ${retryAfterSeconds}s`);
+                        return { error: 'RATE_LIMITED', retryAfter: retryAfterSeconds };
+                    }
+                    console.error(`HTTP error! status: ${response.status} for ${endpoint}`);
+                    return null; // Return null for HTTP errors
                 }
                 const data = await response.json();
-                console.log('[DEBUG] Data received:', data);
-                return data.results;
-            } catch (error) {
-                console.error('[DEBUG] Error fetching content:', error);
+                // Check if this is an error response from the backend (has error property)
+                if (data.error) {
+                    console.error(`Backend error for ${endpoint}:`, data.error);
+                    return null; // Return null for backend errors
+                }
+                // Check if response has the expected structure (results array)
+                if (data.results !== undefined) {
+                    return Array.isArray(data.results) ? data.results : [];
+                }
+                // If no results property, return empty array as fallback
                 return [];
+            } catch (error) {
+                console.error(`Error fetching content for ${endpoint}:`, error);
+                return null;
             }
         }
 
@@ -1376,274 +1434,81 @@
 
         // Function to load content (optimized for performance)
         async function loadContent() {
-            try {
-                const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-                console.log('[DEBUG] Starting TV shows content loading...');
-                const startTime = performance.now();
+            const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+            const sections = [
+                { id: 'trending-tv-row', endpoint: '/trending/tv/week', i18nKey: 'tvshows.sections.trending' },
+                { id: 'popular-tv-row', endpoint: '/tv/popular', i18nKey: 'tvshows.sections.popular' },
+                { id: 'top-rated-tv-row', endpoint: '/tv/top_rated', i18nKey: 'tvshows.sections.topRated' },
+                { id: 'action-tv-row', endpoint: '/discover/tv?with_genres=10759&sort_by=popularity.desc', i18nKey: 'tvshows.sections.action' },
+                { id: 'comedy-tv-row', endpoint: '/discover/tv?with_genres=35&sort_by=popularity.desc', i18nKey: 'tvshows.sections.comedy' },
+                { id: 'drama-tv-row', endpoint: '/discover/tv?with_genres=18&sort_by=popularity.desc', i18nKey: 'tvshows.sections.drama' },
+                { id: 'horror-tv-row', endpoint: '/discover/tv?with_genres=9648&sort_by=popularity.desc', i18nKey: 'tvshows.sections.horror' },
+                { id: 'animation-tv-row', endpoint: '/discover/tv?with_genres=16&sort_by=popularity.desc', i18nKey: 'tvshows.sections.animation' },
+                { id: 'scifi-tv-row', endpoint: '/discover/tv?with_genres=10765&sort_by=popularity.desc', i18nKey: 'tvshows.sections.scifi' },
+                { id: 'crime-tv-row', endpoint: '/discover/tv?with_genres=80&sort_by=popularity.desc', i18nKey: 'tvshows.sections.crime' },
+                { id: 'documentary-tv-row', endpoint: '/discover/tv?with_genres=99&sort_by=popularity.desc', i18nKey: 'tvshows.sections.documentary' },
+                { id: 'family-tv-row', endpoint: '/discover/tv?with_genres=10751&sort_by=popularity.desc', i18nKey: 'tvshows.sections.family' },
+                { id: 'kids-tv-row', endpoint: '/discover/tv?with_genres=10762&sort_by=popularity.desc', i18nKey: 'tvshows.sections.kids' },
+                { id: 'mystery-tv-row', endpoint: '/discover/tv?with_genres=9648&sort_by=popularity.desc', i18nKey: 'tvshows.sections.mystery' },
+                { id: 'reality-tv-row', endpoint: '/discover/tv?with_genres=10764&sort_by=popularity.desc', i18nKey: 'tvshows.sections.reality' },
+                { id: 'warpolitics-tv-row', endpoint: '/discover/tv?with_genres=10768&sort_by=popularity.desc', i18nKey: 'tvshows.sections.warpolitics' },
+                { id: 'western-tv-row', endpoint: '/discover/tv?with_genres=37&sort_by=popularity.desc', i18nKey: 'tvshows.sections.western' }
+            ];
 
-                // Fetch trending TV shows
-                console.log('[DEBUG] Fetching trending TV shows...');
-                const trendingShows = await fetchContent('/trending/tv/week', lang);
-                console.log('[DEBUG] Trending shows:', trendingShows);
-                const trendingContainer = document.getElementById('trending-tv-row');
-                if (trendingContainer) {
-                    trendingContainer.innerHTML = '';
-                    trendingShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        trendingContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
+            const loadSection = async (section) => {
+                const container = document.getElementById(section.id);
+                if (!container) return;
 
-                // Fetch popular TV shows
-                console.log('[DEBUG] Fetching popular TV shows...');
-                const popularShows = await fetchContent('/tv/popular', lang);
-                console.log('[DEBUG] Popular shows:', popularShows);
-                const popularContainer = document.getElementById('popular-tv-row');
-                if (popularContainer) {
-                    popularContainer.innerHTML = '';
-                    popularShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        popularContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
+                try {
+                    const results = await fetchContent(section.endpoint, lang);
+                    if (results === null) {
+                        // Fetch failed (server error)
+                        container.innerHTML = `<div class="loading">${window.i18n ? window.i18n.t('search.errorOccurred') : 'Error loading content'}</div>`;
+                    } else if (results && results.error === 'RATE_LIMITED') {
+                        // Rate limited - show specific message
+                        const retryAfter = results.retryAfter || 0;
+                        const minutes = Math.ceil(retryAfter / 60);
+                        const rateLimitMsg = window.i18n 
+                            ? `Rate limit exceeded. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`
+                            : `Rate limit exceeded. Please try again in ${minutes} minute${minutes !== 1 ? 's' : ''}.`;
+                        container.innerHTML = `<div class="loading">${rateLimitMsg}</div>`;
+                    } else if (Array.isArray(results) && results.length > 0) {
+                        container.innerHTML = '';
+                        results.forEach((show, index) => {
+                            const card = createShowCard(show);
+                            container.appendChild(card);
+                            // Duration fetches disabled to prevent backend overload
+                            // if (index < 5) {
+                            //     durationQueue.add(() => fetchAndSetShowDuration(show, card));
+                            // }
+                        });
+                        if (window.initMyListButtons) window.initMyListButtons();
+                    } else {
+                        // Empty array or invalid response
+                        const sectionName = window.i18n ? window.i18n.t(section.i18nKey) : section.i18nKey;
+                        const noResultsMsg = window.i18n
+                            ? window.i18n.t('search.noResultsFor').replace('{query}', sectionName)
+                            : `No ${sectionName} found`;
+                        container.innerHTML = `<div class="loading">${noResultsMsg}</div>`;
+                    }
+                } catch (error) {
+                    console.error(`Error loading section ${section.id}:`, error);
+                    container.innerHTML = `<div class=\"loading\">${window.i18n ? window.i18n.t('search.errorOccurred') : 'Error loading content'}</div>`;
                 }
+            };
 
-                // Fetch top rated TV shows
-                console.log('[DEBUG] Fetching top rated TV shows...');
-                const topRatedShows = await fetchContent('/tv/top_rated', lang);
-                console.log('[DEBUG] Top rated shows:', topRatedShows);
-                const topRatedContainer = document.getElementById('top-rated-tv-row');
-                if (topRatedContainer) {
-                    topRatedContainer.innerHTML = '';
-                    topRatedShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        topRatedContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
+            // Load sections using queue
+            // Load sections using queue with initial delay to avoid hitting rate limits
+            // Wait 2 seconds before starting to let any previous rate limit buckets reset
+            setTimeout(() => {
+                sections.forEach(section => {
+                    sectionQueue.add(() => loadSection(section));
+                });
+            }, 2000);
 
-                // Fetch action & adventure TV shows
-                console.log('[DEBUG] Fetching action & adventure TV shows...');
-                const actionShows = await fetchContent(
-                    '/discover/tv?with_genres=10759&sort_by=popularity.desc',
-                    lang
-                );
-                console.log('[DEBUG] Action shows:', actionShows);
-                const actionContainer = document.getElementById('action-tv-row');
-                if (actionContainer) {
-                    actionContainer.innerHTML = '';
-                    actionShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        actionContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                // Fetch comedy TV shows
-                console.log('[DEBUG] Fetching comedy TV shows...');
-                const comedyShows = await fetchContent(
-                    '/discover/tv?with_genres=35&sort_by=popularity.desc',
-                    lang
-                );
-                console.log('[DEBUG] Comedy shows:', comedyShows);
-                const comedyContainer = document.getElementById('comedy-tv-row');
-                if (comedyContainer) {
-                    comedyContainer.innerHTML = '';
-                    comedyShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        comedyContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                // Fetch drama TV shows
-                console.log('[DEBUG] Fetching drama TV shows...');
-                const dramaShows = await fetchContent(
-                    '/discover/tv?with_genres=18&sort_by=popularity.desc',
-                    lang
-                );
-                console.log('[DEBUG] Drama shows:', dramaShows);
-                const dramaContainer = document.getElementById('drama-tv-row');
-                if (dramaContainer) {
-                    dramaContainer.innerHTML = '';
-                    dramaShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        dramaContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                // Fetch horror TV shows
-                console.log('[DEBUG] Fetching horror TV shows...');
-                const horrorShows = await fetchContent(
-                    '/discover/tv?with_genres=9648&sort_by=popularity.desc',
-                    lang
-                );
-                console.log('[DEBUG] Horror shows:', horrorShows);
-                const horrorContainer = document.getElementById('horror-tv-row');
-                if (horrorContainer) {
-                    horrorContainer.innerHTML = '';
-                    horrorShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        horrorContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                // Fetch animation TV shows
-                console.log('[DEBUG] Fetching animation TV shows...');
-                const animationShows = await fetchContent(
-                    '/discover/tv?with_genres=16&sort_by=popularity.desc',
-                    lang
-                );
-                console.log('[DEBUG] Animation shows:', animationShows);
-                const animationContainer = document.getElementById('animation-tv-row');
-                if (animationContainer) {
-                    animationContainer.innerHTML = '';
-                    animationShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        animationContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                // Fetch science fiction & fantasy TV shows
-                const scifiShows = await fetchContent(
-                    '/discover/tv?with_genres=10765&sort_by=popularity.desc',
-                    lang
-                );
-                const scifiContainer = document.getElementById('scifi-tv-row');
-                if (scifiContainer) {
-                    scifiContainer.innerHTML = '';
-                    scifiShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        scifiContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Crime TV shows
-                const crimeShows = await fetchContent(
-                    '/discover/tv?with_genres=80&sort_by=popularity.desc',
-                    lang
-                );
-                const crimeContainer = document.getElementById('crime-tv-row');
-                if (crimeContainer) {
-                    crimeContainer.innerHTML = '';
-                    crimeShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        crimeContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Documentary TV shows
-                const documentaryShows = await fetchContent(
-                    '/discover/tv?with_genres=99&sort_by=popularity.desc',
-                    lang
-                );
-                const documentaryContainer = document.getElementById('documentary-tv-row');
-                if (documentaryContainer) {
-                    documentaryContainer.innerHTML = '';
-                    documentaryShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        documentaryContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Family TV shows
-                const familyShows = await fetchContent(
-                    '/discover/tv?with_genres=10751&sort_by=popularity.desc',
-                    lang
-                );
-                const familyContainer = document.getElementById('family-tv-row');
-                if (familyContainer) {
-                    familyContainer.innerHTML = '';
-                    familyShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        familyContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Kids TV shows
-                const kidsShows = await fetchContent(
-                    '/discover/tv?with_genres=10762&sort_by=popularity.desc',
-                    lang
-                );
-                const kidsContainer = document.getElementById('kids-tv-row');
-                if (kidsContainer) {
-                    kidsContainer.innerHTML = '';
-                    kidsShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        kidsContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Mystery TV shows
-                const mysteryShows = await fetchContent(
-                    '/discover/tv?with_genres=9648&sort_by=popularity.desc',
-                    lang
-                );
-                const mysteryContainer = document.getElementById('mystery-tv-row');
-                if (mysteryContainer) {
-                    mysteryContainer.innerHTML = '';
-                    mysteryShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        mysteryContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Reality TV shows
-                const realityShows = await fetchContent(
-                    '/discover/tv?with_genres=10764&sort_by=popularity.desc',
-                    lang
-                );
-                const realityContainer = document.getElementById('reality-tv-row');
-                if (realityContainer) {
-                    realityContainer.innerHTML = '';
-                    realityShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        realityContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch War & Politics TV shows
-                const warPoliticsShows = await fetchContent(
-                    '/discover/tv?with_genres=10768&sort_by=popularity.desc',
-                    lang
-                );
-                const warPoliticsContainer = document.getElementById('warpolitics-tv-row');
-                if (warPoliticsContainer) {
-                    warPoliticsContainer.innerHTML = '';
-                    warPoliticsShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        warPoliticsContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-                // Fetch Western TV shows
-                const westernShows = await fetchContent(
-                    '/discover/tv?with_genres=37&sort_by=popularity.desc',
-                    lang
-                );
-                const westernContainer = document.getElementById('western-tv-row');
-                if (westernContainer) {
-                    westernContainer.innerHTML = '';
-                    westernShows.forEach((show) => {
-                        const card = createContentCard(show);
-                        westernContainer.appendChild(card);
-                    });
-                    window.initMyListButtons && window.initMyListButtons();
-                }
-
-                const endTime = performance.now();
-                console.log(`[DEBUG] TV shows loaded in ${(endTime - startTime).toFixed(2)}ms`);
-
-                // Translate dynamic content after loading
-                if (window.i18n && window.i18n.currentLanguage !== 'en') {
-                    await window.i18n.translateDynamicElements();
-                }
-            } catch (error) {
-                console.error('[DEBUG] Error loading content:', error);
+            // Translate dynamic content after loading if needed
+            if (window.i18n && window.i18n.currentLanguage !== 'en') {
+                await window.i18n.translateDynamicElements();
             }
         }
 
