@@ -288,6 +288,7 @@
             margin-bottom: 15px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
+            line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
             line-height: 1.4;
@@ -419,6 +420,7 @@
             .card-overview {
                 font-size: 12px;
                 -webkit-line-clamp: 2;
+                line-clamp: 2;
             }
 
             .play-button {
@@ -605,7 +607,35 @@
 
     <script>
         const JIKAN_API_URL = 'https://api.jikan.moe/v4';
-        const AUTH_API_URL = 'https://streaming.ecolens.me/api';
+        const AUTH_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+            ? `http://${window.location.hostname}:3000/api`
+            : '/api';
+
+        class FetchQueue {
+            constructor(concurrency = 3, delay = 200) {
+                this.concurrency = concurrency;
+                this.delay = delay;
+                this.running = 0;
+                this.queue = [];
+            }
+            add(task) {
+                this.queue.push(task);
+                this.next();
+            }
+            async next() {
+                if (this.running >= this.concurrency || this.queue.length === 0) return;
+                this.running++;
+                const task = this.queue.shift();
+                try {
+                    await task();
+                } finally {
+                    this.running--;
+                    setTimeout(() => this.next(), this.delay);
+                }
+            }
+        }
+        // Jikan has strict rate limits, use concurrency 1 for sections
+        const animeQueue = new FetchQueue(1, 500);
 
         let myList = [];
 
@@ -622,6 +652,11 @@
             } else {
                 navbar.classList.remove('scrolled');
             }
+        });
+
+        // Listen for language changes
+        window.addEventListener('languageChanged', () => {
+            loadAnimeContent();
         });
 
         async function initializePage() {
@@ -648,48 +683,75 @@
             }
         }
 
+        // Sections configuration
+        const sections = [
+            {
+                id: 'trending-anime',
+                endpoint: 'top/anime?filter=airing&limit=20',
+                i18nKey: 'anime.sections.trending',
+            },
+            {
+                id: 'popular-anime',
+                endpoint: 'top/anime?filter=bypopularity&limit=20',
+                i18nKey: 'anime.sections.popular',
+            },
+            {
+                id: 'top-rated-anime',
+                endpoint: 'top/anime?filter=favorite&limit=20',
+                i18nKey: 'anime.sections.topRated',
+            },
+            {
+                id: 'action-anime',
+                endpoint: 'anime?genres=1&order_by=popularity&sort=desc&limit=20',
+                i18nKey: 'anime.sections.action',
+            },
+            {
+                id: 'comedy-anime',
+                endpoint: 'anime?genres=4&order_by=popularity&sort=desc&limit=20',
+                i18nKey: 'anime.sections.comedy',
+            },
+            {
+                id: 'drama-anime',
+                endpoint: 'anime?genres=8&order_by=popularity&sort=desc&limit=20',
+                i18nKey: 'anime.sections.drama',
+            },
+            {
+                id: 'fantasy-anime',
+                endpoint: 'anime?genres=10&order_by=popularity&sort=desc&limit=20',
+                i18nKey: 'anime.sections.fantasy',
+            },
+            {
+                id: 'romance-anime',
+                endpoint: 'anime?genres=22&order_by=popularity&sort=desc&limit=20',
+                i18nKey: 'anime.sections.romance',
+            },
+            {
+                id: 'this-season-anime',
+                endpoint: 'seasons/now?limit=20',
+                i18nKey: 'anime.sections.thisSeason',
+            },
+        ];
+
         // Load anime content using Jikan API
         async function loadAnimeContent() {
-            // Load different anime sections
-            await Promise.all([
-                loadSection('trending-anime', 'top/anime?filter=airing&limit=20'),
-                loadSection('popular-anime', 'top/anime?filter=bypopularity&limit=20'),
-                loadSection('top-rated-anime', 'top/anime?filter=favorite&limit=20'),
-                loadSection(
-                    'action-anime',
-                    'anime?genres=1&order_by=popularity&sort=desc&limit=20'
-                ),
-                loadSection(
-                    'comedy-anime',
-                    'anime?genres=4&order_by=popularity&sort=desc&limit=20'
-                ),
-                loadSection(
-                    'drama-anime',
-                    'anime?genres=8&order_by=popularity&sort=desc&limit=20'
-                ),
-                loadSection(
-                    'fantasy-anime',
-                    'anime?genres=10&order_by=popularity&sort=desc&limit=20'
-                ),
-                loadSection(
-                    'romance-anime',
-                    'anime?genres=22&order_by=popularity&sort=desc&limit=20'
-                ),
-                loadSection('this-season-anime', 'seasons/now?limit=20'),
-            ]);
+            // Load sections using queue to respect Jikan rate limits
+            sections.forEach(section => {
+                animeQueue.add(() => loadSection(section));
+            });
         }
 
         // Load content for a specific section
-        async function loadSection(containerId, endpoint) {
-            const container = document.getElementById(containerId);
+        async function loadSection(section) {
+            const container = document.getElementById(section.id);
             if (!container) return;
 
             try {
-                const content = await fetchAnimeContent(endpoint);
-                renderContent(container, content);
+                const content = await fetchAnimeContent(section.endpoint);
+                renderContent(container, content, section.i18nKey);
             } catch (error) {
-                console.error(`Error loading ${containerId}:`, error);
-                container.innerHTML = `<div class="error">Failed to load content</div>`;
+                console.error(`Error loading ${section.id}:`, error);
+                const errorMsg = window.i18n ? window.i18n.t('search.errorOccurred') : 'Error occurred';
+                container.innerHTML = `<div class="error">${errorMsg}</div>`;
             }
         }
 
@@ -707,16 +769,26 @@
                 return data.data || [];
             } catch (error) {
                 console.error('Error fetching anime content:', error);
-                return [];
+                return null;
             }
         }
 
         // Render content cards
-        function renderContent(container, content) {
+        function renderContent(container, content, i18nKey) {
             container.innerHTML = '';
 
+            if (content === null) {
+                const errorMsg = window.i18n ? window.i18n.t('search.errorOccurred') : 'Error occurred';
+                container.innerHTML = `<div class="error">${errorMsg}</div>`;
+                return;
+            }
+
             if (!content || content.length === 0) {
-                container.innerHTML = '<div class="error">No content available</div>';
+                const sectionName = window.i18n ? window.i18n.t(i18nKey) : 'Anime';
+                const noResultsMsg = window.i18n
+                    ? window.i18n.t('search.noResultsFor').replace('{query}', sectionName)
+                    : `No ${sectionName} found`;
+                container.innerHTML = `<div class="no-content">${noResultsMsg}</div>`;
                 return;
             }
 
