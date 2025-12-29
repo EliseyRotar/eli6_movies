@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ELI6 Movies</string>
+    <string name="title_activity_main">ELI6 Movies</string>
+    <string name="package_name">com.eli6.movies</string>
+    <string name="custom_url_scheme">com.eli6.movies</string>
+</resources>

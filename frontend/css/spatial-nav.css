@@ -1,0 +1,69 @@
+/**
+ * Focus states for Spatial Navigation (Android TV)
+ */
+
+/* Global focus override for TV */
+:focus {
+    outline: none !important;
+}
+
+/* Movie Card Focus */
+.movie-card:focus,
+.content-card:focus {
+    transform: scale(1.1) !important;
+    z-index: 100 !important;
+    box-shadow: 0 0 20px 5px var(--accent-color) !important;
+    border-color: var(--accent-color) !important;
+}
+
+/* Show info on focus for cards */
+.movie-card:focus .movie-info,
+.content-card:focus .content-info {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+/* Transition delays for focused elements */
+.movie-card:focus .movie-info>*,
+.content-card:focus .content-info>* {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+}
+
+/* Nav Link Focus */
+.nav-links a:focus,
+.nav-icon:focus {
+    color: #fff !important;
+    transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.nav-links a:focus::after {
+    transform: scaleX(1);
+}
+
+/* Button Focus */
+button:focus,
+.hero-btn:focus,
+.action-btn:focus {
+    transform: scale(1.1) !important;
+    box-shadow: 0 0 15px var(--accent-color) !important;
+    outline: 2px solid #fff !important;
+    outline-offset: 2px;
+}
+
+/* Custom Focus Ring for other elements */
+[tabindex="0"]:focus {
+    box-shadow: 0 0 0 3px var(--accent-color);
+}
+
+/* Hide scrollbars (TVs usually don't show them) */
+::-webkit-scrollbar {
+    display: none;
+}
+
+* {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}

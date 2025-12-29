@@ -1,0 +1,74 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:node/recommended",
+        "prettier"
+    ],
+    "plugins": [
+        "html"
+    ],
+    "overrides": [
+        {
+            "files": [
+                "backend/**/*.js"
+            ],
+            "env": {
+                "node": true,
+                "browser": false,
+                "es2020": true
+            },
+            "rules": {
+                "node/no-unsupported-features/es-syntax": "off",
+                "node/no-unsupported-features/node-builtins": "off"
+            }
+        },
+        {
+            "files": [
+                "frontend/**/*.js"
+            ],
+            "env": {
+                "browser": true,
+                "node": false,
+                "es2020": true,
+                "jquery": true
+            },
+            "globals": {
+                "TMDB_BASE_URL": "readonly",
+                "AUTH_API_URL": "readonly",
+                "TMDB_IMAGE_BASE_URL": "readonly",
+                "i18n": "readable",
+                "showNotification": "readable",
+                "showMyListToast": "readable",
+                "handleMyListApiError": "readable",
+                "showMyListEmpty": "readable",
+                "playContent": "readable"
+            },
+            "rules": {
+                "no-unused-vars": "off",
+                "no-undef": "off",
+                "no-empty": "warn"
+            }
+        }
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2020
+    },
+    "rules": {
+        "no-console": "off",
+        "no-unused-vars": [
+            "warn",
+            {
+                "argsIgnorePattern": "^_"
+            }
+        ],
+        "node/no-unpublished-require": "off",
+        "node/no-missing-require": "off",
+        "no-useless-escape": "off"
+    }
+}

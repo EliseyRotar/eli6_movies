@@ -1,0 +1,43 @@
+{
+    "version": 1,
+    "generatedAt": "2025-09-17T00:00:00Z",
+    "items": [
+        { "title": "Adblocker install popup on front page", "status": "done" },
+        {
+            "title": "Player overlays: server switcher and season/episode selector",
+            "status": "done"
+        },
+        {
+            "title": "Netflix carousel buttons fixed; replaced 'More Info' with 'Add to My List'",
+            "status": "done"
+        },
+        { "title": "Card layout spacing adjustments on both sides", "status": "done" },
+        { "title": "Stuck with MongoDB (decision)", "status": "done" },
+        { "title": "Auto next episode on series end", "status": "done" },
+        { "title": "Genres added in Movies and TV Shows", "status": "done" },
+        { "title": "Account page redesign", "status": "done" },
+        { "title": "Admin-only control panel", "status": "done" },
+        { "title": "Added VIXSRC and more streaming servers", "status": "done" },
+        { "title": "Keep Watching section", "status": "done" },
+        { "title": "Watched and Favorites in My List", "status": "done" },
+        { "title": "Improved card hover overlay (rating, animations)", "status": "done" },
+        { "title": "Cast feature in player", "status": "done" },
+        { "title": "Mobile interface first pass", "status": "done" },
+        { "title": "Language switcher (EN/IT/RU) and dynamic translations", "status": "done" },
+        { "title": "Custom pages for Home/Movies/TV/Anime/My List", "status": "done" },
+        { "title": "Search fixes across pages including Android TV", "status": "done" },
+        { "title": "Anime section and index section", "status": "done" },
+        { "title": "Removed N/A on TV show cards", "status": "done" },
+        { "title": "Live Sports page scaffold (Calcio)", "status": "planned" },
+        { "title": "Content personalization: color palette themes", "status": "planned" },
+        { "title": "PFP support for accounts", "status": "planned" },
+        { "title": "Kinogo films scraping integration", "status": "planned" },
+        { "title": "Favicon generation", "status": "planned" },
+        { "title": "Entry mini animation", "status": "planned" },
+        { "title": "Security hardening: backend moved to /opt/eli6_backend", "status": "done" },
+        {
+            "title": "Security: env secrets, rate limiting, headers, CORS tightened",
+            "status": "done"
+        }
+    ]
+}

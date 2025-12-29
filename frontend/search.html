@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Search - ELI6 MOVIES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/movies.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <script src="js/i18n.js"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-glow: rgba(229, 9, 20, 0.3);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #060606;
+            color: #fff;
+            padding-top: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Premium Search Page Container */
+        .search-page-wrapper {
+            padding: 140px 24px 100px;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        .search-header-section {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .search-header-section h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 30%, #666 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-box-container {
+            position: relative;
+            max-width: 700px;
+            margin: 0 auto;
+            z-index: 10;
+        }
+
+        .premium-search-input {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 22px 28px 22px 64px;
+            color: #fff;
+            font-size: 18px;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .premium-search-input:focus {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: #e50914;
+            box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.1), 0 20px 50px rgba(0, 0, 0, 0.5);
+            outline: none;
+            transform: translateY(-4px);
+        }
+
+        .search-box-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .premium-search-input:focus+.search-box-icon {
+            color: #e50914;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Results Grid Overhaul */
+        .search-results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 32px;
+            margin-top: 64px;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .search-page-wrapper {
+                padding: 100px 20px 120px;
+            }
+
+            .search-results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+                gap: 20px;
+            }
+
+            .search-header-section h1 {
+                font-size: 28px;
+            }
+
+            .premium-search-input {
+                font-size: 16px;
+                padding: 16px 20px 16px 52px;
+                border-radius: 16px;
+            }
+
+            .search-box-icon {
+                font-size: 24px;
+                left: 18px;
+            }
+
+            .navbar {
+                display: none !important;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-topbar,
+            .mobile-overlay,
+            .mobile-sidenav,
+            .mobile-bottom-nav {
+                display: none !important;
+            }
+
+            .navbar {
+                display: flex !important;
+            }
+        }
+
+        .search-prompt {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-prompt h2 {
+            font-size: 28px;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .search-prompt p {
+            font-size: 16px;
+        }
+
+        .search-prompt.hidden,
+        .results-info.hidden,
+        .loading.hidden,
+        .no-results.hidden {
+            display: none;
+        }
+
+        .results-info {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .no-results h3 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #e50914;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Shared Filter Tabs styling */
+        .search-filters {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+
+        .search-filter-tab {
+            padding: 10px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-filter-tab.active {
+            background: #e50914;
+            border-color: #e50914;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(229, 9, 20, 0.3);
+        }
+
+        .search-filter-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Mobile Top Bar -->
+    <div class="mobile-topbar" id="mobileTopbar">
+        <button class="mobile-hamburger" id="openMobileSidenav">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="mobile-logo" data-i18n="nav.logo">ELI6 MOVIES</span>
+        <div class="mobile-top-icons">
+            <a href="account.html" class="mobile-action-btn">
+                <i class="material-icons">account_circle</i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay and Side Navigation -->
+    <div class="mobile-overlay" id="mobileOverlay" style="display: none"></div>
+    <nav class="mobile-sidenav" id="mobileSidenav" style="display: none">
+        <div class="mobile-sidenav-header">
+            <span class="mobile-sidenav-title" data-i18n="nav.logo">ELI6 MOVIES</span>
+            <button class="mobile-sidenav-close" id="closeMobileSidenav">&times;</button>
+        </div>
+        <ul class="mobile-sidenav-links">
+            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="movies.html" data-i18n="nav.movies">Movies</a></li>
+            <li><a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a></li>
+            <li><a href="mylist.html" data-i18n="nav.mylist">My List</a></li>
+            <li><a href="settings.html" data-i18n="nav.settings">Settings</a></li>
+            <li><a href="account.html" data-i18n="nav.account">Account</a></li>
+        </ul>
+    </nav>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="index.html">
+            <i class="material-icons">home</i>
+            <span data-i18n="nav.home">Home</span>
+        </a>
+        <a href="movies.html">
+            <i class="material-icons">local_movies</i>
+            <span data-i18n="nav.movies">Movies</span>
+        </a>
+        <a href="tvshows.html">
+            <i class="material-icons">tv</i>
+            <span data-i18n="nav.tvshows">TV</span>
+        </a>
+        <a href="mylist.html">
+            <i class="material-icons">playlist_add_check</i>
+            <span data-i18n="nav.mylist">My List</span>
+        </a>
+        <a href="settings.html">
+            <i class="material-icons">settings</i>
+            <span data-i18n="nav.settings">Settings</span>
+        </a>
+    </nav>
+
+    <!-- Desktop Navigation -->
+    <nav class="navbar" style="display: none;">
+        <div style="display: flex; align-items: center; gap: 30px">
+            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
+            <div class="nav-links">
+                <a href="index.html" data-i18n="nav.home">Home</a>
+                <a href="movies.html" data-i18n="nav.movies">Movies</a>
+                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
+                <a href="anime.html" data-i18n="nav.anime">Anime</a>
+                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
+            </div>
+        </div>
+        <div class="nav-icons">
+            <a href="settings.html" class="nav-icon">
+                <i class="material-icons">settings</i>
+            </a>
+            <a href="account.html" class="nav-icon">
+                <i class="material-icons">account_circle</i>
+            </a>
+        </div>
+    </nav>
+
+    <div class="search-page-wrapper">
+        <div class="search-header-section">
+            <h1 data-i18n="search.title">What are you looking for?</h1>
+            <div class="search-box-container">
+                <input type="text" id="searchInput" class="premium-search-input"
+                    placeholder="Search movies, TV shows, anime..." data-i18n="search.placeholder" />
+                <i class="material-icons search-box-icon">search</i>
+            </div>
+            <div class="search-filters filter-tabs">
+                <div class="search-filter-tab filter-tab active" data-type="all" data-i18n="search.all">All</div>
+                <div class="search-filter-tab filter-tab" data-type="movie" data-i18n="nav.movies">Movies</div>
+                <div class="search-filter-tab filter-tab" data-type="tv" data-i18n="nav.tvshows">TV Shows</div>
+                <div class="search-filter-tab filter-tab" data-type="anime" data-i18n="nav.anime">Anime</div>
+            </div>
+        </div>
+
+        <div id="resultsInfo" class="results-info hidden"></div>
+
+        <div id="moviesGrid" class="search-results-grid movies-grid">
+            <!-- Results will be injected here -->
+        </div>
+
+        <div id="searchPrompt" class="search-prompt">
+            <h2 data-i18n="search.promptTitle">Discover something new</h2>
+            <p data-i18n="search.promptText">Enter a title to search across our entire library</p>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="loading-spinner"></div>
+            <p data-i18n="search.loading">Searching...</p>
+        </div>
+
+        <div id="noResults" class="no-results hidden">
+            <i class="material-icons"
+                style="font-size: 64px; color: rgba(255,255,255,0.2); margin-bottom: 20px;">search_off</i>
+            <h3 data-i18n="search.noResultsTitle">No results found</h3>
+            <p data-i18n="search.noResultsText">Try adjusting your keywords or filters</p>
+        </div>
+    </div>
+    <script src="js/i18n.js"></script>
+    <script src="js/mobile-nav.js"></script>
+    <script src="js/mylist.js"></script>
+    <script>
+        const AUTH_API_URL = 'https://streaming.ecolens.me/api';
+        const TMDB_BASE_URL = `${AUTH_API_URL}/tmdb`;
+        const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+        const JIKAN_API_URL = 'https://api.jikan.moe/v4';
+
+        let currentFilter = 'all';
+        let searchTimeout = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            const filterTabs = document.querySelectorAll('.search-filter-tab');
+            const moviesGrid = document.getElementById('moviesGrid');
+            const searchPrompt = document.getElementById('searchPrompt');
+            const loading = document.getElementById('loading');
+            const noResults = document.getElementById('noResults');
+            const resultsInfo = document.getElementById('resultsInfo');
+
+            // Filter tab click handlers
+            filterTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    filterTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFilter = tab.dataset.type;
+                    if (searchInput.value.trim()) {
+                        performSearch(searchInput.value.trim());
+                    }
+                });
+            });
+
+            // Search input handler with debounce
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.trim();
+                clearTimeout(searchTimeout);
+                
+                if (!query) {
+                    showPrompt();
+                    return;
+                }
+
+                searchTimeout = setTimeout(() => {
+                    performSearch(query);
+                }, 500);
+            });
+
+            function showPrompt() {
+                searchPrompt.classList.remove('hidden');
+                moviesGrid.innerHTML = '';
+                loading.classList.add('hidden');
+                noResults.classList.add('hidden');
+                resultsInfo.classList.add('hidden');
+            }
+
+            async function performSearch(query) {
+                if (!query) return;
+
+                searchPrompt.classList.add('hidden');
+                loading.classList.remove('hidden');
+                noResults.classList.add('hidden');
+                resultsInfo.classList.add('hidden');
+                moviesGrid.innerHTML = '';
+
+                try {
+                    let allResults = [];
+                    
+                    if (currentFilter === 'all' || currentFilter === 'movie') {
+                        const movies = await searchTMDB(query, 'movie');
+                        allResults.push(...movies.map(m => ({...m, contentType: 'movie'})));
+                    }
+                    
+                    if (currentFilter === 'all' || currentFilter === 'tv') {
+                        const tv = await searchTMDB(query, 'tv');
+                        allResults.push(...tv.map(t => ({...t, contentType: 'tv'})));
+                    }
+                    
+                    if (currentFilter === 'all' || currentFilter === 'anime') {
+                        const anime = await searchAnime(query);
+                        allResults.push(...anime.map(a => ({...a, contentType: 'anime'})));
+                    }
+
+                    loading.classList.add('hidden');
+
+                    if (allResults.length === 0) {
+                        noResults.classList.remove('hidden');
+                    } else {
+                        displayResults(allResults);
+                        resultsInfo.textContent = `Found ${allResults.length} result${allResults.length !== 1 ? 's' : ''}`;
+                        resultsInfo.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    console.error('Search error:', error);
+                    loading.classList.add('hidden');
+                    noResults.classList.remove('hidden');
+                }
+            }
+
+            async function searchTMDB(query, type) {
+                try {
+                    const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
+                    const url = `${TMDB_BASE_URL}/search/${type}?query=${encodeURIComponent(query)}&language=${lang}`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Search failed');
+                    const data = await response.json();
+                    return data.results || [];
+                } catch (error) {
+                    console.error(`TMDB search error (${type}):`, error);
+                    return [];
+                }
+            }
+
+            async function searchAnime(query) {
+                try {
+                    const url = `${JIKAN_API_URL}/anime?q=${encodeURIComponent(query)}&limit=20`;
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Anime search failed');
+                    const data = await response.json();
+                    return (data.data || []).map(anime => ({
+                        id: anime.mal_id,
+                        title: anime.title,
+                        overview: anime.synopsis || '',
+                        poster_path: anime.images?.jpg?.image_url || '',
+                        vote_average: anime.score || 0,
+                        release_date: anime.aired?.from ? anime.aired.from.split('T')[0] : null,
+                        contentType: 'anime'
+                    }));
+                } catch (error) {
+                    console.error('Anime search error:', error);
+                    return [];
+                }
+            }
+
+            function displayResults(results) {
+                moviesGrid.innerHTML = '';
+                results.forEach(item => {
+                    const card = createResultCard(item);
+                    moviesGrid.appendChild(card);
+                });
+                if (window.initMyListButtons) {
+                    window.initMyListButtons();
+                }
+            }
+
+            function createResultCard(item) {
+                const posterPath = item.poster_path 
+                    ? (item.contentType === 'anime' ? item.poster_path : `${TMDB_IMAGE_BASE_URL}${item.poster_path}`)
+                    : 'img/no-poster.jpg';
+                const year = item.release_date ? item.release_date.split('-')[0] : 'N/A';
+                const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
+                const title = item.title || item.name || 'Unknown';
+                const overview = item.overview ? item.overview.substring(0, 100) + '...' : '';
+                const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
+                const isInList = myListArr.some(
+                    (listItem) => listItem.id === item.id && listItem.type === item.contentType
+                );
+
+                const card = document.createElement('div');
+                card.className = 'movie-card';
+                card.innerHTML = `
+                    <img src="${posterPath}" alt="${title}" onerror="this.src='img/no-poster.jpg'">
+                    <div class="movie-info">
+                        <div class="card-actions">
+                            <button class="action-btn play-btn" onclick="event.stopPropagation(); playContent(${item.id}, '${item.contentType}')">
+                                <i class="material-icons">play_arrow</i>
+                            </button>
+                            <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${item.id},"title":"${title.replace(/"/g, '&quot;')}","type":"${item.contentType}","poster_path":"${posterPath}","overview":"${overview.replace(/"/g, '&quot;')}"}'>
+                                <i class="material-icons">${isInList ? 'check' : 'add'}</i>
+                            </button>
+                        </div>
+                        <div class="movie-title">${title}</div>
+                        <div class="card-meta">
+                            <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${rating}</span>
+                            <span>|</span>
+                            <span>${year}</span>
+                        </div>
+                        <p class="movie-overview">${overview}</p>
+                    </div>
+                `;
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.action-btn, .mylist-btn')) return;
+                    playContent(item.id, item.contentType);
+                });
+                return card;
+            }
+
+            function playContent(id, type) {
+                window.location.href = `player.php?type=${type}&id=${id}`;
+            }
+
+            // Check if there's a query parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryParam = urlParams.get('q');
+            if (queryParam) {
+                searchInput.value = queryParam;
+                performSearch(queryParam);
+            }
+        });
+    </script>
+</body>
+
+</html>

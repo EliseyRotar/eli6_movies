@@ -1,0 +1,393 @@
+/* Movies page styles extracted from movies.html */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Netflix Sans', Arial, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding-top: 80px;
+    overflow-x: hidden;
+}
+
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    padding: 20px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, var(--nav-bg) 10%, transparent);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.navbar.scrolled {
+    background: var(--nav-bg-scrolled);
+}
+
+.logo {
+    color: var(--accent-color);
+    font-size: 28px;
+    font-weight: bold;
+    text-decoration: none;
+    text-shadow: 0 0 10px rgba(229, 9, 20, 0.5);
+    transition: all 0.3s ease;
+}
+
+.nav-links {
+    display: flex;
+    gap: 30px;
+}
+
+.nav-links a {
+    color: #e5e5e5;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.3s;
+    position: relative;
+    padding: 5px 0;
+}
+
+.nav-links a:hover {
+    color: #fff;
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #e50914;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.nav-links a:hover::after {
+    transform: scaleX(1);
+}
+
+.movie-section {
+    padding: 40px 60px;
+    position: relative;
+}
+
+.section-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.movie-row {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    padding: 20px 0;
+    scroll-behavior: smooth;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    margin: 0 -30px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.movie-row::-webkit-scrollbar {
+    display: none;
+}
+
+.movie-card {
+    min-width: 200px;
+    height: 300px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    transform-style: preserve-3d;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.movie-card:hover {
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+}
+
+.movie-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    transform: skewX(-25deg);
+}
+
+.movie-card:hover::after {
+    left: 150%;
+}
+
+.movie-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.movie-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(to top, rgba(0, 0, 0, 1) 20%, rgba(0, 0, 0, 0.8) 70%, transparent);
+    color: #fff;
+    transform: translateY(100%);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+}
+
+.movie-card:hover .movie-info {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.movie-card .card-actions,
+.movie-card .movie-title,
+.movie-card .card-meta,
+.movie-card .movie-overview {
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease-in-out;
+}
+
+.movie-card:hover .movie-info>* {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.movie-card:hover .card-actions {
+    transition-delay: 0.1s;
+}
+
+.movie-card:hover .movie-title {
+    transition-delay: 0.15s;
+}
+
+.movie-card:hover .card-meta {
+    transition-delay: 0.2s;
+}
+
+.movie-card:hover .movie-overview {
+    transition-delay: 0.25s;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+    background: #e50914;
+    border-color: #e50914;
+    transform: scale(1.1);
+}
+
+.action-btn.in-list {
+    background: #e50914;
+    border-color: #e50914;
+}
+
+.movie-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 14px;
+    color: #b3b3b3;
+    margin-top: 10px;
+}
+
+.card-meta .rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #46d369;
+    font-weight: bold;
+}
+
+.movie-overview {
+    font-size: 13px;
+    color: #e5e5e5;
+    margin-top: 10px;
+    line-height: 1.5;
+    height: 4.5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scroll-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 1;
+    transition: all 0.3s ease;
+    font-size: 24px;
+}
+
+.scroll-left {
+    left: 10px;
+}
+
+.scroll-right {
+    right: 10px;
+}
+
+.scroll-button:hover {
+    background: rgba(229, 9, 20, 0.9);
+    border-color: #e50914;
+    transform: translateY(-50%) scale(1.1);
+}
+
+@media (max-width: 768px) {
+    .movie-section {
+        padding: 5px 0 20px 0;
+    }
+
+    .section-title {
+        font-size: 18px;
+        margin-bottom: 12px;
+        padding-left: 20px;
+    }
+
+    .movie-row {
+        margin: 0;
+        padding: 0 20px;
+        gap: 12px;
+    }
+
+    /* Premium Mobile Card Style */
+    .movie-card {
+        min-width: 140px;
+        width: 140px;
+        height: auto;
+        aspect-ratio: 2/3;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .movie-card img {
+        height: 100%;
+        width: 100%;
+    }
+
+    /* Force Info Visibility on Mobile */
+    .movie-info {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+        padding: 40px 8px 8px 8px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.5) 50%, transparent 100%);
+    }
+
+    .movie-title {
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 0;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+
+    /* Hide desktop-oriented meta/overview/actions on mobile cards to keep it clean */
+    .card-meta,
+    .movie-overview,
+    .card-actions {
+        display: none !important;
+    }
+
+    /* Minimalist overlay icon for play/add? Optional. 
+       For now, clean look with title is best. */
+
+    .scroll-button {
+        display: none !important;
+        /* Touch scrolling is better */
+    }
+}
+
+.nav-icons {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-icon {
+    color: #e5e5e5;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-icon:hover {
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.nav-icon i {
+    font-size: 24px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #fff;
+    font-size: 1.2rem;
+}
