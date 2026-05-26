@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const connectDB = require('./db');
 
+const rateLimit = require('./middleware/rateLimit');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -55,6 +56,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors(corsOptions));
+app.use(rateLimit);
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 
