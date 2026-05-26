@@ -1,10 +1,6 @@
 const bcrypt = require('bcryptjs');
-const logger = require('../utils/logger');
+const User = require('../models/User');
 const { normalizeEmail } = require('../utils/validators');
-
-// In-memory store for now; ready to swap with Mongo-backed implementation.
-const users = [];
-let nextUserId = 1;
 
 async function hashPassword(password) {
     return bcrypt.hash(password, 10);
@@ -12,27 +8,26 @@ async function hashPassword(password) {
 
 async function createUser({ username, email, password, role = 'user' }) {
     const hashedPassword = await hashPassword(password);
-    const user = {
-        _id: nextUserId++,
+    const user = new User({
         username,
         email: normalizeEmail(email),
         password: hashedPassword,
         role,
-        myList: [],
-        keepWatching: [],
-        watchHistory: [],
-    };
-    users.push(user);
+    });
+    await user.save();
     return user;
 }
 
 async function findByEmail(email) {
-    const normalized = normalizeEmail(email);
-    return users.find((u) => u.email === normalized) || null;
+    return User.findOne({ email: normalizeEmail(email) });
 }
 
 async function findById(id) {
-    return users.find((u) => u._id === id) || null;
+    try {
+        return await User.findById(id);
+    } catch {
+        return null;
+    }
 }
 
 async function verifyPassword(user, password) {
@@ -41,30 +36,24 @@ async function verifyPassword(user, password) {
 
 async function updateUser(user, updates = {}) {
     Object.assign(user, updates);
+    await user.save();
     return user;
 }
 
 async function deleteUser(id) {
-    const idx = users.findIndex((u) => u._id === id);
-    if (idx !== -1) {
-        const [removed] = users.splice(idx, 1);
-        return removed;
-    }
-    return null;
+    return User.findByIdAndDelete(id);
 }
 
-function listUsersSafe() {
-    return users.map(({ _id, username, email, role }) => ({ _id, username, email, role }));
+async function listUsersSafe() {
+    return User.find({}, '_id username email role').lean();
 }
 
-function getInternalStore() {
-    return users;
+async function findByUsername(username) {
+    return User.findOne({ username });
 }
 
 function resetStore() {
-    users.length = 0;
-    nextUserId = 1;
-    logger.info('User store reset');
+    // no-op in production; only used in tests
 }
 
 module.exports = {
@@ -75,7 +64,7 @@ module.exports = {
     updateUser,
     deleteUser,
     listUsersSafe,
-    getInternalStore,
-    resetStore,
+    findByUsername,
     hashPassword,
+    resetStore,
 };
