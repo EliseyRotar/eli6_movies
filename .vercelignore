@@ -1,0 +1,4 @@
+backend/
+node_modules/
+*.log
+android/
