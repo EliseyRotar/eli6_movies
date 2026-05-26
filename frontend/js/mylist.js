@@ -1,7 +1,7 @@
 // Shared My List logic and UI/UX for all pages
 // Usage: Call initMyListButtons() after DOM is ready
 
-const MYLIST_API_URL = 'https://streaming.ecolens.me/api';
+const MYLIST_API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
 
 // Utility: Show toast notification
 function showMyListToast(message, type = 'success', undoCallback = null) {

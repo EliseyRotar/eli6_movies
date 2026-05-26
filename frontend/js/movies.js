@@ -1,8 +1,8 @@
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
-const AUTH_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+const AUTH_API_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
     ? `http://${window.location.hostname}:3000/api`
-    : '/api';
-const TMDB_BASE_URL = `${AUTH_API_URL}/tmdb`;
+    : '');
+const TMDB_BASE_URL = window.TMDB_PROXY_URL || `${AUTH_API_URL}/tmdb`;
 
 class FetchQueue {
     constructor(concurrency = 3) {
@@ -105,7 +105,7 @@ async function fetchAndSetMovieDuration(movie, card) {
 }
 
 function playContent(id, type) {
-    window.location.href = `player.php?type=${type}&id=${id}`;
+    window.location.href = `player.html?type=${type}&id=${id}`;
 }
 
 function showNotification(message, type = 'success') {

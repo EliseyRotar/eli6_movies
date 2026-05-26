@@ -1,5 +1,5 @@
-const AUTH_API_URL = 'https://streaming.ecolens.me/api';
-const TMDB_BASE_URL = `${AUTH_API_URL}/tmdb`;
+const AUTH_API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
+const TMDB_BASE_URL = window.TMDB_PROXY_URL || `${AUTH_API_URL}/tmdb`;
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
 let featuredContent = [];
@@ -79,7 +79,10 @@ function createContentCard(item, type) {
     card.className = 'movie-card';
     card.id = `content-card-${type}-${item.id}`;
     card.innerHTML = `
-        <img src="${posterPath}" alt="${title}" onerror="this.src='https://via.placeholder.com/200x300?text=No+Image'">
+        <div class="movie-card-inner">
+            <img src="${posterPath}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/160x240?text=No+Image'">
+            <span class="card-title-always">${title}</span>
+        </div>
         <div class="movie-info">
             <div class="card-actions">
                 <button class="action-btn play-btn" onclick="event.stopPropagation(); playContent(${item.id}, '${type}')">
@@ -88,13 +91,13 @@ function createContentCard(item, type) {
                 <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${item.id},"title":"${title}","type":"${type}","poster_path":"${posterPath}","overview":"${overview}"}'>
                     <i class="material-icons">${isInList ? 'check' : 'add'}</i>
                 </button>
-                <button class="action-btn remove-btn" style="display: none;" onclick="event.stopPropagation(); removeFromKeepWatching(${item.id}, '${type}')">
+                <button class="action-btn remove-btn" style="display:none" onclick="event.stopPropagation(); removeFromKeepWatching(${item.id}, '${type}')">
                     <i class="material-icons">close</i>
                 </button>
             </div>
             <div class="movie-title">${title}</div>
             <div class="card-meta">
-                ${metaParts.join('<span>|</span>')}
+                ${metaParts.join('<span class="dot"></span>')}
             </div>
             <p class="movie-overview">${overview}</p>
         </div>
@@ -683,15 +686,15 @@ function openPlayer(content) {
     );
 
     // Redirect to player page
-    window.location.href = './player.php';
+    window.location.href = './player.html';
 }
 
 // Function to play content
 function playContent(id, type, link_url) {
     if (type === 'anime' && link_url) {
-        window.location.href = `player.php?type=anime&link_url=${encodeURIComponent(link_url)}`;
+        window.location.href = `player.html?type=anime&link_url=${encodeURIComponent(link_url)}`;
     } else {
-        window.location.href = `player.php?type=${type}&id=${id}`;
+        window.location.href = `player.html?type=${type}&id=${id}`;
     }
 }
 
@@ -917,7 +920,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             card.style.transform = 'scale(0.97)';
             setTimeout(() => {
                 card.style.transform = '';
-                window.location.href = `player.php?type=${type}&id=${id}`;
+                window.location.href = `player.html?type=${type}&id=${id}`;
             }, 120);
         };
         // My List button
@@ -973,7 +976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         card.onclick = function (e) {
             if (e.target.closest('.mobile-play-btn, .mobile-mylist-btn')) return;
-            window.location.href = `player.php?type=${type}&id=${id}`;
+            window.location.href = `player.html?type=${type}&id=${id}`;
         };
         return card;
     }
@@ -1249,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 50 + i * 100
             );
             slide.querySelector('.play').onclick = () =>
-                (window.location.href = `player.php?type=${type}&id=${id}`);
+                (window.location.href = `player.html?type=${type}&id=${id}`);
             // Add to My List button logic
             slide.querySelector('.mylist').onclick = async function () {
                 const token = localStorage.getItem('token');
@@ -1375,15 +1378,6 @@ async function fetchAnimeContent() {
     }
 }
 
-// Listen for language changes and reload TMDB content
-if (window.i18n) {
-    const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
-    window.i18n.changeLanguage = async function (lang) {
-        await origChangeLanguage(lang);
-        await loadContent();
-    };
-}
-
 // Helper: fetch TMDB item with per-language cache and fallback
 async function fetchTMDBItemWithFallback(id, type, lang) {
     const endpoint = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
@@ -1425,81 +1419,6 @@ function hideKeepWatchingLoading() {
     const spinner = document.getElementById('keep-watching-loading');
     if (spinner) spinner.style.display = 'none';
 }
-// Update loadKeepWatching to use language, cache, fallback
-async function loadKeepWatching() {
-    const section = document.getElementById('keep-watching-section');
-    const container = document.getElementById('keep-watching-row');
-    if (!section || !container) return;
-    showKeepWatchingLoading(container);
-    let keepWatchingList = [];
-    try {
-        keepWatchingList = await fetchKeepWatching();
-    } catch (e) {
-        handleMyListApiError(e);
-        container.innerHTML =
-            '<div class="error-state"><i class="material-icons">error_outline</i><h2>Failed to load Keep Watching</h2><p>Please try again later or check your connection.</p></div>';
-        hideKeepWatchingLoading();
-        return;
-    }
-    if (!keepWatchingList.length) {
-        showMyListEmpty(container);
-        section.style.display = 'none';
-        hideKeepWatchingLoading();
-        return;
-    }
-    section.style.display = 'block';
-    container.innerHTML = '';
-    const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-    for (const item of keepWatchingList) {
-        const tmdbData = await fetchTMDBItemWithFallback(item.id, item.type, lang);
-        const cardItem = {
-            id: item.id,
-            overview: tmdbData.overview,
-            vote_average: tmdbData.vote_average,
-            title: tmdbData.title || tmdbData.name,
-            name: tmdbData.title || tmdbData.name,
-            release_date: tmdbData.release_date,
-            first_air_date: tmdbData.first_air_date,
-            poster_path: tmdbData.poster_path,
-        };
-        const card = createContentCard(cardItem, item.type);
-        // Show remove button and hide mylist button for keep watching cards
-        const mylistBtn = card.querySelector('.mylist-btn');
-        const removeBtn = card.querySelector('.remove-btn');
-        if (mylistBtn) mylistBtn.style.display = 'none';
-        if (removeBtn) {
-            removeBtn.style.display = 'flex';
-            removeBtn.onclick = async (e) => {
-                e.stopPropagation();
-                await removeFromKeepWatchingWithUndo(item.id, item.type, card, async () => {
-                    // Undo: re-add the item
-                    await fetch(`${AUTH_API_URL}/user/keep-watching`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                        body: JSON.stringify(item),
-                    });
-                    loadKeepWatching();
-                });
-                loadKeepWatching();
-            };
-        }
-        container.appendChild(card);
-    }
-    hideKeepWatchingLoading();
-}
-// Listen for language changes and reload Keep Watching only
-if (window.i18n) {
-    const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
-    window.i18n.changeLanguage = async function (lang) {
-        await origChangeLanguage(lang);
-        await loadKeepWatching();
-    };
-}
-
-// ... existing code ...
 // Helper to truncate text at word boundary
 function truncateText(text, maxLength) {
     if (!text) return '';
@@ -1543,31 +1462,4 @@ if (window.i18next && typeof window.i18next.on === 'function') {
         await origChangeLanguage(lang);
         await reloadAllTMDBContent();
     }, 200);
-}
-// On page load: already initialized above
-
-// Show manual reload banner
-function showManualReloadBanner() {
-    const banner = document.getElementById('manual-reload-banner');
-    if (banner) banner.style.display = 'block';
-    const btn = document.getElementById('dismiss-reload-banner');
-    if (btn)
-        btn.onclick = () => {
-            banner.style.display = 'none';
-        };
-}
-// Call this function to show the banner
-showManualReloadBanner();
-
-// Wait for i18n to initialize before showing adblocker popup
-if (window.i18n && typeof i18n.init === 'function') {
-    i18n.init().then(() => {
-        var adblockerScript = document.createElement('script');
-        adblockerScript.src = 'js/adblocker-popup.js';
-        document.body.appendChild(adblockerScript);
-    });
-} else {
-    var adblockerScript = document.createElement('script');
-    adblockerScript.src = 'js/adblocker-popup.js';
-    document.body.appendChild(adblockerScript);
 }

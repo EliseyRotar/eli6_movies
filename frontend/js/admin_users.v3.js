@@ -4,7 +4,7 @@ let allUsers = [];
 let filteredUsers = [];
 let currentPage = 1;
 const USERS_PER_PAGE = 10;
-const API_BASE = 'https://streaming.ecolens.me/api';
+const API_BASE = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
 
 function getCurrentUser() {
     const user = localStorage.getItem('user');

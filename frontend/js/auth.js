@@ -1,4 +1,4 @@
-const API_URL = 'https://streaming.ecolens.me/api';
+const API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
 
 // Retry mechanism with exponential backoff
 async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
@@ -313,10 +313,10 @@ async function renderWatchHistory() {
 // Resume playback (redirect to player)
 function resumePlayback(id, type) {
     if (type === 'movie') {
-        window.location.href = `player.php?type=movie&id=${id}`;
+        window.location.href = `player.html?type=movie&id=${id}`;
     } else if (type === 'tv') {
-        window.location.href = `player.php?type=tv&id=${id}`;
+        window.location.href = `player.html?type=tv&id=${id}`;
     } else if (type === 'anime') {
-        window.location.href = `player.php?type=anime&id=${id}`;
+        window.location.href = `player.html?type=anime&id=${id}`;
     }
 }
