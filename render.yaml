@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: eli6-movies-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_COOKIE_MAX_AGE
+        value: 604800000
+      - key: TMDB_API_KEY
+        sync: false
+      - key: TMDB_LANGUAGE
+        value: en-US
+      - key: TMDB_TIMEOUT_MS
+        value: 8000
+      - key: MONGODB_URI
+        sync: false
+      - key: FRONTEND_ORIGIN
+        sync: false
