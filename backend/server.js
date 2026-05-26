@@ -77,21 +77,26 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
 
-// Connect to MongoDB then start server (skip when imported as serverless function)
+// Start HTTP server immediately, connect DB in background with retries
 if (require.main === module) {
-    connectDB()
-        .then(() => {
-            const PORT = process.env.PORT || 3000;
-            app.listen(PORT, '0.0.0.0', () => {
-                // eslint-disable-next-line no-console
-                console.log(`Server running on port ${PORT}`);
-            });
-        })
-        .catch((err) => {
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, '0.0.0.0', () => {
+        // eslint-disable-next-line no-console
+        console.log(`Server running on port ${PORT}`);
+    });
+
+    (async function connectWithRetry(attempt = 1) {
+        try {
+            await connectDB();
             // eslint-disable-next-line no-console
-            console.error('Failed to connect to MongoDB:', err.message);
-            process.exit(1);
-        });
+            console.log('MongoDB connected');
+        } catch (err) {
+            const delay = Math.min(attempt * 5000, 60000);
+            // eslint-disable-next-line no-console
+            console.error(`MongoDB connection failed (attempt ${attempt}): ${err.message}. Retrying in ${delay / 1000}s...`);
+            setTimeout(() => connectWithRetry(attempt + 1), delay);
+        }
+    })();
 }
 
 module.exports = app;
