@@ -997,9 +997,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.innerHTML = '<div class="mobile-loading"><div class="loading-spinner"></div></div>';
 
             try {
-                const response = await fetch(
-                    `https://api.themoviedb.org/3/${section.url}?api_key=REDACTED_TMDB_API_KEY_OLD`
-                );
+                const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
+                const response = await fetch(`${TMDB_PROXY}/${section.url}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
                 const data = await response.json();
@@ -1091,11 +1090,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!row) return;
             row.innerHTML = '<div class="mobile-loading"><div class="loading-spinner"></div></div>';
             try {
-                // Fix API URL: if url contains '?', use &api_key=..., else use ?api_key=...
-                let apiUrl = `https://api.themoviedb.org/3/${section.url}`;
-                apiUrl +=
-                    (apiUrl.includes('?') ? '&' : '?') + 'api_key=REDACTED_TMDB_API_KEY_OLD';
-                let response = await fetch(apiUrl);
+                const TMDB_PROXY2 = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
+                let response = await fetch(`${TMDB_PROXY2}/${section.url}`);
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
                 const items = data.results || [];

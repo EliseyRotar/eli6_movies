@@ -315,11 +315,12 @@ function createCard(item) {
 
 async function fetchAndSetMyListDuration(item, card) {
     try {
+        const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
         let url = '';
         if (item.type === 'movie') {
-            url = `https://api.themoviedb.org/3/movie/${item.id}?api_key=REDACTED_TMDB_API_KEY_OLD`;
+            url = `${TMDB_PROXY}/movie/${item.id}`;
         } else if (item.type === 'tv') {
-            url = `https://api.themoviedb.org/3/tv/${item.id}?api_key=REDACTED_TMDB_API_KEY_OLD`;
+            url = `${TMDB_PROXY}/tv/${item.id}`;
         }
         const response = await fetch(url);
         if (!response.ok) return;
