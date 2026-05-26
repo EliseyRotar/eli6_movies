@@ -11,5 +11,14 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
-  ]
+  ],
+  "experimentalServices": {
+    "eli6-movies-api": {
+      "type": "web",
+      "root": "backend",
+      "entrypoint": "server.js",
+      "routePrefix": "/api",
+      "buildCommand": "npm install"
+    }
+  }
 }
