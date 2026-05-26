@@ -7,6 +7,7 @@
         <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
         <link rel="stylesheet" href="css/theme.css" />
+        <script src="js/config.js"></script>
         <script src="js/i18n.js"></script>
         <style>
             * {
@@ -538,7 +539,7 @@
 
         <script>
             const JIKAN_API_URL = 'https://api.jikan.moe/v4';
-            const AUTH_API_URL = 'https://streaming.ecolens.me/api';
+            const AUTH_API_URL = window.API_BASE_URL || '';
 
             let myList = [];
             let currentResults = [];
@@ -761,7 +762,7 @@
 
             // Play content
             function playContent(id, type) {
-                window.location.href = `player.php?type=${type}&id=${id}`;
+                window.location.href = `player.html?type=${type}&id=${id}`;
             }
 
             // Sort results

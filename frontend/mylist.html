@@ -673,7 +673,7 @@
     </nav>
 
     <script>
-        const AUTH_API_URL = 'https://streaming.ecolens.me/api';
+        const AUTH_API_URL = window.API_BASE_URL || '';
         const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
         let mylistItems = [];
@@ -815,7 +815,7 @@
             }
 
             // Navigate to player page
-            const playerUrl = `player.php?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
+            const playerUrl = `player.html?type=${encodeURIComponent(type)}&id=${encodeURIComponent(id)}`;
             window.location.href = playerUrl;
         }
 
@@ -863,6 +863,7 @@
             };
         }
     </script>
+    <script src="js/config.js"></script>
     <script src="js/mylist.js"></script>
     <script src="js/mobile-nav.js"></script>
     <script src="js/spatial-nav.js"></script>

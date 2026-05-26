@@ -4,66 +4,57 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ELI6 Movies | Best Streaming Website</title>
-    <meta name="description"
-        content="Stream the latest and top-rated movies online. ELI6 Movies is the best streaming website for high-quality, fast, and free entertainment." />
+    <title>ELI6 Movies — Free Streaming</title>
+    <meta name="description" content="Stream the latest movies, TV shows and anime online for free. Fast, high-quality streaming with no sign-up required." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="css/theme.css" />
     <link rel="stylesheet" href="css/index.css" />
     <link rel="stylesheet" href="css/spatial-nav.css" />
-
-    <style></style>
 </head>
 
 <body>
-    <!-- Mobile Overlay and Side Navigation -->
-    <div class="mobile-overlay" id="mobileOverlay" style="display: none"></div>
-    <nav class="mobile-sidenav" id="mobileSidenav" style="display: none">
+    <!-- ─── Mobile Overlay & Side Nav ─────────────── -->
+    <div class="mobile-overlay" id="mobileOverlay" style="display:none"></div>
+    <nav class="mobile-sidenav" id="mobileSidenav" style="display:none">
         <div class="mobile-sidenav-header">
             <span class="mobile-sidenav-title" data-i18n="nav.logo">ELI6 MOVIES</span>
             <button class="mobile-sidenav-close" id="closeMobileSidenav">&times;</button>
         </div>
         <ul class="mobile-sidenav-links">
-            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="index.html" class="active" data-i18n="nav.home">Home</a></li>
             <li><a href="movies.html" data-i18n="nav.movies">Movies</a></li>
             <li><a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a></li>
+            <li><a href="anime.html" data-i18n="nav.anime">Anime</a></li>
             <li><a href="mylist.html" data-i18n="nav.mylist">My List</a></li>
             <li><a href="settings.html" data-i18n="nav.settings">Settings</a></li>
             <li><a href="account.html" data-i18n="nav.account">Account</a></li>
         </ul>
     </nav>
-    <!-- Mobile Top Bar -->
+
+    <!-- ─── Mobile Top Bar ────────────────────────── -->
     <div class="mobile-topbar" id="mobileTopbar">
         <button class="mobile-hamburger" id="openMobileSidenav">
             <span></span><span></span><span></span>
         </button>
         <span class="mobile-logo" data-i18n="nav.logo">ELI6 MOVIES</span>
         <div class="mobile-top-icons">
-            <a href="search.html" class="mobile-action-btn">
-                <i class="material-icons">search</i>
-            </a>
-            <a href="account.html" class="mobile-action-btn">
-                <i class="material-icons">account_circle</i>
-            </a>
+            <a href="search.html" class="mobile-action-btn"><i class="material-icons">search</i></a>
+            <a href="account.html" class="mobile-action-btn"><i class="material-icons">account_circle</i></a>
         </div>
     </div>
-    <div class="mobile-searchbar" id="mobileSearchbar" style="display: none">
-        <input type="text" placeholder="" data-i18n-placeholder="search.placeholder" id="mobileSearchInput" />
-        <button id="closeMobileSearch"><i class="material-icons">close</i></button>
-    </div>
 
-    <!-- Mobile hero carousel -->
+    <!-- ─── Mobile Hero Carousel ──────────────────── -->
     <div class="mobile-hero-carousel">
         <div class="mobile-hero-slider" id="mobileHeroSlider"></div>
         <div class="mobile-hero-indicators" id="mobileHeroIndicators"></div>
     </div>
 
-    <div class="mobile-carousels">
-        <!-- mobile carousels populated by JS -->
-    </div>
+    <!-- ─── Mobile Content Carousels ──────────────── -->
+    <div class="mobile-carousels"><!-- populated by JS --></div>
 
-    <!-- Mobile bottom navigation -->
+    <!-- ─── Mobile Bottom Navigation ─────────────── -->
     <nav class="mobile-bottom-nav">
         <a href="index.html" class="active">
             <i class="material-icons">home</i>
@@ -81,12 +72,14 @@
             <i class="material-icons">playlist_add_check</i>
             <span data-i18n="nav.mylist">My List</span>
         </a>
-        <a href="settings.html">
-            <i class="material-icons">settings</i>
-            <span data-i18n="nav.settings">Settings</span>
+        <a href="search.html">
+            <i class="material-icons">search</i>
+            <span data-i18n="search.title">Search</span>
         </a>
     </nav>
-    <nav class="navbar">
+
+    <!-- ─── Desktop Navbar ────────────────────────── -->
+    <nav class="navbar" id="navbar">
         <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
         <div class="nav-links">
             <a href="index.html" class="active" data-i18n="nav.home">Home</a>
@@ -96,86 +89,123 @@
             <a href="mylist.html" data-i18n="nav.mylist">My List</a>
         </div>
         <div class="nav-icons">
-            <a href="search.html" class="nav-icon">
-                <i class="material-icons">search</i>
-            </a>
-            <a href="settings.html" class="nav-icon">
-                <i class="material-icons">settings</i>
-            </a>
-            <a href="account.html" class="nav-icon">
-                <i class="material-icons">account_circle</i>
-            </a>
+            <a href="search.html" class="nav-icon" title="Search"><i class="material-icons">search</i></a>
+            <a href="settings.html" class="nav-icon" title="Settings"><i class="material-icons">settings</i></a>
+            <a href="account.html" class="nav-icon" title="Account"><i class="material-icons">account_circle</i></a>
         </div>
     </nav>
 
+    <!-- ─── Hero Slider ───────────────────────────── -->
     <section class="hero" id="hero">
         <div class="hero-fade" id="heroFade"></div>
         <div class="hero-dots" id="heroDots"></div>
-        <div class="hero-progress">
-            <div class="hero-progress-bar"></div>
-        </div>
+        <div class="hero-progress"><div class="hero-progress-bar"></div></div>
     </section>
 
-    <section id="keep-watching-section" class="content-section" style="display: none">
-        <h2 class="section-title">
-            <i class="material-icons">history</i>
-            <span data-i18n="home.sections.keepWatching">Keep Watching</span>
-        </h2>
+    <!-- ─── Keep Watching ─────────────────────────── -->
+    <section id="keep-watching-section" class="content-section" style="display:none">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="material-icons">history</i>
+                <span data-i18n="home.sections.keepWatching">Keep Watching</span>
+            </h2>
+        </div>
         <div class="content-row" id="keep-watching-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
+            <div class="loading"><div class="loading-spinner"></div></div>
         </div>
     </section>
 
+    <!-- ─── Trending Movies ────────────────────────── -->
     <section id="trending" class="content-section">
-        <h2 class="section-title">
-            <i class="material-icons">trending_up</i>
-            <span data-i18n="home.sections.trending">Trending Now</span>
-        </h2>
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="material-icons">local_fire_department</i>
+                <span data-i18n="home.sections.trending">Trending Now</span>
+            </h2>
+            <a href="movies.html" class="section-see-all">See all</a>
+        </div>
         <div class="content-row" id="trending-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
+            <div class="loading"><div class="loading-spinner"></div></div>
         </div>
     </section>
 
+    <!-- ─── Trending TV ────────────────────────────── -->
     <section id="trending-tv" class="content-section">
-        <h2 class="section-title">
-            <i class="material-icons">tv</i>
-            <span data-i18n="home.sections.trendingTV">Popular TV</span>
-        </h2>
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="material-icons">tv</i>
+                <span data-i18n="home.sections.trendingTV">Popular TV Shows</span>
+            </h2>
+            <a href="tvshows.html" class="section-see-all">See all</a>
+        </div>
         <div class="content-row" id="trending-tv-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
+            <div class="loading"><div class="loading-spinner"></div></div>
         </div>
     </section>
 
+    <!-- ─── Popular Movies ─────────────────────────── -->
     <section id="popular" class="content-section">
-        <h2 class="section-title">
-            <i class="material-icons">star</i>
-            <span data-i18n="home.sections.popular">Popular</span>
-        </h2>
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="material-icons">star</i>
+                <span data-i18n="home.sections.popular">Popular Movies</span>
+            </h2>
+            <a href="movies.html" class="section-see-all">See all</a>
+        </div>
         <div class="content-row" id="popular-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
+            <div class="loading"><div class="loading-spinner"></div></div>
         </div>
     </section>
 
+    <!-- ─── Anime ──────────────────────────────────── -->
     <section id="anime" class="content-section">
-        <h2 class="section-title">
-            <i class="material-icons">animation</i>
-            <span data-i18n="home.sections.anime">Anime</span>
-        </h2>
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="material-icons">animation</i>
+                <span data-i18n="home.sections.anime">Anime</span>
+            </h2>
+            <a href="anime.html" class="section-see-all">See all</a>
+        </div>
         <div class="content-row" id="anime-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
+            <div class="loading"><div class="loading-spinner"></div></div>
         </div>
     </section>
 
+    <!-- ─── Footer ────────────────────────────────── -->
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <div class="logo-text">ELI6 MOVIES</div>
+                <p>Stream the latest movies, TV shows, and anime for free. Fast, high-quality, no subscription needed.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Browse</h4>
+                <a href="index.html">Home</a>
+                <a href="movies.html">Movies</a>
+                <a href="tvshows.html">TV Shows</a>
+                <a href="anime.html">Anime</a>
+                <a href="mylist.html">My List</a>
+            </div>
+            <div class="footer-col">
+                <h4>Account</h4>
+                <a href="account.html">Sign In / Register</a>
+                <a href="settings.html">Settings</a>
+                <a href="search.html">Search</a>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <a href="#">DMCA</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Use</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2025 ELI6 Movies</span>
+            <span class="footer-disclaimer">This site does not host any files. All content is provided by non-affiliated third parties.</span>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
     <script src="js/mylist.js"></script>
     <script src="js/UAParser.min.js"></script>
     <script src="js/adblocker-popup.js"></script>

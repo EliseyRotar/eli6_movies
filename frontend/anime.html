@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="css/theme.css" />
     <link rel="stylesheet" href="css/spatial-nav.css" />
+    <script src="js/config.js"></script>
     <script src="js/i18n.js"></script>
     <style>
         * {
@@ -607,9 +608,9 @@
 
     <script>
         const JIKAN_API_URL = 'https://api.jikan.moe/v4';
-        const AUTH_API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
+        const AUTH_API_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.')
             ? `http://${window.location.hostname}:3000/api`
-            : '/api';
+            : '');
 
         class FetchQueue {
             constructor(concurrency = 3, delay = 200) {
@@ -920,7 +921,7 @@
 
         // Play content
         function playContent(id, type) {
-            window.location.href = `player.php?type=${type}&id=${id}`;
+            window.location.href = `player.html?type=${type}&id=${id}`;
         }
     </script>
     <script src="js/spatial-nav.js"></script>

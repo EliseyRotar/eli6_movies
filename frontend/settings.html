@@ -1015,10 +1015,11 @@
             </div>
         </div>
 
+        <script src="js/config.js"></script>
         <script src="js/theme.js"></script>
         <script>
             // API URLs
-            const API_URL = 'https://streaming.ecolens.me/api';
+            const API_URL = window.API_BASE_URL || '';
 
             // Settings Management
             const settingsManager = {
