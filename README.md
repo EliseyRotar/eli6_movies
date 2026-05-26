@@ -2,8 +2,8 @@
 
 Free streaming site for movies, TV shows, and anime. No subscription, no sign-up required to browse.
 
-**Live site:** _(set after Vercel deployment)_
-**API:** _(set after Render deployment)_
+**Live site:** https://eli6movies.vercel.app
+**API:** https://eli6movies.onrender.com
 
 ---
 
