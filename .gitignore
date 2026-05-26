@@ -68,3 +68,6 @@ Thumbs.db
 *.tmp
 *.temp
 .vercel
+
+# Local infrastructure doc (contains live secrets — keep off GitHub)
+INFRASTRUCTURE.md
