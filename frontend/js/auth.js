@@ -1,4 +1,4 @@
-const API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
+const API_URL = window.API_BASE_URL || '';
 
 // Retry mechanism with exponential backoff
 async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
@@ -138,7 +138,9 @@ async function register(username, email, password) {
 
 // Logout function
 function logout() {
-    localStorage.removeItem('user');
+    ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(
+        (k) => localStorage.removeItem(k)
+    );
     window.location.href = '/account.html';
 }
 
