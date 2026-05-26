@@ -6,7 +6,6 @@ const {
     validateEmail,
     validateUsername,
     validatePassword,
-    requireNumber,
 } = require('../utils/validators');
 
 const router = express.Router();
@@ -14,7 +13,8 @@ const router = express.Router();
 router.use('/admin', auth, adminOnly);
 
 router.get('/admin/users', async (_req, res) => {
-    res.json(userService.listUsersSafe());
+    const users = await userService.listUsersSafe();
+    res.json(users);
 });
 
 router.post('/admin/users', async (req, res) => {
@@ -36,9 +36,9 @@ router.post('/admin/users', async (req, res) => {
 });
 
 router.delete('/admin/users/:id', async (req, res) => {
-    const userId = requireNumber(req.params.id);
-    if (!userId) return res.status(400).json({ error: 'INVALID_ID' });
-    const deleted = await userService.deleteUser(userId);
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ error: 'INVALID_ID' });
+    const deleted = await userService.deleteUser(id);
     if (!deleted) return res.status(404).json({ error: 'NOT_FOUND' });
     res.json({
         message: 'USER_DELETED',
@@ -47,32 +47,33 @@ router.delete('/admin/users/:id', async (req, res) => {
 });
 
 router.put('/admin/users/:id', async (req, res) => {
-    const userId = requireNumber(req.params.id);
-    if (!userId) return res.status(400).json({ error: 'INVALID_ID' });
-    const user = await userService.findById(userId);
+    const { id } = req.params;
+    const user = await userService.findById(id);
     if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
 
     const { username, email } = req.body || {};
     if (username && !validateUsername(username))
         return res.status(400).json({ error: 'INVALID_USERNAME' });
-    if (email && !validateEmail(email)) return res.status(400).json({ error: 'INVALID_EMAIL' });
+    if (email && !validateEmail(email))
+        return res.status(400).json({ error: 'INVALID_EMAIL' });
 
     if (username && username !== user.username) {
-        const exists = (await userService.getInternalStore()).find(
-            (u) => u.username === username && u._id !== userId
-        );
-        if (exists) return res.status(400).json({ error: 'USERNAME_EXISTS' });
+        const exists = await userService.findByUsername(username.trim());
+        if (exists && String(exists._id) !== String(id)) {
+            return res.status(400).json({ error: 'USERNAME_EXISTS' });
+        }
         user.username = username.trim();
     }
     if (email && email !== user.email) {
         const normalized = email.trim().toLowerCase();
-        const exists = (await userService.getInternalStore()).find(
-            (u) => u.email === normalized && u._id !== userId
-        );
-        if (exists) return res.status(400).json({ error: 'EMAIL_EXISTS' });
+        const exists = await userService.findByEmail(normalized);
+        if (exists && String(exists._id) !== String(id)) {
+            return res.status(400).json({ error: 'EMAIL_EXISTS' });
+        }
         user.email = normalized;
     }
 
+    await user.save();
     res.json({
         message: 'USER_UPDATED',
         user: { _id: user._id, username: user.username, email: user.email, role: user.role },
@@ -80,13 +81,13 @@ router.put('/admin/users/:id', async (req, res) => {
 });
 
 router.put('/admin/users/:id/reset-password', async (req, res) => {
-    const userId = requireNumber(req.params.id);
+    const { id } = req.params;
     const { newPassword } = req.body || {};
-    if (!userId) return res.status(400).json({ error: 'INVALID_ID' });
     if (!validatePassword(newPassword)) return res.status(400).json({ error: 'INVALID_PASSWORD' });
-    const user = await userService.findById(userId);
+    const user = await userService.findById(id);
     if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
     user.password = await userService.hashPassword(newPassword);
+    await user.save();
     res.json({
         message: 'PASSWORD_RESET',
         user: { _id: user._id, username: user.username, email: user.email, role: user.role },
@@ -94,13 +95,13 @@ router.put('/admin/users/:id/reset-password', async (req, res) => {
 });
 
 router.put('/admin/users/:id/role', async (req, res) => {
-    const userId = requireNumber(req.params.id);
+    const { id } = req.params;
     const { role } = req.body || {};
-    if (!userId) return res.status(400).json({ error: 'INVALID_ID' });
     if (!['user', 'admin'].includes(role)) return res.status(400).json({ error: 'INVALID_ROLE' });
-    const user = await userService.findById(userId);
+    const user = await userService.findById(id);
     if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
     user.role = role;
+    await user.save();
     res.json({
         message: 'ROLE_UPDATED',
         user: { _id: user._id, username: user.username, email: user.email, role: user.role },
@@ -108,7 +109,7 @@ router.put('/admin/users/:id/role', async (req, res) => {
 });
 
 router.post('/admin/fix-mylist', async (_req, res) => {
-    res.json({ message: 'NO_OP_MEMORY_STORE' });
+    res.json({ message: 'OK' });
 });
 
 module.exports = router;

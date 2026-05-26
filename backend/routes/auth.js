@@ -14,13 +14,15 @@ const router = express.Router();
 const isProd = process.env.NODE_ENV === 'production';
 const cookieBase = {
     httpOnly: true,
-    sameSite: 'strict',
+    // none required for cross-origin (Vercel frontend ↔ Render backend)
+    sameSite: isProd ? 'none' : 'strict',
     secure: isProd,
     maxAge: Number(process.env.JWT_COOKIE_MAX_AGE || 15 * 60 * 1000),
 };
 
 function sanitizeUser(user) {
-    const { password, ...safe } = user;
+    const obj = user.toObject ? user.toObject() : { ...user };
+    const { password, __v, ...safe } = obj;
     return safe;
 }
 
@@ -75,6 +77,10 @@ router.post('/login', async (req, res, next) => {
         logger.error('Login failed', { error: error.message });
         next(error);
     }
+});
+
+router.post('/logout', (req, res) => {
+    res.clearCookie('token', { ...cookieBase, maxAge: 0 }).json({ message: 'LOGGED_OUT' });
 });
 
 module.exports = router;

@@ -3,7 +3,6 @@ const auth = require('../middleware/auth');
 const userService = require('../services/userService');
 const logger = require('../utils/logger');
 const {
-    requireNumber,
     validateEmail,
     validateUsername,
     validatePassword,
@@ -11,10 +10,11 @@ const {
 
 const router = express.Router();
 
-const sanitizeUser = (user) => {
-    const { password, ...safe } = user;
+function sanitizeUser(user) {
+    const obj = user.toObject ? user.toObject() : { ...user };
+    const { password, __v, ...safe } = obj;
     return safe;
-};
+}
 
 router.get('/user/profile', auth, async (req, res) => {
     res.json({
@@ -34,22 +34,13 @@ router.post('/user/mylist', auth, async (req, res) => {
         if (!['movie', 'tv', 'anime'].includes(type)) {
             return res.status(400).json({ error: 'INVALID_TYPE' });
         }
-        if (!Array.isArray(req.user.myList)) req.user.myList = [];
         const exists = req.user.myList.some((item) => item.id === id && item.type === type);
         if (exists) {
             return res.status(400).json({ error: 'ALREADY_EXISTS' });
         }
-        req.user.myList.unshift({
-            id,
-            title,
-            type,
-            poster_path,
-            overview: overview || '',
-            addedAt: new Date(),
-        });
-        if (req.user.myList.length > 100) {
-            req.user.myList = req.user.myList.slice(0, 100);
-        }
+        req.user.myList.unshift({ id, title, type, poster_path, overview: overview || '', addedAt: new Date() });
+        if (req.user.myList.length > 100) req.user.myList = req.user.myList.slice(0, 100);
+        await req.user.save();
         res.json(req.user.myList);
     } catch (error) {
         logger.error('Add to my list failed', { error: error.message });
@@ -58,13 +49,16 @@ router.post('/user/mylist', auth, async (req, res) => {
 });
 
 router.delete('/user/mylist/:id/:type', auth, async (req, res) => {
-    const { id, type } = req.params;
-    const numericId = requireNumber(id);
-    if (!numericId || !type) return res.status(400).json({ error: 'INVALID_INPUT' });
-    req.user.myList = (req.user.myList || []).filter(
-        (item) => !(item.id === numericId && item.type === type)
-    );
-    return res.json(req.user.myList);
+    try {
+        const { id, type } = req.params;
+        req.user.myList = req.user.myList.filter(
+            (item) => !(String(item.id) === String(id) && item.type === type)
+        );
+        await req.user.save();
+        res.json(req.user.myList);
+    } catch (error) {
+        res.status(500).json({ error: 'MYLIST_ERROR' });
+    }
 });
 
 router.post('/user/watch-history', auth, async (req, res) => {
@@ -73,15 +67,15 @@ router.post('/user/watch-history', auth, async (req, res) => {
         if (!item || !item.id || !item.type) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
-        const watchHistory = req.user.watchHistory || [];
-        const existing = watchHistory.find((i) => i.id === item.id);
+        const existing = req.user.watchHistory.find((i) => i.id === item.id);
         if (existing) {
             existing.progress = item.progress;
             existing.last_watched = new Date();
         } else {
-            watchHistory.unshift(item);
+            req.user.watchHistory.unshift(item);
         }
-        req.user.watchHistory = watchHistory.slice(0, 100);
+        if (req.user.watchHistory.length > 100) req.user.watchHistory = req.user.watchHistory.slice(0, 100);
+        await req.user.save();
         res.json(req.user.watchHistory);
     } catch (error) {
         logger.error('Watch history update failed', { error: error.message });
@@ -90,12 +84,17 @@ router.post('/user/watch-history', auth, async (req, res) => {
 });
 
 router.delete('/user/watch-history', auth, async (req, res) => {
-    const { id, type } = req.body || {};
-    if (!id || !type) return res.status(400).json({ error: 'INVALID_INPUT' });
-    req.user.watchHistory = (req.user.watchHistory || []).filter(
-        (item) => !(item.id === id && item.type === type)
-    );
-    res.json(req.user.watchHistory);
+    try {
+        const { id, type } = req.body || {};
+        if (!id || !type) return res.status(400).json({ error: 'INVALID_INPUT' });
+        req.user.watchHistory = req.user.watchHistory.filter(
+            (item) => !(String(item.id) === String(id) && item.type === type)
+        );
+        await req.user.save();
+        res.json(req.user.watchHistory);
+    } catch (error) {
+        res.status(500).json({ error: 'WATCH_HISTORY_ERROR' });
+    }
 });
 
 router.get('/user/keep-watching', auth, async (req, res) => {
@@ -108,28 +107,21 @@ router.post('/user/keep-watching', auth, async (req, res) => {
         if (!item.id || !item.type) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
-        const keepWatching = req.user.keepWatching || [];
-        const watchHistory = req.user.watchHistory || [];
+        const kwIndex = req.user.keepWatching.findIndex((i) => i.id === item.id && i.type === item.type);
+        if (kwIndex > -1) req.user.keepWatching.splice(kwIndex, 1);
+        req.user.keepWatching.unshift(item);
+        if (req.user.keepWatching.length > 20) req.user.keepWatching.pop();
 
-        const kwIndex = keepWatching.findIndex((i) => i.id === item.id && i.type === item.type);
-        if (kwIndex > -1) keepWatching.splice(kwIndex, 1);
-        keepWatching.unshift(item);
-        if (keepWatching.length > 20) keepWatching.pop();
-        req.user.keepWatching = keepWatching;
-
-        const whIndex = watchHistory.findIndex((i) => i.id === item.id && i.type === item.type);
+        const whIndex = req.user.watchHistory.findIndex((i) => i.id === item.id && i.type === item.type);
         if (whIndex > -1) {
-            watchHistory[whIndex].last_watched = new Date();
-            watchHistory[whIndex].progress = item.progress || 0;
+            req.user.watchHistory[whIndex].last_watched = new Date();
+            req.user.watchHistory[whIndex].progress = item.progress || 0;
         } else {
-            watchHistory.unshift({
-                ...item,
-                last_watched: new Date(),
-                progress: item.progress || 0,
-            });
+            req.user.watchHistory.unshift({ ...item, last_watched: new Date(), progress: item.progress || 0 });
         }
-        req.user.watchHistory = watchHistory.slice(0, 100);
+        if (req.user.watchHistory.length > 100) req.user.watchHistory = req.user.watchHistory.slice(0, 100);
 
+        await req.user.save();
         res.json(req.user.keepWatching);
     } catch (error) {
         logger.error('Keep watching update failed', { error: error.message });
@@ -138,13 +130,16 @@ router.post('/user/keep-watching', auth, async (req, res) => {
 });
 
 router.delete('/user/keep-watching/:id/:type', auth, async (req, res) => {
-    const { id, type } = req.params;
-    const numericId = requireNumber(id);
-    if (!numericId || !type) return res.status(400).json({ error: 'INVALID_INPUT' });
-    req.user.keepWatching = (req.user.keepWatching || []).filter(
-        (item) => !(item.id === numericId && item.type === type)
-    );
-    res.json(req.user.keepWatching);
+    try {
+        const { id, type } = req.params;
+        req.user.keepWatching = req.user.keepWatching.filter(
+            (item) => !(String(item.id) === String(id) && item.type === type)
+        );
+        await req.user.save();
+        res.json(req.user.keepWatching);
+    } catch (error) {
+        res.status(500).json({ error: 'KEEP_WATCHING_ERROR' });
+    }
 });
 
 router.get('/user/watched', auth, async (req, res) => {
@@ -152,32 +147,38 @@ router.get('/user/watched', auth, async (req, res) => {
 });
 
 router.put('/user/update', auth, async (req, res) => {
-    const { username, email } = req.body || {};
+    try {
+        const { username, email } = req.body || {};
 
-    if (username && !validateUsername(username)) {
-        return res.status(400).json({ error: 'INVALID_USERNAME' });
-    }
-    if (email && !validateEmail(email)) {
-        return res.status(400).json({ error: 'INVALID_EMAIL' });
-    }
+        if (username && !validateUsername(username)) {
+            return res.status(400).json({ error: 'INVALID_USERNAME' });
+        }
+        if (email && !validateEmail(email)) {
+            return res.status(400).json({ error: 'INVALID_EMAIL' });
+        }
 
-    if (username && username !== req.user.username) {
-        const existing = (await userService.getInternalStore()).find(
-            (u) => u.username === username && u._id !== req.user._id
-        );
-        if (existing) return res.status(400).json({ error: 'USERNAME_EXISTS' });
-        req.user.username = username.trim();
-    }
-    if (email && email !== req.user.email) {
-        const normalized = email.trim().toLowerCase();
-        const existing = (await userService.getInternalStore()).find(
-            (u) => u.email === normalized && u._id !== req.user._id
-        );
-        if (existing) return res.status(400).json({ error: 'EMAIL_EXISTS' });
-        req.user.email = normalized;
-    }
+        if (username && username !== req.user.username) {
+            const existing = await userService.findByUsername(username.trim());
+            if (existing && String(existing._id) !== String(req.user._id)) {
+                return res.status(400).json({ error: 'USERNAME_EXISTS' });
+            }
+            req.user.username = username.trim();
+        }
+        if (email && email !== req.user.email) {
+            const normalized = email.trim().toLowerCase();
+            const existing = await userService.findByEmail(normalized);
+            if (existing && String(existing._id) !== String(req.user._id)) {
+                return res.status(400).json({ error: 'EMAIL_EXISTS' });
+            }
+            req.user.email = normalized;
+        }
 
-    res.json({ message: 'PROFILE_UPDATED', user: sanitizeUser(req.user) });
+        await req.user.save();
+        res.json({ message: 'PROFILE_UPDATED', user: sanitizeUser(req.user) });
+    } catch (error) {
+        logger.error('Profile update failed', { error: error.message });
+        res.status(500).json({ error: 'UPDATE_ERROR' });
+    }
 });
 
 router.put('/user/password', auth, async (req, res) => {
@@ -189,6 +190,7 @@ router.put('/user/password', auth, async (req, res) => {
         const isMatch = await userService.verifyPassword(req.user, currentPassword);
         if (!isMatch) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
         req.user.password = await userService.hashPassword(newPassword);
+        await req.user.save();
         res.json({ message: 'PASSWORD_UPDATED' });
     } catch (error) {
         logger.error('Password change failed', { error: error.message });
