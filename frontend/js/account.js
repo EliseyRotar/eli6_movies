@@ -169,15 +169,20 @@
 
     // Rows
     var rows = [
-      { k: 'My List', v: '→', link: 'mylist.html' },
-      { k: 'Settings', v: '→', link: 'settings.html' },
+      { k: 'Appearance & theme', v: 'Customize ›', link: 'settings.html' },
+      { k: 'Plan',               v: 'Free · Forever', link: null },
+      { k: 'Language',           v: 'English', link: null },
+      { k: 'Playback quality',   v: 'Auto (up to 4K)', link: null },
+      { k: 'Autoplay next episode', v: 'On', link: null },
+      { k: 'Downloads over Wi-Fi only', v: 'On', link: null },
+      { k: 'My List',            v: '→', link: 'mylist.html' },
     ];
     rows.forEach(function (r) {
-      var row = div('account__row account__row--link');
+      var row = div('account__row' + (r.link ? ' account__row--link' : ''));
       var rk = div('account__row-k'); rk.textContent = r.k;
       var rv = div('account__row-v'); rv.textContent = r.v;
       row.appendChild(rk); row.appendChild(rv);
-      row.addEventListener('click', function () { window.location.href = r.link; });
+      if (r.link) row.addEventListener('click', function () { window.location.href = r.link; });
       card.appendChild(row);
     });
 
@@ -212,9 +217,14 @@
     pwCard.appendChild(pwBtn);
     wrap.appendChild(pwCard);
 
-    // Actions
+    // Primary actions
     var actions = div('account__actions');
-    var logoutBtn = el('button', 'btn btn--ghost');
+    var customizeBtn = el('button', 'btn btn--primary');
+    customizeBtn.textContent = 'Customize appearance';
+    customizeBtn.addEventListener('click', function () { window.location.href = 'settings.html'; });
+    var editBtn = el('button', 'btn btn--outline');
+    editBtn.textContent = 'Edit profile';
+    var logoutBtn = el('button', 'btn btn--outline');
     logoutBtn.textContent = 'Sign out';
     logoutBtn.addEventListener('click', function () {
       ['user','token','myList','keepWatching','watchHistory','currentContent'].forEach(function (k) { localStorage.removeItem(k); });
@@ -222,6 +232,14 @@
       renderPage();
       window.renderTopNav('account');
     });
+    actions.appendChild(customizeBtn);
+    actions.appendChild(editBtn);
+    actions.appendChild(logoutBtn);
+    wrap.appendChild(actions);
+
+    // Danger zone
+    var dangerZone = div();
+    dangerZone.style.cssText = 'padding:8px var(--pad-x) 4px;';
     var deleteBtn = el('button', 'btn btn--outline');
     deleteBtn.textContent = 'Delete account';
     deleteBtn.style.color = 'var(--fg-muted)';
@@ -234,9 +252,8 @@
         renderPage();
       } catch (err) { showToast(err.message || 'Failed to delete account', 'error'); }
     });
-    actions.appendChild(logoutBtn);
-    actions.appendChild(deleteBtn);
-    wrap.appendChild(actions);
+    dangerZone.appendChild(deleteBtn);
+    wrap.appendChild(dangerZone);
 
     mount.appendChild(wrap);
   }
@@ -247,7 +264,7 @@
     var mount = document.getElementById('account-mount');
     if (!mount) return;
     var pagehd = div();
-    pagehd.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">User</div><h1 class="pagehead__title">Account</h1></div>';
+    pagehd.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">Settings</div><h1 class="pagehead__title">Account</h1></div>';
     mount.innerHTML = '';
     mount.appendChild(pagehd);
 
