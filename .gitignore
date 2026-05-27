@@ -71,3 +71,7 @@ Thumbs.db
 
 # Local infrastructure doc (contains live secrets — keep off GitHub)
 INFRASTRUCTURE.md
+
+# Design handoff (local reference only)
+design_handoff_eli6_movies/
+*.zip
