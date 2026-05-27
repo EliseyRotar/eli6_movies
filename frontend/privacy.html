@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — ELI6 Movies</title>
+  <meta name="description" content="How ELI6 Movies collects, uses, and protects your personal data." />
+  <script>(function(){try{var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');document.documentElement.dataset.theme=p.theme||'pulse';document.documentElement.dataset.mode=p.mode||'dark';}catch(e){document.documentElement.dataset.theme='pulse';document.documentElement.dataset.mode='dark';}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+  <link rel="icon" href="favicon.ico" />
+</head>
+<body>
+  <div id="topnav-mount"></div>
+
+  <main class="legal">
+    <div class="legal__eyebrow">Legal</div>
+    <h1 class="legal__title">Privacy Policy</h1>
+    <p class="legal__updated">Last updated: May 2025</p>
+
+    <p>ELI6 Movies ("we", "us", "our") respects your privacy. This policy explains what data we collect, why we collect it, and how you can control it.</p>
+
+    <h2>1. What we collect</h2>
+    <p>When you create an account we collect:</p>
+    <ul>
+      <li><strong>Username</strong> — a display name you choose.</li>
+      <li><strong>Email address</strong> — used to identify your account and for password resets.</li>
+      <li><strong>Password</strong> — stored as a one-way bcrypt hash. We never store your plain-text password.</li>
+    </ul>
+    <p>When you use the service we also store:</p>
+    <ul>
+      <li><strong>Watch history</strong> — titles you have started watching and your approximate playback progress, so we can show a "Keep Watching" row.</li>
+      <li><strong>My List</strong> — titles you have saved manually.</li>
+      <li><strong>Appearance preferences</strong> — theme, colour scheme, and layout settings (stored locally in your browser via <code>localStorage</code> and never sent to our servers).</li>
+    </ul>
+    <p>We do <strong>not</strong> collect your IP address for profiling, run advertising trackers, or sell your data to any third party.</p>
+
+    <h2>2. How we use your data</h2>
+    <ul>
+      <li>To authenticate you and keep you signed in (JWT token stored in <code>localStorage</code>).</li>
+      <li>To personalise your home page with your watch history and saved list.</li>
+      <li>To respond to account-related requests (e.g. password changes, account deletion).</li>
+    </ul>
+    <p>We do not use your data for advertising, profiling, or automated decision-making.</p>
+
+    <h2>3. Cookies and local storage</h2>
+    <p>We do not set traditional HTTP cookies from our own domain. Instead, we use the browser's <code>localStorage</code> API to store:</p>
+    <ul>
+      <li>Your authentication token (session).</li>
+      <li>Cached copies of your watch history and My List for offline use.</li>
+      <li>Your appearance preferences (theme, mode, accent colour).</li>
+      <li>Your cookie-consent preference (so this notice does not reappear).</li>
+    </ul>
+    <p>Third-party video players embedded on the Player page are served by external providers and may set their own cookies or use local storage independently. We have no control over those third-party cookies. See our <a href="cookies.html">Cookie Policy</a> for details.</p>
+
+    <h2>4. Third-party services</h2>
+    <ul>
+      <li><strong>The Movie Database (TMDB)</strong> — we use the TMDB API (proxied through our own server) to retrieve movie and TV show metadata, images, and ratings. Your browsing is not directly exposed to TMDB. TMDB's own <a href="https://www.themoviedb.org/privacy-policy" target="_blank" rel="noopener">privacy policy</a> applies to their service.</li>
+      <li><strong>Embedded video players</strong> — the Player page embeds video streams from third-party servers (VixSrc, VidSrc, Embed.su, and others). We do not control, host, or distribute that content. Those providers may log access requests. We do not receive those logs.</li>
+      <li><strong>Google Cast</strong> — if you use the Cast button, Google's Cast SDK is loaded. Google's <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacy policy</a> applies to that interaction.</li>
+      <li><strong>Google Fonts</strong> — fonts are loaded from Google Fonts CDN. Google may log the request. See Google's <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">privacy policy</a>.</li>
+    </ul>
+
+    <h2>5. Data retention and deletion</h2>
+    <p>Your account data is stored for as long as your account exists. You can delete your account at any time from the <a href="account.html">Account</a> page. Deleting your account permanently removes your email, username, watch history, and My List from our database within 30 days.</p>
+    <p>Appearance preferences stored in your browser's <code>localStorage</code> remain until you clear your browser data or delete your account.</p>
+
+    <h2>6. Your rights</h2>
+    <p>Depending on your location, you may have the right to:</p>
+    <ul>
+      <li>Access the personal data we hold about you.</li>
+      <li>Correct inaccurate data.</li>
+      <li>Request deletion of your data ("right to be forgotten").</li>
+      <li>Object to or restrict certain processing.</li>
+      <li>Receive a copy of your data in a portable format.</li>
+    </ul>
+    <p>To exercise any of these rights, contact us at the address below. We will respond within 30 days.</p>
+
+    <h2>7. Children's privacy</h2>
+    <p>ELI6 Movies is not directed at children under 13. We do not knowingly collect personal data from anyone under 13. If you believe a child has provided us with personal data, please contact us and we will delete it.</p>
+
+    <h2>8. Changes to this policy</h2>
+    <p>We may update this policy from time to time. The "Last updated" date at the top of this page will reflect any changes. Continued use of the service after changes constitutes acceptance of the new policy.</p>
+
+    <h2>9. Contact</h2>
+    <div class="legal__contact">
+      <p>Questions about this privacy policy? Email us at <strong>contact@eli6movies.com</strong>.</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="bottomnav-mount"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      window.renderTopNav('');
+      window.renderBottomNav('');
+      window.renderFooter('footer-mount');
+    });
+  </script>
+</body>
+</html>
