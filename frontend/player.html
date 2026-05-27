@@ -6,14 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ELI6 MOVIES - Player</title>
     <link rel="icon" href="favicon.ico">
-    <!-- <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet"> -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/theme.css">
-    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/design.css">
     <link rel="stylesheet" href="css/spatial-nav.css">
+    <script>(function(){var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');var t=p.theme||'pulse';var m=p.mode||'dark';document.documentElement.dataset.theme=t;document.documentElement.dataset.mode=m;})();</script>
     <script src="js/config.js"></script>
     <script src="js/i18n.js"></script>
-    <script src="js/mobile-nav.js" defer></script>
+    <script src="js/theme.js"></script>
+    <script src="js/components.js"></script>
     <style>
         * {
             margin: 0;
@@ -22,8 +25,8 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #000;
+            font-family: var(--font-body, 'Space Grotesk', Arial, sans-serif);
+            background: var(--bg, #000);
             color: #fff;
             overflow-x: hidden;
             line-height: 1.4;
@@ -49,7 +52,7 @@
         }
 
         .logo {
-            color: #e50914;
+            color: var(--accent);
             font-size: 25px;
             font-weight: 700;
             text-decoration: none;
@@ -324,8 +327,8 @@
         }
 
         .server-btn.active {
-            background: #e50914;
-            border-color: #e50914;
+            background: var(--accent);
+            border-color: var(--accent);
         }
 
         .server-btn:hover {
@@ -372,14 +375,14 @@
         }
 
         .btn-play {
-            background: linear-gradient(135deg, #e50914 0%, #b81d24 100%);
+            background: linear-gradient(135deg, var(--accent) 0%, #b81d24 100%);
             color: #fff;
-            border: 2px solid #e50914;
+            border: 2px solid var(--accent);
             box-shadow: 0 6px 20px rgba(229, 9, 20, 0.4);
         }
 
         .btn-play:hover {
-            background: linear-gradient(135deg, #b81d24 0%, #e50914 100%);
+            background: linear-gradient(135deg, #b81d24 0%, var(--accent) 100%);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(229, 9, 20, 0.6);
         }
@@ -438,13 +441,13 @@
         }
 
         .btn-mylist.in-list {
-            background: linear-gradient(135deg, #e50914 0%, #b81d24 100%);
-            border-color: #e50914;
+            background: linear-gradient(135deg, var(--accent) 0%, #b81d24 100%);
+            border-color: var(--accent);
             box-shadow: 0 6px 20px rgba(229, 9, 20, 0.4);
         }
 
         .btn-mylist.in-list:hover {
-            background: linear-gradient(135deg, #b81d24 0%, #e50914 100%);
+            background: linear-gradient(135deg, #b81d24 0%, var(--accent) 100%);
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(229, 9, 20, 0.6);
         }
@@ -522,7 +525,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #e50914;
+            color: var(--accent);
             font-size: 18px;
             text-align: center;
             padding: 40px;
@@ -1087,7 +1090,7 @@
 
         /* Netflix Error States */
         .error-text {
-            color: #e50914;
+            color: var(--accent);
             font-size: 16px;
             text-align: center;
             padding: 40px;
@@ -1132,7 +1135,7 @@
 
         .selector-group select:focus {
             outline: none;
-            border-color: #e50914;
+            border-color: var(--accent);
             background: rgba(109, 109, 110, 0.9);
         }
 
@@ -1202,7 +1205,7 @@
             width: 18px;
             height: 18px;
             border: 2px solid #fff;
-            border-top: 2px solid #e50914;
+            border-top: 2px solid var(--accent);
             border-radius: 50%;
             animation: spin 0.7s linear infinite;
             vertical-align: middle;
@@ -1246,7 +1249,7 @@
         }
 
         .notification.undo button {
-            background: #e50914;
+            background: var(--accent);
             color: #fff;
             border: none;
             border-radius: 4px;
@@ -1350,7 +1353,7 @@
         .player-overlay-controls .server-btn.active,
         .player-overlay-controls .server-btn:focus {
             background: #fff;
-            color: #e50914;
+            color: var(--accent);
         }
         .player-overlay-controls .server-btn:not(.active):hover {
             background: #b81d24;
@@ -1521,7 +1524,7 @@
                 font-family: 'Netflix Sans', sans-serif;
                 font-weight: 800;
                 font-size: 22px;
-                color: var(--accent-color, #e50914);
+                color: var(--accent-color, var(--accent));
                 letter-spacing: 1px;
                 text-shadow: 0 0 10px rgba(229, 9, 20, 0.4);
                 flex: 1;
@@ -1727,7 +1730,7 @@
 
             .btn-play {
                 grid-column: span 2;
-                background: #e50914;
+                background: var(--accent);
             }
 
             .content-section {
@@ -1821,81 +1824,8 @@
 </head>
 
 <body>
-    <!-- Mobile Top Bar -->
-    <div class="mobile-topbar" id="mobileTopbar">
-        <button class="mobile-hamburger" id="openMobileSidenav">
-            <span></span><span></span><span></span>
-        </button>
-        <span class="mobile-logo" data-i18n="nav.logo">ELI6 MOVIES</span>
-        <div class="mobile-top-icons">
-            <a href="account.html" class="mobile-action-btn">
-                <i class="material-icons">account_circle</i>
-            </a>
-        </div>
-    </div>
-
-    <!-- Mobile Overlay and Side Navigation -->
-    <div class="mobile-overlay" id="mobileOverlay" style="display: none"></div>
-    <nav class="mobile-sidenav" id="mobileSidenav" style="display: none">
-        <div class="mobile-sidenav-header">
-            <span class="mobile-sidenav-title" data-i18n="nav.logo">ELI6 MOVIES</span>
-            <button class="mobile-sidenav-close" id="closeMobileSidenav">&times;</button>
-        </div>
-        <ul class="mobile-sidenav-links">
-            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
-            <li><a href="movies.html" data-i18n="nav.movies">Movies</a></li>
-            <li><a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a></li>
-            <li><a href="mylist.html" data-i18n="nav.mylist">My List</a></li>
-            <li><a href="settings.html" data-i18n="nav.settings">Settings</a></li>
-            <li><a href="account.html" data-i18n="nav.account">Account</a></li>
-        </ul>
-    </nav>
-
-    <nav class="navbar" id="navbar">
-        <div style="display: flex; align-items: center;">
-            <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
-            <div class="nav-links">
-                <a href="index.html" data-i18n="nav.home">Home</a>
-                <a href="movies.html" data-i18n="nav.movies">Movies</a>
-                <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
-                <a href="mylist.html" data-i18n="nav.mylist">My List</a>
-            </div>
-        </div>
-        <div class="nav-right nav-icons">
-            <a href="search.html" class="nav-icon">
-                <i class="material-icons">search</i>
-            </a>
-            <a href="settings.html" class="nav-icon">
-                <i class="material-icons">settings</i>
-            </a>
-            <a href="account.html" class="nav-icon">
-                <i class="material-icons">account_circle</i>
-            </a>
-        </div>
-    </nav>
-
-    <nav class="mobile-bottom-nav">
-        <a href="index.html">
-            <i class="material-icons">home</i>
-            <span data-i18n="nav.home">Home</span>
-        </a>
-        <a href="movies.html">
-            <i class="material-icons">local_movies</i>
-            <span data-i18n="nav.movies">Movies</span>
-        </a>
-        <a href="tvshows.html">
-            <i class="material-icons">tv</i>
-            <span data-i18n="nav.tvshows">TV</span>
-        </a>
-        <a href="mylist.html">
-            <i class="material-icons">playlist_add_check</i>
-            <span data-i18n="nav.mylist">My List</span>
-        </a>
-        <a href="settings.html">
-            <i class="material-icons">settings</i>
-            <span data-i18n="nav.settings">Settings</span>
-        </a>
-    </nav>
+    <div id="topnav-mount"></div>
+    <div id="bottomnav-mount"></div>
 
     <!-- Netflix Hero Section -->
     <section class="hero-section">
@@ -1909,22 +1839,20 @@
             </div>
             <p class="hero-description" id="heroDescription" data-i18n="player.loadingContent" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #e5e5e5 !important;">Loading content information...</p>
             <div class="hero-actions">
-                <button class="netflix-btn btn-play" onclick="playContent()">
-                    <i class="material-icons">play_arrow</i>
-                    <span data-i18n="player.play">Play</span>
+                <button class="btn btn--primary" onclick="playContent()">
+                    ▶ <span data-i18n="player.play">Play</span>
                 </button>
-                <button class="netflix-btn btn-more" onclick="showInfo()">
-                    <i class="material-icons">info</i>
-                    <span data-i18n="player.moreInfo">More Info</span>
+                <button class="btn btn--ghost" onclick="showInfo()">
+                    ⓘ <span data-i18n="player.moreInfo">More Info</span>
                 </button>
-                <button id="addButton" class="netflix-btn btn-mylist mylist-btn" data-i18n="player.addToMyList">
-                    <i class="material-icons">add</i> <span data-i18n="player.addToMyList">My List</span>
+                <button id="addButton" class="btn btn--ghost mylist-btn" data-i18n="player.addToMyList">
+                    + <span data-i18n="player.addToMyList">My List</span>
                 </button>
                 <!-- Google Cast Button -->
                 <span id="castButtonContainer" style="display:inline-block; vertical-align:middle; margin-left:12px;">
-                  <google-cast-launcher id="castLauncher" style="--discovery-color:#e50914; --connected-color:#46d369; width:40px; height:40px;"></google-cast-launcher>
+                  <google-cast-launcher id="castLauncher" style="--discovery-color:var(--accent); --connected-color:#46d369; width:40px; height:40px;"></google-cast-launcher>
                 </span>
-                <span id="castFallback" style="display:none; color:#ccc; font-size:14px; margin-left:10px;">(Casting not supported in this browser)</span>
+                <span id="castFallback" style="display:none; color:var(--fg-muted); font-size:14px; margin-left:10px;">(Casting not supported in this browser)</span>
              
                 <!-- Season and Episode Selectors (TV Shows Only) - HIDDEN -->
                 <div class="episode-selector" id="episodeSelector" style="display: none;">
@@ -1943,7 +1871,7 @@
                 </div>
             </div>
             <div class="server-notice">
-                <i class="material-icons" style="font-size: 16px; vertical-align: middle; margin-right: 5px;">info</i>
+                <span style="font-size: 16px; vertical-align: middle; margin-right: 5px;">ⓘ</span>
                 <span data-i18n="player.server_notice">If content is unavailable, try switching between servers.</span>
             </div>
         </div>
@@ -1973,7 +1901,7 @@
                     <!-- Next Episode Overlay Button (moved from hero section) -->
                     <div id="nextEpisodeOverlayBtnContainer" class="overlay" style="display:none; position:absolute; top:50%; right:20px; transform:translateY(-50%); z-index:9999;">
                         <button id="nextEpisodeBtnOverlay" class="next-episode-btn" title="Skip to next episode" data-i18n-title="player.skipToNextEpisode">
-                            <i class="material-icons" style="font-size: 28px; color: #fff;">skip_next</i>
+                            <span style="font-size: 28px; color: #fff;">⏭</span>
                         </button>
                     </div>
                 </div>
@@ -2059,6 +1987,8 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
+            window.renderTopNav('player');
+            window.renderBottomNav('player');
             await loadContentDetails();
             setupEventListeners();
             checkMyListStatus();
@@ -2080,8 +2010,8 @@
                 manualControls.id = 'manualControls';
                 manualControls.style = 'margin-top: 16px; text-align: center;';
                 manualControls.innerHTML = `
-                    <button id="reportBrokenBtn" style="background:#e50914;color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:16px;cursor:pointer;margin-right:12px;">Report Broken</button>
-                    <button id="reloadPlayerBtn" style="background:#444;color:#fff;border:none;padding:10px 24px;border-radius:4px;font-size:16px;cursor:pointer;">Reload Player</button>
+                    <button id="reportBrokenBtn" class="btn btn--outline" style="margin-right:12px;">Report Broken</button>
+                    <button id="reloadPlayerBtn" class="btn btn--ghost">Reload Player</button>
                 `;
                 videoPlayerDiv.parentNode.insertBefore(manualControls, videoPlayerDiv.nextSibling);
                 document.getElementById('reportBrokenBtn').onclick = () => {
@@ -2811,9 +2741,7 @@
                             <div class="trailer-item" onclick="playTrailer('${trailer.key}')">
                                 <div class="trailer-thumbnail">
                                     <img src="https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg" alt="${trailer.name}">
-                                    <div class="trailer-play-overlay">
-                                        <i class="material-icons">play_arrow</i>
-                                    </div>
+                                    <div class="trailer-play-overlay">▶</div>
                                 </div>
                                 <div class="trailer-title">${trailer.name}</div>
                             </div>
@@ -3033,10 +2961,10 @@
 
             if (isInMyList) {
                 addButton.classList.add('in-list');
-                addButton.innerHTML = '<i class="material-icons">check</i> My List';
+                addButton.innerHTML = '✓ My List';
             } else {
                 addButton.classList.remove('in-list');
-                addButton.innerHTML = '<i class="material-icons">add</i> My List';
+                addButton.innerHTML = '+ My List';
             }
         }
 
@@ -3046,8 +2974,7 @@
             if (!addButton) return;
             addButton.disabled = true;
             addButton.classList.add('animated');
-            const icon = addButton.querySelector('.material-icons');
-            const origIcon = icon ? icon.textContent : '';
+            const origHTML = addButton.innerHTML;
             // Show spinner
             if (!addButton.querySelector('.spinner')) {
                 addButton.insertAdjacentHTML('beforeend', '<span class="spinner"></span>');
@@ -3213,7 +3140,7 @@
                 <div class="player-error">
                     ${message}
                     <br><br>
-                    <button onclick="goBack()" style="background: #e50914; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+                    <button onclick="goBack()" style="background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
                         Go Back
                     </button>
                 </div>
@@ -4055,11 +3982,10 @@
         style="display:none; position:fixed; z-index:99999; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); align-items:center; justify-content:center;">
         <div
             style="background:#181818; color:#fff; border-radius:12px; padding:40px 30px; max-width:400px; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.5); animation: fadeIn 0.3s;">
-            <i class="material-icons" style="font-size:48px; color:#e50914; margin-bottom:16px;">error_outline</i>
+            <span style="font-size:48px; color:var(--accent); margin-bottom:16px; display:block;">⚠</span>
             <div id="serverErrorText" style="font-size:18px; margin-bottom:24px;">This server is
                 unavailable.<br>Switching to another server...</div>
-            <button id="serverErrorClose"
-                style="background:#e50914; color:#fff; border:none; border-radius:4px; padding:10px 24px; font-size:16px; cursor:pointer; display:none;">Close</button>
+            <button id="serverErrorClose" class="btn btn--primary" style="display:none;">Close</button>
         </div>
     </div>
 
