@@ -595,12 +595,69 @@
     if (!mount) return;
 
     const footer = el("footer", "footer");
-    footer.innerHTML =
-      "<span>© 2025 ELI6 Movies</span>" +
-      "<span>This site does not host any files. All content is provided by non-affiliated third parties.</span>";
+
+    const top = el("div", "footer__top");
+    const copy = el("span");
+    copy.textContent = "© 2025 ELI6 Movies";
+    const disc = el("span");
+    disc.textContent = "This site does not host any files. All content is provided by non-affiliated third parties.";
+    top.appendChild(copy);
+    top.appendChild(disc);
+
+    const links = el("nav", "footer__links");
+    const legalLinks = [
+      { label: "Privacy Policy", href: "privacy.html" },
+      { label: "Terms of Service", href: "terms.html" },
+      { label: "Cookie Policy", href: "cookies.html" },
+      { label: "DMCA", href: "dmca.html" },
+    ];
+    legalLinks.forEach(function (l) {
+      const a = el("a"); a.href = l.href; a.textContent = l.label;
+      links.appendChild(a);
+    });
+
+    const bottom = el("div", "footer__bottom");
+    bottom.textContent = "ELI6 Movies is an independent aggregator and does not produce, host, or distribute any media content. All trademarks belong to their respective owners.";
+
+    footer.appendChild(top);
+    footer.appendChild(links);
+    footer.appendChild(bottom);
 
     mount.innerHTML = "";
     mount.appendChild(footer);
+  }
+
+  // ─── Cookie Banner ──────────────────────────────────────────────────────────
+
+  function renderCookieBanner() {
+    if (localStorage.getItem("eli6.cookies.accepted")) return;
+
+    const banner = el("div", "cookie-banner");
+
+    const text = el("div", "cookie-banner__text");
+    text.innerHTML = 'We use cookies and local storage to keep you signed in and save your preferences. ' +
+      '<a href="cookies.html">Learn more</a>.';
+
+    const actions = el("div", "cookie-banner__actions");
+    const acceptBtn = el("button", "btn btn--primary");
+    acceptBtn.textContent = "Accept";
+    acceptBtn.style.cssText = "padding:8px 20px;font-size:13px";
+    acceptBtn.addEventListener("click", function () {
+      localStorage.setItem("eli6.cookies.accepted", "1");
+      banner.style.transition = "opacity 200ms";
+      banner.style.opacity = "0";
+      setTimeout(function () { banner.remove(); }, 210);
+    });
+    const moreBtn = el("a", "btn btn--ghost");
+    moreBtn.href = "cookies.html";
+    moreBtn.textContent = "Cookie Policy";
+    moreBtn.style.cssText = "padding:8px 16px;font-size:13px";
+    actions.appendChild(acceptBtn);
+    actions.appendChild(moreBtn);
+
+    banner.appendChild(text);
+    banner.appendChild(actions);
+    document.body.appendChild(banner);
   }
 
   // ─── Toast ──────────────────────────────────────────────────────────────────
@@ -627,14 +684,19 @@
   // ─── exports ────────────────────────────────────────────────────────────────
 
   Object.assign(window, {
-    renderTopNav:    renderTopNav,
-    renderBottomNav: renderBottomNav,
-    makePoster:      makePoster,
-    makeRow:         makeRow,
-    makeHeroSlider:  makeHeroSlider,
-    openDetailModal: openDetailModal,
-    renderFooter:    renderFooter,
-    showToast:       showToast,
+    renderTopNav:      renderTopNav,
+    renderBottomNav:   renderBottomNav,
+    makePoster:        makePoster,
+    makeRow:           makeRow,
+    makeHeroSlider:    makeHeroSlider,
+    openDetailModal:   openDetailModal,
+    renderFooter:      renderFooter,
+    showToast:         showToast,
+    renderCookieBanner: renderCookieBanner,
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    renderCookieBanner();
   });
 
 })(window);
