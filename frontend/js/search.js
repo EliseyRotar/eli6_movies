@@ -84,15 +84,46 @@
     mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div></div>';
 
     var lang = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
-    var r = await fetch(TMDB_URL + '/trending/all/week?language=' + lang);
-    var data = r.ok ? await r.json() : { results: [] };
-    var items = (data.results || []).map(function (i) {
-      return Object.assign({}, i, { kind: i.media_type || (i.title ? 'movie' : 'tv'), year: (i.release_date || i.first_air_date || '').slice(0, 4), rating: i.vote_average ? i.vote_average.toFixed(1) : '', title: i.title || i.name || '' });
+
+    var results = await Promise.all([
+      fetch(TMDB_URL + '/movie/popular?language=' + lang).then(function (r) { return r.ok ? r.json() : { results: [] }; }),
+      fetch(TMDB_URL + '/search/tv?query=anime&language=' + lang).then(function (r) { return r.ok ? r.json() : { results: [] }; }),
+    ]);
+
+    var popular = (results[0].results || []).map(function (i) {
+      return Object.assign({}, i, { kind: 'movie', year: (i.release_date || '').slice(0, 4), rating: i.vote_average ? i.vote_average.toFixed(1) : '', title: i.title || '' });
+    });
+    var anime = (results[1].results || []).map(function (i) {
+      return Object.assign({}, i, { kind: 'tv', year: (i.first_air_date || '').slice(0, 4), rating: i.vote_average ? i.vote_average.toFixed(1) : '', title: i.name || i.title || '' });
     });
 
     mount.innerHTML = '';
-    var row = window.makeRow('Trending This Week', items, { onPick: function (item) { window.openDetailModal(item); } });
-    mount.appendChild(row);
+
+    // Recent searches pills
+    var recentWrap = document.createElement('div');
+    recentWrap.style.cssText = 'padding:0 var(--pad-x) 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+    var recentLabel = document.createElement('span');
+    recentLabel.style.cssText = 'font-size:12px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--fg-muted);margin-right:4px';
+    recentLabel.textContent = 'Recent searches';
+    recentWrap.appendChild(recentLabel);
+    ['sci-fi', 'tokyo', 'anime', 'thriller'].forEach(function (term) {
+      var pill = document.createElement('button');
+      pill.className = 'pill';
+      pill.textContent = '⌕ ' + term;
+      pill.addEventListener('click', function () {
+        var input = document.getElementById('search-input');
+        if (input) { input.value = term; input.dispatchEvent(new Event('input')); }
+      });
+      recentWrap.appendChild(pill);
+    });
+    mount.appendChild(recentWrap);
+
+    if (popular.length) {
+      mount.appendChild(window.makeRow('Popular right now', popular, { onPick: function (item) { window.openDetailModal(item); } }));
+    }
+    if (anime.length) {
+      mount.appendChild(window.makeRow('Trending in anime', anime, { onPick: function (item) { window.openDetailModal(item); } }));
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function () {
