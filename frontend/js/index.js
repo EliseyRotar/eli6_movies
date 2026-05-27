@@ -9,9 +9,10 @@ const TMDB_BASE_URL = window.TMDB_PROXY_URL || (AUTH_API_URL ? AUTH_API_URL + '/
 async function fetchContent(type, category, lang) {
   const endpoints = {
     movie: {
-      trending: '/trending/movie/week',
-      popular:  '/movie/popular',
-      upcoming: '/movie/upcoming',
+      trending:  '/trending/movie/week',
+      popular:   '/movie/popular',
+      upcoming:  '/movie/upcoming',
+      top_rated: '/movie/top_rated',
     },
     tv: {
       trending: '/trending/tv/week',
@@ -168,10 +169,12 @@ async function initPage() {
   rowsMnt.appendChild(loadingDiv);
 
   // Fetch all data in parallel
-  const [trending, trendingTV, popular, anime, keepWatching] = await Promise.all([
-    fetchTMDBWithFallback('movie', 'trending', lang),
-    fetchTMDBWithFallback('tv',    'trending', lang),
-    fetchTMDBWithFallback('movie', 'popular',  lang),
+  const [trending, trendingTV, popular, upcoming, topRated, anime, keepWatching] = await Promise.all([
+    fetchTMDBWithFallback('movie', 'trending',  lang),
+    fetchTMDBWithFallback('tv',    'trending',  lang),
+    fetchTMDBWithFallback('movie', 'popular',   lang),
+    fetchTMDBWithFallback('movie', 'upcoming',  lang),
+    fetchTMDBWithFallback('movie', 'top_rated', lang),
     fetchAnimeContent(),
     fetchKeepWatching(),
   ]);
@@ -210,27 +213,9 @@ async function initPage() {
     rowsMnt.appendChild(kwRow);
   }
 
-  // Trending Movies
+  // Trending Now (numbered, 10 items)
   if (trending.length) {
-    const row = makeRow('Trending Now', trending.slice(0, 20).map(i => normalise(i, 'movie')), {
-      seeAllHref: 'movies.html',
-      onPick: function (item) { openDetailModal(item); },
-    });
-    rowsMnt.appendChild(row);
-  }
-
-  // Trending TV
-  if (trendingTV.length) {
-    const row = makeRow('Popular TV Shows', trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
-      seeAllHref: 'tvshows.html',
-      onPick: function (item) { openDetailModal(item); },
-    });
-    rowsMnt.appendChild(row);
-  }
-
-  // Top Picks (popular, numbered)
-  if (popular.length) {
-    const row = makeRow('Top Picks', popular.slice(0, 10).map(i => normalise(i, 'movie')), {
+    const row = makeRow('Trending Now', trending.slice(0, 10).map(i => normalise(i, 'movie')), {
       numbered:   true,
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
@@ -238,11 +223,38 @@ async function initPage() {
     rowsMnt.appendChild(row);
   }
 
-  // Anime
+  // New Releases
+  if (upcoming.length) {
+    const row = makeRow('New Releases', upcoming.slice(0, 20).map(i => normalise(i, 'movie')), {
+      seeAllHref: 'movies.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Critically Acclaimed
+  if (topRated.length) {
+    const row = makeRow('Critically Acclaimed', topRated.slice(0, 20).map(i => normalise(i, 'movie')), {
+      seeAllHref: 'movies.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Anime Spotlight
   if (anime.length) {
-    const row = makeRow('Anime', anime.slice(0, 20), {
+    const row = makeRow('Anime Spotlight', anime.slice(0, 20), {
       seeAllHref: 'anime.html',
       onPick: function (item) { playContent(item.id, 'anime', item.link_url); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Because you watched…
+  if (trendingTV.length) {
+    const row = makeRow('Because you watched \'Crown of Ashes\'', trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
+      seeAllHref: 'tvshows.html',
+      onPick: function (item) { openDetailModal(item); },
     });
     rowsMnt.appendChild(row);
   }
