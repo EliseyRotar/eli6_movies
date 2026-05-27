@@ -1,0 +1,40 @@
+// Fake movie/show data — original titles so we can ship without licensing concerns.
+// Each item has a baked-in gradient + accent so the "poster" placeholder reads as a real piece of art.
+window.MOVIES = [
+  { id: 1,  title: "The Last Horizon",   year: 2024, kind: "movie", genre: "Sci-Fi",     rating: "8.4", runtime: "2h 14m", grad: ["#0b1d3a", "#3a1e6b", "#c44a3a"], mood: "dark"   },
+  { id: 2,  title: "Midnight in Tokyo",  year: 2023, kind: "movie", genre: "Drama",      rating: "7.9", runtime: "1h 48m", grad: ["#1a0f2e", "#6a1b5e", "#f08fb8"], mood: "neon"   },
+  { id: 3,  title: "Crown of Ashes",     year: 2024, kind: "tv",    genre: "Fantasy",    rating: "9.1", runtime: "S2",     grad: ["#2b0808", "#7a1a1a", "#e8b04a"], mood: "regal"  },
+  { id: 4,  title: "Velvet Static",      year: 2025, kind: "movie", genre: "Thriller",   rating: "7.6", runtime: "1h 56m", grad: ["#101010", "#3a3a3a", "#d94e6a"], mood: "noir"   },
+  { id: 5,  title: "Iron Lullaby",       year: 2023, kind: "movie", genre: "Action",     rating: "8.0", runtime: "2h 08m", grad: ["#0a1a14", "#1f4a3a", "#c98a3a"], mood: "earth"  },
+  { id: 6,  title: "The Quiet Hour",     year: 2024, kind: "movie", genre: "Drama",      rating: "8.7", runtime: "1h 42m", grad: ["#1e1b14", "#4a3a26", "#e0c89a"], mood: "warm"   },
+  { id: 7,  title: "Paper Cities",       year: 2024, kind: "tv",    genre: "Mystery",    rating: "8.2", runtime: "S1",     grad: ["#0c2330", "#1f5a6a", "#a4d9d4"], mood: "cool"   },
+  { id: 8,  title: "Salt & Smoke",       year: 2022, kind: "movie", genre: "Western",    rating: "7.5", runtime: "2h 21m", grad: ["#3a1a08", "#7a3a14", "#e8a060"], mood: "dust"   },
+  { id: 9,  title: "Neon Garden",        year: 2025, kind: "anime", genre: "Anime",      rating: "9.3", runtime: "12 ep",  grad: ["#1a0a3a", "#5a1ab0", "#5af0d8"], mood: "neon"   },
+  { id: 10, title: "Hollow Kings",       year: 2024, kind: "tv",    genre: "Drama",      rating: "8.5", runtime: "S3",     grad: ["#0a0a0a", "#2a1818", "#c08040"], mood: "noir"   },
+  { id: 11, title: "Lighthouse Echo",    year: 2023, kind: "movie", genre: "Drama",      rating: "8.1", runtime: "1h 39m", grad: ["#0a1a2e", "#1f3a5a", "#f0e4c8"], mood: "cool"   },
+  { id: 12, title: "Bone Orchard",       year: 2024, kind: "movie", genre: "Horror",     rating: "7.8", runtime: "1h 51m", grad: ["#1a0a0a", "#3a1818", "#a02828"], mood: "blood"  },
+  { id: 13, title: "Glassworks",         year: 2025, kind: "movie", genre: "Sci-Fi",     rating: "8.8", runtime: "2h 03m", grad: ["#0a1a2e", "#1a4a6a", "#8fdfff"], mood: "cool"   },
+  { id: 14, title: "Saints of Brooklyn", year: 2022, kind: "movie", genre: "Crime",      rating: "7.4", runtime: "2h 12m", grad: ["#0a0a0a", "#1f1a14", "#a06840"], mood: "dust"   },
+  { id: 15, title: "Wildflower Hotel",   year: 2024, kind: "tv",    genre: "Comedy",     rating: "8.0", runtime: "S2",     grad: ["#2a1a14", "#6a3a4a", "#f4a060"], mood: "warm"   },
+  { id: 16, title: "Pale Blue Engine",   year: 2025, kind: "anime", genre: "Anime",      rating: "8.9", runtime: "24 ep",  grad: ["#0a1a3a", "#2a4a9a", "#8fb8ff"], mood: "cool"   },
+  { id: 17, title: "Tin Pan Republic",   year: 2024, kind: "movie", genre: "Historical", rating: "7.7", runtime: "2h 28m", grad: ["#1a1408", "#4a3a14", "#e0b048"], mood: "regal"  },
+  { id: 18, title: "Shoreline Static",   year: 2023, kind: "tv",    genre: "Thriller",   rating: "8.3", runtime: "S1",     grad: ["#0a1414", "#1a3a3a", "#80c8c0"], mood: "cool"   },
+  { id: 19, title: "The Borrowed Year",  year: 2024, kind: "movie", genre: "Romance",    rating: "7.9", runtime: "1h 44m", grad: ["#2a0a1a", "#6a1a4a", "#f4a0b8"], mood: "warm"   },
+  { id: 20, title: "Sunset Protocol",    year: 2025, kind: "movie", genre: "Action",     rating: "8.2", runtime: "1h 58m", grad: ["#3a0a0a", "#7a2a14", "#f4a040"], mood: "warm"   },
+  { id: 21, title: "Ghost Frequency",    year: 2023, kind: "tv",    genre: "Sci-Fi",     rating: "8.6", runtime: "S2",     grad: ["#0a0a1a", "#1a1a4a", "#a0a0ff"], mood: "neon"   },
+  { id: 22, title: "Marble & Moss",      year: 2024, kind: "movie", genre: "Drama",      rating: "8.0", runtime: "2h 05m", grad: ["#1a2a1a", "#3a4a2a", "#c8d4a0"], mood: "earth"  },
+  { id: 23, title: "After the Atlas",    year: 2024, kind: "movie", genre: "Adventure",  rating: "7.8", runtime: "2h 18m", grad: ["#0a1a2a", "#1a3a5a", "#e8c060"], mood: "warm"   },
+  { id: 24, title: "Wolf in the Wires",  year: 2025, kind: "anime", genre: "Anime",      rating: "9.0", runtime: "16 ep",  grad: ["#1a0a1a", "#4a1a3a", "#ff5ab0"], mood: "neon"   },
+];
+
+window.HERO = {
+  id: 1,
+  title: "The Last Horizon",
+  tagline: "The further we sail, the deeper the silence.",
+  year: 2024,
+  rating: "8.4",
+  runtime: "2h 14m",
+  genre: "Sci-Fi · Drama",
+  description: "When the last surviving probe sends back a signal from a forgotten edge of the galaxy, a salvage crew is offered one shot at the impossible. A meditation on memory, distance, and what we leave behind.",
+  grad: ["#0b1d3a", "#3a1e6b", "#c44a3a"],
+};
