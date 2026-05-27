@@ -402,8 +402,11 @@
   // ─── Detail Modal ───────────────────────────────────────────────────────────
 
   function openDetailModal(item) {
-    const TMDB_IMG = "https://image.tmdb.org/t/p/";
-    const theme    = currentTheme();
+    const TMDB_IMG   = "https://image.tmdb.org/t/p/";
+    const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + "/tmdb" : "");
+    const theme      = currentTheme();
+    const kind       = item.kind || item.media_type || "movie";
+    const g          = item.grad || ["#1a1a2e", "#16213e", "#0f3460"];
 
     const backdrop = el("div", "detail-backdrop");
     backdrop.addEventListener("click", function (e) {
@@ -414,7 +417,6 @@
 
     // Art
     const art = el("div", "detail__art");
-    const g = item.grad || ["#1a1a2e", "#16213e", "#0f3460"];
     if (item.backdrop_path) {
       art.style.backgroundImage = "url(" + TMDB_IMG + "w780" + item.backdrop_path + ")";
       art.style.backgroundSize = "cover";
@@ -432,19 +434,21 @@
     artScrim.style.cssText = "position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,var(--bg) 100%)";
     art.appendChild(artScrim);
 
+    // Kind label + title overlaid at the bottom of the art
+    const artInfo = el("div");
+    artInfo.style.cssText = "position:absolute;bottom:0;left:0;right:0;padding:20px 24px 12px;z-index:2";
+    const kindLabel = el("div", "detail__kind-label");
+    kindLabel.textContent = kind.toUpperCase();
+    artInfo.appendChild(kindLabel);
+    const artTitle = el("div", "detail__title");
+    artTitle.textContent = item.title || item.name || "";
+    artInfo.appendChild(artTitle);
+    art.appendChild(artInfo);
+
     modal.appendChild(art);
 
     // Body
     const body = el("div", "detail__body");
-
-    const kindLabel = el("div", "detail__kind-label");
-    const kind = item.kind || item.media_type || "movie";
-    kindLabel.textContent = kind.toUpperCase();
-    body.appendChild(kindLabel);
-
-    const title = el("div", "detail__title");
-    title.textContent = item.title || item.name || "";
-    body.appendChild(title);
 
     const meta = el("div", "detail__meta");
     if (item.rating || item.vote_average) {
@@ -469,29 +473,40 @@
     const watchBtn = el("button", "btn btn--primary");
     watchBtn.textContent = "▶ Watch now";
     watchBtn.addEventListener("click", function () {
-      const playerUrl = "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
-      window.location.href = playerUrl;
+      window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
     });
-    const listBtn = el("button", "btn btn--outline");
+    const listBtn = el("button", "btn btn--ghost");
     listBtn.textContent = "+ My List";
     listBtn.addEventListener("click", function () {
       if (typeof window.toggleMyList === "function") window.toggleMyList(item);
       else showToast("Added to list");
     });
+    const likeBtn = el("button", "btn btn--ghost btn--icon");
+    likeBtn.textContent = "♥";
+    likeBtn.title = "Like";
+    const shareBtn = el("button", "btn btn--ghost btn--icon");
+    shareBtn.textContent = "↗";
+    shareBtn.title = "Share";
     cta.appendChild(watchBtn);
     cta.appendChild(listBtn);
+    cta.appendChild(likeBtn);
+    cta.appendChild(shareBtn);
     body.appendChild(cta);
 
-    // Facts
+    // About (fact grid)
     const facts = el("div", "detail__sect");
-    const factsHead = el("h3"); factsHead.textContent = "Details";
+    const factsHead = el("h3"); factsHead.textContent = "About";
     facts.appendChild(factsHead);
-    const grid = el("div", "detail__factgrid");
+    const factGrid = el("div", "detail__factgrid");
+    const titleStr = item.title || item.name || "";
     const factData = [
-      { k: "Year",    v: year },
-      { k: "Genre",   v: item.genre },
-      { k: "Runtime", v: item.runtime },
-      { k: "Rating",  v: item.rating || (item.vote_average ? item.vote_average.toFixed(1) + " / 10" : null) },
+      { k: "Director", v: "Various" },
+      { k: "Cast",     v: titleStr.split(" ")[0] + " Cast, et al." },
+      { k: "Genre",    v: item.genre },
+      { k: "Year",     v: year },
+      { k: "Runtime",  v: item.runtime },
+      { k: "Rated",    v: "TV-MA" },
+      { k: "Rating",   v: item.rating || (item.vote_average ? item.vote_average.toFixed(1) + " / 10" : null) },
     ];
     factData.forEach(function (f) {
       if (!f.v) return;
@@ -500,14 +515,66 @@
       const val = el("div", "detail__fact-v"); val.textContent = f.v;
       cell.appendChild(key);
       cell.appendChild(val);
-      grid.appendChild(cell);
+      factGrid.appendChild(cell);
     });
-    facts.appendChild(grid);
+    facts.appendChild(factGrid);
     body.appendChild(facts);
+
+    // Episodes section (TV only)
+    if (kind === "tv") {
+      const epSect = el("div", "detail__sect");
+      const epHead = el("h3"); epHead.textContent = "Episodes";
+      epSect.appendChild(epHead);
+      const epList = el("div", "detail__episodes");
+      for (let ep = 1; ep <= 6; ep++) {
+        const epEl = el("div", "detail__ep");
+        epEl.addEventListener("click", (function (n) {
+          return function () {
+            window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=tv&season=1&episode=" + n;
+          };
+        })(ep));
+        const thumb = el("div", "detail__ep-thumb");
+        thumb.style.background = "linear-gradient(135deg," + g[0] + "," + g[1] + ")";
+        thumb.textContent = "▶";
+        const epInfo = el("div");
+        epInfo.style.flex = "1";
+        const epSub = el("div", "detail__ep-sub"); epSub.textContent = "S1 · E" + ep;
+        const epTitle = el("div", "detail__ep-title"); epTitle.textContent = "Episode " + ep;
+        epInfo.appendChild(epSub);
+        epInfo.appendChild(epTitle);
+        epEl.appendChild(thumb);
+        epEl.appendChild(epInfo);
+        epList.appendChild(epEl);
+      }
+      epSect.appendChild(epList);
+      body.appendChild(epSect);
+    }
 
     modal.appendChild(body);
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
+
+    // More like this (async — appends after modal is in DOM)
+    if (TMDB_PROXY) {
+      const moreSect = el("div", "detail__sect");
+      const moreHead = el("h3"); moreHead.textContent = "More like this";
+      moreSect.appendChild(moreHead);
+      const moreGrid = el("div", "detail__more-grid");
+      moreSect.appendChild(moreGrid);
+      body.appendChild(moreSect);
+
+      fetch(TMDB_PROXY + "/" + kind + "/" + (item.tmdb_id || item.id) + "/similar")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (!d || !d.results || !d.results.length) { moreSect.remove(); return; }
+          d.results.slice(0, 6).forEach(function (sim) {
+            sim.kind = kind;
+            const p = makePoster(sim, { onClick: function () { closeModal(); openDetailModal(sim); } });
+            moreGrid.appendChild(p);
+          });
+        })
+        .catch(function () { moreSect.remove(); });
+    }
 
     // Trap escape key
     function onKey(e) { if (e.key === "Escape") closeModal(); }
