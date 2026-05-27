@@ -796,9 +796,40 @@ html[data-theme="marquee"] .settings__preset-name { letter-spacing: 0.05em; text
   margin-top: 60px;
   border-top: 1px solid var(--border);
   font-size: 12px; color: var(--fg-muted);
-  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  display: flex; flex-direction: column; gap: 20px;
 }
+.footer__top { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.footer__links { display: flex; flex-wrap: wrap; gap: 20px; }
+.footer__links a { color: var(--fg-muted); text-decoration: none; font-size: 12px; transition: color 120ms; }
+.footer__links a:hover { color: var(--fg); }
+.footer__bottom { font-size: 11px; color: var(--fg-faint); }
 @media (max-width: 899px) { .footer { display: none; } }
+
+/* ============ COOKIE BANNER ============ */
+.cookie-banner {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 8000;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 14px var(--pad-x);
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  font-size: 13px; color: var(--fg-muted);
+}
+@media (max-width: 899px) { .cookie-banner { padding-bottom: calc(14px + 60px); } }
+.cookie-banner__text { flex: 1; min-width: 200px; }
+.cookie-banner__actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ============ LEGAL PAGES ============ */
+.legal { max-width: 720px; margin: 0 auto; padding: 48px var(--pad-x) 80px; }
+.legal__eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 12px; }
+.legal__title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: clamp(28px,5vw,44px); color: var(--fg); margin: 0 0 8px; }
+.legal__updated { font-size: 12px; color: var(--fg-faint); margin-bottom: 40px; }
+.legal h2 { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 18px; color: var(--fg); margin: 36px 0 12px; }
+.legal p, .legal li { font-size: 15px; line-height: 1.75; color: var(--fg); opacity: 0.85; margin-bottom: 12px; }
+.legal ul { padding-left: 20px; margin-bottom: 12px; }
+.legal a { color: var(--accent); text-decoration: none; }
+.legal a:hover { text-decoration: underline; }
+.legal__contact { margin-top: 36px; padding: 20px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); }
+.legal__contact p { margin: 0; }
 
 /* ============ TOAST / NOTIFICATION ============ */
 .e6-toast {
