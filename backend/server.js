@@ -12,7 +12,8 @@ const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const catalogRoutes = require('./routes/catalog');
 const translationRoutes = require('./routes/translation');
-const tmdbRoutes = require('./routes/tmdb');
+const tmdbRoutes  = require('./routes/tmdb');
+const animeRoutes = require('./routes/anime');
 
 const app = express();
 app.set('trust proxy', true);
@@ -67,6 +68,7 @@ app.use('/api', adminRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api', translationRoutes);
 app.use('/api/tmdb', tmdbRoutes);
+app.use('/api/anime', animeRoutes);
 
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', userRoutes);
@@ -74,6 +76,7 @@ app.use('/api/v1', adminRoutes);
 app.use('/api/v1', catalogRoutes);
 app.use('/api/v1', translationRoutes);
 app.use('/api/v1/tmdb', tmdbRoutes);
+app.use('/api/v1/anime', animeRoutes);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
