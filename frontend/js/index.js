@@ -80,8 +80,9 @@ async function fetchTMDBItemWithFallback(id, type, lang) {
 }
 
 async function fetchAnimeContent() {
+  if (!AUTH_API_URL) return [];
   try {
-    const r = await fetch('https://animeapi.skin/trending');
+    const r = await fetch(AUTH_API_URL + '/api/anime/trending');
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     return (data || []).map(a => ({
