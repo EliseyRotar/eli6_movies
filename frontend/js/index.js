@@ -1,1461 +1,285 @@
-const AUTH_API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
-const TMDB_BASE_URL = window.TMDB_PROXY_URL || `${AUTH_API_URL}/tmdb`;
-const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+// ELI6 Movies — home page logic
+// Fetch layer preserved; render layer now uses components.js
 
-let featuredContent = [];
-let currentSlide = 0;
-let slideInterval;
-let myList = [];
+const AUTH_API_URL  = window.API_BASE_URL  || '';
+const TMDB_BASE_URL = window.TMDB_PROXY_URL || (AUTH_API_URL ? AUTH_API_URL + '/tmdb' : '');
 
-// Hero slider configuration
-const SLIDE_DURATION = 5000; // 5 seconds per slide
-const MAX_HERO_SLIDES = 10; // Maximum number of hero slides
+// ─── TMDB fetch helpers ───────────────────────────────────────────────────────
 
-// Fetch myList from backend and store in localStorage
-async function syncMyList() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    try {
-        const response = await fetch(`${AUTH_API_URL}/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-            const data = await response.json();
-            myList = data.myList || [];
-            localStorage.setItem('myList', JSON.stringify(myList));
-        } else {
-            myList = [];
-            localStorage.setItem('myList', '[]');
-        }
-    } catch (e) {
-        myList = [];
-        localStorage.setItem('myList', '[]');
-    }
-}
-
-// Function to create content card
-function createContentCard(item, type) {
-    const posterPath = item.poster_path
-        ? item.poster_path.startsWith('http')
-            ? item.poster_path
-            : `${TMDB_IMAGE_BASE_URL}${item.poster_path}`
-        : 'https://via.placeholder.com/200x300?text=No+Image';
-    const year =
-        type === 'movie'
-            ? item.release_date
-                ? item.release_date.split('-')[0]
-                : ''
-            : item.first_air_date
-              ? item.first_air_date.split('-')[0]
-              : '';
-    // Use up-to-date myList
-    const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-    const isInList = myListArr.some(
-        (listItem) => listItem.id === item.id && listItem.type === type
-    );
-    const rating = item.vote_average ? item.vote_average.toFixed(1) : '';
-    const title = type === 'movie' ? item.title : item.name;
-    const overview = item.overview
-        ? item.overview.substring(0, 100) + (item.overview.length > 100 ? '...' : '')
-        : '';
-    // Duration: fallback to empty if not present
-    let duration = '';
-    if (typeof item.runtime === 'number') {
-        duration = `${item.runtime} min`;
-    } else if (type === 'tv' && item.episode_run_time && item.episode_run_time.length > 0) {
-        duration = `${item.episode_run_time[0]} min`;
-    }
-
-    // Build meta parts dynamically, skipping empty values
-    const metaParts = [];
-    if (rating)
-        metaParts.push(
-            `<span class=\"rating\"><i class=\"material-icons\" style=\"font-size: 16px;\">star</i> ${rating}</span>`
-        );
-    if (year) metaParts.push(`<span>${year}</span>`);
-    if (duration) metaParts.push(`<span class=\"duration\">${duration}</span>`);
-
-    const card = document.createElement('div');
-    card.className = 'movie-card';
-    card.id = `content-card-${type}-${item.id}`;
-    card.innerHTML = `
-        <div class="movie-card-inner">
-            <img src="${posterPath}" alt="${title}" loading="lazy" onerror="this.src='https://via.placeholder.com/160x240?text=No+Image'">
-            <span class="card-title-always">${title}</span>
-        </div>
-        <div class="movie-info">
-            <div class="card-actions">
-                <button class="action-btn play-btn" onclick="event.stopPropagation(); playContent(${item.id}, '${type}')">
-                    <i class="material-icons">play_arrow</i>
-                </button>
-                <button class="mylist-btn${isInList ? ' in-list' : ''}" data-mylist-item='{"id":${item.id},"title":"${title}","type":"${type}","poster_path":"${posterPath}","overview":"${overview}"}'>
-                    <i class="material-icons">${isInList ? 'check' : 'add'}</i>
-                </button>
-                <button class="action-btn remove-btn" style="display:none" onclick="event.stopPropagation(); removeFromKeepWatching(${item.id}, '${type}')">
-                    <i class="material-icons">close</i>
-                </button>
-            </div>
-            <div class="movie-title">${title}</div>
-            <div class="card-meta">
-                ${metaParts.join('<span class="dot"></span>')}
-            </div>
-            <p class="movie-overview">${overview}</p>
-        </div>
-      `;
-
-    // Add click handler for the entire card to navigate to player
-    card.addEventListener('click', (e) => {
-        // Prevent navigation if clicking any action button or mylist-btn
-        if (e.target.closest('.action-btn, .mylist-btn')) return;
-        if (type === 'anime') {
-            playContent(item.id, type, item.link_url);
-        } else {
-            playContent(item.id, type);
-        }
-    });
-
-    return card;
-}
-
-// Helper to fetch and update duration for a card
-async function fetchAndSetDuration(item, type, card) {
-    try {
-        let url = '';
-        if (type === 'movie') {
-            url = `${TMDB_BASE_URL}/movie/${item.id}`;
-        } else if (type === 'tv') {
-            url = `${TMDB_BASE_URL}/tv/${item.id}`;
-        }
-        const response = await fetch(url);
-        if (!response.ok) return;
-        const data = await response.json();
-        let duration = '';
-        if (type === 'movie' && typeof data.runtime === 'number') {
-            duration = `${data.runtime} min`;
-        } else if (type === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
-            duration = `${data.episode_run_time[0]} min`;
-        }
-        // Update the card's duration span
-        const durationSpan = card.querySelector('.duration');
-        if (durationSpan) durationSpan.textContent = duration;
-    } catch (e) {
-        // Ignore errors
-    }
-}
-
-// Function to toggle My List (backend version)
-async function toggleMyList(id, type, title, posterPath, year) {
-    const button = event.currentTarget;
-    const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-    const isInList = myListArr.some((listItem) => listItem.id === id && listItem.type === type);
-    const token = localStorage.getItem('token');
-    if (!token) {
-        window.location.href = 'account.html';
-        return;
-    }
-    try {
-        // Prepare the item object for the backend
-        const item = {
-            id: parseInt(id),
-            title: title,
-            type: type,
-            poster_path: posterPath.includes('/t/p/') ? posterPath.split('/t/p/')[1] : posterPath,
-            overview: '',
-        };
-
-        let response;
-        if (isInList) {
-            // Use the correct URL format for DELETE requests
-            response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
-                method: 'DELETE',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-        } else {
-            response = await fetch(`${AUTH_API_URL}/user/mylist`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(item),
-            });
-        }
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-                errorData.message || `Failed to ${isInList ? 'remove from' : 'add to'} list`
-            );
-        }
-
-        // Get the updated list from the response
-        const updatedList = await response.json();
-
-        // Update localStorage with the new list
-        localStorage.setItem('myList', JSON.stringify(updatedList));
-
-        // Update UI
-        button.classList.toggle('in-list', !isInList);
-        button.innerHTML = `
-          <i class="material-icons">${!isInList ? 'check' : 'add'}</i>
-          ${!isInList ? 'In List' : 'Add to List'}
-        `;
-        showNotification(!isInList ? 'Added to My List' : 'Removed from My List');
-    } catch (error) {
-        console.error('Error updating list:', error);
-        showNotification(
-            error.message || `Failed to ${isInList ? 'remove from' : 'add to'} list`,
-            'error'
-        );
-    }
-}
-
-// Notification function
-function showNotification(message, type = 'success') {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.textContent = message;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 10px 20px;
-        background: ${type === 'success' ? '#2ecc71' : '#e74c3c'};
-        color: white;
-        border-radius: 4px;
-        z-index: 9999;
-        animation: fadeInOut 3s forwards;
-      `;
-    document.body.appendChild(notification);
-    setTimeout(() => {
-        notification.remove();
-    }, 3000);
-}
-
-// Function to fetch content from TMDB API
 async function fetchContent(type, category, lang) {
-    try {
-        let endpoint;
-        switch (type) {
-            case 'movie':
-                endpoint =
-                    category === 'trending'
-                        ? '/trending/movie/week'
-                        : category === 'popular'
-                          ? '/movie/popular'
-                          : category === 'upcoming'
-                            ? '/movie/upcoming'
-                            : '/movie/popular';
-                break;
-            case 'tv':
-                endpoint = '/trending/tv/week';
-                break;
-            default:
-                endpoint = '/movie/popular';
-        }
+  const endpoints = {
+    movie: {
+      trending: '/trending/movie/week',
+      popular:  '/movie/popular',
+      upcoming: '/movie/upcoming',
+    },
+    tv: {
+      trending: '/trending/tv/week',
+    },
+  };
+  const ep  = (endpoints[type] && endpoints[type][category]) || '/movie/popular';
+  let url = TMDB_BASE_URL + ep;
+  if (lang) url += (url.includes('?') ? '&' : '?') + 'language=' + encodeURIComponent(lang);
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    return d.results || [];
+  } catch (e) {
+    console.error('fetchContent error', e);
+    return [];
+  }
+}
 
-        let url = `${TMDB_BASE_URL}${endpoint}`;
-        url += url.includes('?') ? '&' : '?';
-        if (lang) {
-            url += `&language=${lang}`;
-        }
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        return data.results || [];
-    } catch (error) {
-        console.error(`Error fetching ${type} content:`, error);
-        return [];
+async function fetchTMDBWithFallback(type, category, lang) {
+  const data = await fetchContent(type, category, lang);
+  if (lang !== 'en-US') {
+    const missing = data.filter(i => !(i.title || i.name) || !i.overview);
+    if (missing.length) {
+      const enData = await fetchContent(type, category, 'en-US');
+      return data.map((item, i) => {
+        const en = enData[i] || {};
+        return Object.assign({}, item, {
+          title:    item.title    || item.name    || en.title    || en.name,
+          overview: item.overview || en.overview  || '',
+        });
+      });
     }
+  }
+  return data;
 }
 
 async function fetchKeepWatching() {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        console.log('[Keep Watching] No token found, returning empty list');
-        return [];
-    }
-    try {
-        console.log('[Keep Watching] Fetching from:', `${AUTH_API_URL}/user/keep-watching`);
-        const response = await fetch(`${AUTH_API_URL}/user/keep-watching`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-            const data = await response.json();
-            console.log('[Keep Watching] Successfully fetched:', data);
-            return data;
-        } else {
-            console.error('[Keep Watching] Response not ok:', response.status, response.statusText);
-            return [];
-        }
-    } catch (e) {
-        console.error('[Keep Watching] Error fetching:', e);
-        return [];
-    }
-}
-
-// Helper: fetch TMDB content with per-language cache and fallback
-async function fetchTMDBWithFallback(type, category, lang) {
-    const cacheKey = `hero_${type}_${category}_${lang}`;
-    let data = window.tmdbCache && window.tmdbCache.get(cacheKey, lang);
-    if (!data) {
-        data = await fetchContent(type, category, lang);
-        if (window.tmdbCache) window.tmdbCache.set(cacheKey, lang, data);
-    }
-    // Fallback to en-US for missing fields
-    if (lang !== 'en-US') {
-        const missing = data.filter((item) => !(item.title || item.name) || !item.overview);
-        if (missing.length) {
-            let enData = window.tmdbCache && window.tmdbCache.get(cacheKey, 'en-US');
-            if (!enData) {
-                enData = await fetchContent(type, category, 'en-US');
-                if (window.tmdbCache) window.tmdbCache.set(cacheKey, 'en-US', enData);
-            }
-            data = data.map((item, i) => {
-                const enItem = enData[i] || {};
-                return {
-                    ...item,
-                    title: item.title || item.name || enItem.title || enItem.name,
-                    overview: item.overview || enItem.overview || '',
-                };
-            });
-        }
-    }
-    return data;
-}
-// Show/hide hero loading spinner
-function showHeroLoading() {
-    let spinner = document.getElementById('hero-loading');
-    if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'hero-loading';
-        spinner.style =
-            'position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;';
-        spinner.innerHTML = '<div class="loading-spinner"></div>';
-        document.querySelector('.hero').appendChild(spinner);
-    }
-    spinner.style.display = 'flex';
-}
-function hideHeroLoading() {
-    const spinner = document.getElementById('hero-loading');
-    if (spinner) spinner.style.display = 'none';
-}
-// Update loadFeaturedContent to use language and cache
-async function loadFeaturedContent() {
-    try {
-        showHeroLoading();
-        const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-        const [trendingMovies, popularMovies, trendingTV] = await Promise.all([
-            fetchTMDBWithFallback('movie', 'trending', lang),
-            fetchTMDBWithFallback('movie', 'popular', lang),
-            fetchTMDBWithFallback('tv', 'trending', lang),
-        ]);
-        // Combine and shuffle content for variety
-        const allContent = [
-            ...trendingMovies.slice(0, 3),
-            ...popularMovies.slice(0, 2),
-            ...trendingTV.slice(0, 2),
-        ].sort(() => Math.random() - 0.5);
-        // Take the first MAX_HERO_SLIDES items
-        featuredContent = allContent.slice(0, MAX_HERO_SLIDES);
-        if (featuredContent.length > 0) {
-            createHeroSlides();
-            updateHeroContent(0);
-            startSlideRotation();
-        } else {
-            // Fallback: ensure hero text/buttons are visible even if no data
-            const heroContent = document.querySelector('.hero-content');
-            if (heroContent) {
-                heroContent.classList.add('active');
-            }
-        }
-        hideHeroLoading();
-    } catch (error) {
-        hideHeroLoading();
-        console.error('Error loading featured content:', error);
-        // Fallback on error as well
-        const heroContent = document.querySelector('.hero-content');
-        if (heroContent) {
-            heroContent.classList.add('active');
-        }
-    }
-}
-
-// Create hero slides (fade version)
-function createHeroSlides() {
-    const fadeRoot = document.getElementById('heroFade');
-    const dotsRoot = document.getElementById('heroDots');
-    if (!fadeRoot || !dotsRoot) return;
-    fadeRoot.innerHTML = '';
-    dotsRoot.innerHTML = '';
-
-    featuredContent.forEach((content, index) => {
-        const slide = document.createElement('div');
-        slide.className = 'hero-fade-slide' + (index === 0 ? ' active' : '');
-        const backdropPath = content.backdrop_path
-            ? `https://image.tmdb.org/t/p/original${content.backdrop_path}`
-            : 'https://via.placeholder.com/1920x1080?text=No+Image';
-        slide.style.backgroundImage = `url(${backdropPath})`;
-
-        const title = content.title || content.name || '';
-        const overview = truncateText(content.overview || '', 220);
-        const type = content.title ? 'movie' : 'tv';
-        const id = content.id;
-        const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-        const isInList = myListArr.some((listItem) => listItem.id === id && listItem.type === type);
-
-        const overlay = document.createElement('div');
-        overlay.className = 'slide-overlay';
-        overlay.innerHTML = `
-            <div class="slide-overlay-inner">
-                <h2 class="slide-title">${title}</h2>
-                <p class="slide-overview">${overview}</p>
-                <div class="slide-btns">
-                    <button class="hero-btn primary" data-role="slide-play"><i class="material-icons">play_arrow</i><span>Play</span></button>
-                    <button class="hero-btn secondary${isInList ? ' in-list' : ''}" data-role="slide-mylist"><i class="material-icons">${isInList ? 'check' : 'add'}</i><span>${isInList ? 'In List' : 'My List'}</span></button>
-                </div>
-            </div>`;
-        overlay.querySelector('[data-role="slide-play"]').onclick = (e) => {
-            e.stopPropagation();
-            playContent(id, type);
-        };
-        overlay.querySelector('[data-role="slide-mylist"]').onclick = async (e) => {
-            e.stopPropagation();
-            const posterPath = content.poster_path
-                ? `${TMDB_IMAGE_BASE_URL}${content.poster_path}`
-                : '';
-            await toggleMyList(id, type, title, posterPath, '');
-        };
-        slide.appendChild(overlay);
-        fadeRoot.appendChild(slide);
-
-        const dot = document.createElement('div');
-        dot.className = 'hero-dot' + (index === 0 ? ' active' : '');
-        dot.onclick = () => goToSlide(index);
-        dotsRoot.appendChild(dot);
+  const token = localStorage.getItem('token');
+  if (!token) return [];
+  try {
+    const r = await fetch(AUTH_API_URL + '/user/keep-watching', {
+      headers: { Authorization: 'Bearer ' + token },
     });
+    return r.ok ? await r.json() : [];
+  } catch (e) { return []; }
 }
 
-// Function to update hero content
-async function updateHeroContent(slideIndex) {
-    if (!featuredContent[slideIndex]) return;
-
-    const content = featuredContent[slideIndex];
-    const title = content.title || content.name;
-    const overview = truncateText(content.overview || 'No description available.', 180);
-    const type = content.title ? 'movie' : 'tv';
-    const year =
-        type === 'movie'
-            ? content.release_date
-                ? content.release_date.split('-')[0]
-                : 'N/A'
-            : content.first_air_date
-              ? content.first_air_date.split('-')[0]
-              : 'N/A';
-    const rating = content.vote_average ? content.vote_average.toFixed(1) : 'N/A';
-    let duration = 'N/A';
-    if (typeof content.runtime === 'number') {
-        duration = `${content.runtime} min`;
-    } else if (type === 'tv' && content.episode_run_time && content.episode_run_time.length > 0) {
-        duration = `${content.episode_run_time[0]} min`;
-    }
-
-    // Update content (avoid hiding text)
-    const heroContent = document.querySelector('.hero-content');
-    const titleElement = document.querySelector('.hero-title');
-    const overviewElement = document.querySelector('.hero-overview');
-    if (titleElement && overviewElement) {
-        let metaElement = document.querySelector('.hero-meta');
-        if (!metaElement) {
-            metaElement = document.createElement('div');
-            metaElement.className = 'hero-meta';
-            titleElement.parentNode.insertBefore(metaElement, overviewElement);
-        }
-        (async () => {
-            if (duration === 'N/A') {
-                duration = await fetchHeroDuration(content, type);
-            }
-            metaElement.innerHTML = `
-                        <span class="rating"><i class="material-icons" style="font-size: 18px; vertical-align: middle;">star</i> ${rating}</span>
-                        <span style="margin: 0 8px;">|</span>
-                        <span>${year}</span>
-                        <span style="margin: 0 8px;">|</span>
-                        <span class="duration">${duration}</span>
-                    `;
-            titleElement.textContent = title;
-            overviewElement.textContent = overview;
-            if (heroContent && !heroContent.classList.contains('active')) {
-                heroContent.classList.add('active');
-            }
-        })();
-    }
-
-    // Update indicators and fade slides
-    const dotsRoot = document.getElementById('heroDots');
-    const fadeRoot = document.getElementById('heroFade');
-    if (dotsRoot)
-        Array.from(dotsRoot.children).forEach((dot, idx) =>
-            dot.classList.toggle('active', idx === slideIndex)
-        );
-    if (fadeRoot)
-        Array.from(fadeRoot.children).forEach((s, idx) =>
-            s.classList.toggle('active', idx === slideIndex)
-        );
-
-    // Update progress bar
-    updateProgressBar();
-}
-
-// Function to change slide
-function changeSlide(direction) {
-    const newSlide = currentSlide + direction;
-
-    if (newSlide < 0) {
-        currentSlide = featuredContent.length - 1;
-    } else if (newSlide >= featuredContent.length) {
-        currentSlide = 0;
-    } else {
-        currentSlide = newSlide;
-    }
-
-    updateHeroContent(currentSlide);
-    resetSlideTimer();
-}
-
-// Function to go to specific slide
-function goToSlide(slideIndex) {
-    if (slideIndex >= 0 && slideIndex < featuredContent.length) {
-        currentSlide = slideIndex;
-        updateHeroContent(currentSlide);
-        resetSlideTimer();
-    }
-}
-
-// Function to update progress bar
-function updateProgressBar() {
-    const progressBar = document.querySelector('.hero-progress-bar');
-    if (!progressBar) return;
-
-    // Clear any existing interval
-    if (window.progressInterval) {
-        clearInterval(window.progressInterval);
-    }
-
-    // Reset progress
-    progressBar.style.width = '0%';
-
-    // Animate progress
-    let progress = 0;
-    const step = 100 / (SLIDE_DURATION / 50); // Update every 50ms for smoother animation
-
-    window.progressInterval = setInterval(() => {
-        progress += step;
-        progressBar.style.width = `${Math.min(progress, 100)}%`;
-
-        if (progress >= 100) {
-            clearInterval(window.progressInterval);
-        }
-    }, 50);
-}
-
-// Function to reset slide timer
-function resetSlideTimer() {
-    if (slideInterval) {
-        clearInterval(slideInterval);
-    }
-    if (window.progressInterval) {
-        clearInterval(window.progressInterval);
-    }
-    startSlideRotation();
-    updateProgressBar();
-}
-
-// Function to start slide rotation
-function startSlideRotation() {
-    if (featuredContent.length <= 1) return;
-
-    slideInterval = setInterval(() => {
-        changeSlide(1);
-    }, SLIDE_DURATION);
-}
-
-// Function to add featured content to list
-async function addFeaturedToList() {
-    if (!featuredContent[currentSlide]) return;
-
-    const content = featuredContent[currentSlide];
-    const type = content.title ? 'movie' : 'tv';
-    const title = content.title || content.name;
-    const posterPath = content.poster_path ? `${TMDB_IMAGE_BASE_URL}${content.poster_path}` : '';
-
-    await toggleMyList(content.id, type, title, posterPath, '');
-}
-
-// Function to load all content
-async function loadContent() {
-    try {
-        const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-        // Load trending movies
-        const trendingMovies = await fetchContent('movie', 'trending', lang);
-        const trendingMoviesRow = document.getElementById('trending-row');
-        if (trendingMovies.length > 0) {
-            trendingMoviesRow.innerHTML = ''; // Clear loading message
-            trendingMovies.forEach((movie) => {
-                const card = createContentCard(movie, 'movie');
-                trendingMoviesRow.appendChild(card);
-                fetchAndSetDuration(movie, 'movie', card);
-            });
-        } else {
-            trendingMoviesRow.innerHTML = '<div class="loading">No trending movies found</div>';
-        }
-
-        // Load trending TV shows
-        const trendingTV = await fetchContent('tv', 'trending', lang);
-        const trendingTVRow = document.getElementById('trending-tv-row');
-        if (trendingTV.length > 0) {
-            trendingTVRow.innerHTML = ''; // Clear loading message
-            trendingTV.forEach((show) => {
-                const card = createContentCard(show, 'tv');
-                trendingTVRow.appendChild(card);
-                fetchAndSetDuration(show, 'tv', card);
-            });
-        } else {
-            trendingTVRow.innerHTML = '<div class="loading">No trending TV shows found</div>';
-        }
-
-        // Load popular movies
-        const popularMovies = await fetchContent('movie', 'popular', lang);
-        const popularMoviesRow = document.getElementById('popular-row');
-        if (popularMoviesRow && popularMovies.length > 0) {
-            popularMoviesRow.innerHTML = '';
-            popularMovies.forEach((movie) => {
-                const card = createContentCard(movie, 'movie');
-                popularMoviesRow.appendChild(card);
-                fetchAndSetDuration(movie, 'movie', card);
-            });
-            window.initMyListButtons();
-        } else if (popularMoviesRow) {
-            popularMoviesRow.innerHTML = '<div class="loading">No popular movies found</div>';
-        }
-
-        // Load anime
-        const anime = await fetchAnimeContent();
-        const animeRow = document.getElementById('anime-row');
-        if (animeRow && anime.length > 0) {
-            animeRow.innerHTML = '';
-            anime.forEach((show) => {
-                const card = createContentCard(show, 'tv');
-                animeRow.appendChild(card);
-                fetchAndSetDuration(show, 'tv', card);
-            });
-            window.initMyListButtons && window.initMyListButtons();
-        } else if (animeRow) {
-            animeRow.innerHTML = '<div class="loading">No anime found</div>';
-        }
-
-        // Load upcoming movies
-        const upcomingMovies = await fetchContent('movie', 'upcoming', lang);
-        // ... existing code ...
-    } catch (error) {
-        console.error('Error loading content:', error);
-        document.querySelectorAll('.content-row').forEach((row) => {
-            row.innerHTML =
-                '<div class="loading">Error loading content. Please try again later.</div>';
-        });
-    }
-}
-
-// Function to open player
-function openPlayer(content) {
-    // Store content info in localStorage
-    localStorage.setItem(
-        'currentContent',
-        JSON.stringify({
-            id: content.id,
-            title: content.title || content.name,
-            type: content.media_type,
-            poster: `https://image.tmdb.org/t/p/w500${content.poster_path}`,
-            overview: content.overview,
-            releaseDate: content.release_date || content.first_air_date,
-            rating: content.vote_average,
-        })
-    );
-
-    // Redirect to player page
-    window.location.href = './player.html';
-}
-
-// Function to play content
-function playContent(id, type, link_url) {
-    if (type === 'anime' && link_url) {
-        window.location.href = `player.html?type=anime&link_url=${encodeURIComponent(link_url)}`;
-    } else {
-        window.location.href = `player.html?type=${type}&id=${id}`;
-    }
-}
-
-// Function to play featured content
-function playFeatured() {
-    if (featuredContent[currentSlide]) {
-        const content = featuredContent[currentSlide];
-        const type = content.title ? 'movie' : 'tv';
-        playContent(content.id, type);
-    }
-}
-
-// Function to show featured content info
-function showInfo() {
-    if (featuredContent[currentSlide]) {
-        const content = featuredContent[currentSlide];
-        const title = content.title || content.name;
-        const overview = content.overview || 'No description available.';
-        const rating = content.vote_average ? `${content.vote_average.toFixed(1)}/10` : 'N/A';
-        const releaseDate = content.release_date || content.first_air_date || 'Unknown';
-
-        // Create a modal or expand the info section
-        alert(`${title}\n\nRating: ${rating}\nRelease Date: ${releaseDate}\n\n${overview}`);
-    }
-}
-
-// Add keyboard navigation
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') {
-        changeSlide(-1);
-    } else if (e.key === 'ArrowRight') {
-        changeSlide(1);
-    } else if (e.key === ' ') {
-        e.preventDefault();
-        playFeatured();
-    }
-});
-
-// Pause auto-rotation on hover (guarded if hero exists)
-(function () {
-    const heroEl = document.querySelector('.hero');
-    if (!heroEl) return;
-    heroEl.addEventListener('mouseenter', () => {
-        if (slideInterval) {
-            clearInterval(slideInterval);
-        }
-        if (window.progressInterval) {
-            clearInterval(window.progressInterval);
-        }
-    });
-    heroEl.addEventListener('mouseleave', () => {
-        if (featuredContent.length > 1) {
-            startSlideRotation();
-            updateProgressBar();
-        }
-    });
-})();
-
-// Add scroll buttons functionality
-document.querySelectorAll('.content-row').forEach((row) => {
-    const leftBtn = document.createElement('button');
-    leftBtn.className = 'scroll-button scroll-left';
-    leftBtn.innerHTML = '<i class="material-icons">chevron_left</i>';
-    leftBtn.onclick = () => row.scrollBy({ left: -200, behavior: 'smooth' });
-
-    const rightBtn = document.createElement('button');
-    rightBtn.className = 'scroll-button scroll-right';
-    rightBtn.innerHTML = '<i class="material-icons">chevron_right</i>';
-    rightBtn.onclick = () => row.scrollBy({ left: 200, behavior: 'smooth' });
-
-    row.parentElement.appendChild(leftBtn);
-    row.parentElement.appendChild(rightBtn);
-});
-
-// Navbar scroll effect
-window.addEventListener('scroll', () => {
-    const navbar = document.querySelector('.navbar');
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
-});
-
-// Load Keep Watching Section
-async function loadKeepWatching() {
-    const section = document.getElementById('keep-watching-section');
-    const container = document.getElementById('keep-watching-row');
-    if (!section || !container) return;
-    showKeepWatchingLoading(container);
-    let keepWatchingList = [];
-    try {
-        keepWatchingList = await fetchKeepWatching();
-    } catch (e) {
-        handleMyListApiError(e);
-        container.innerHTML =
-            '<div class="error-state"><i class="material-icons">error_outline</i><h2>Failed to load Keep Watching</h2><p>Please try again later or check your connection.</p></div>';
-        hideKeepWatchingLoading();
-        return;
-    }
-    if (!keepWatchingList.length) {
-        showMyListEmpty(container);
-        section.style.display = 'none';
-        hideKeepWatchingLoading();
-        return;
-    }
-    section.style.display = 'block';
-    container.innerHTML = '';
-    const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-    for (const item of keepWatchingList) {
-        const tmdbData = await fetchTMDBItemWithFallback(item.id, item.type, lang);
-        const cardItem = {
-            id: item.id,
-            overview: tmdbData.overview,
-            vote_average: tmdbData.vote_average,
-            title: tmdbData.title || tmdbData.name,
-            name: tmdbData.title || tmdbData.name,
-            release_date: tmdbData.release_date,
-            first_air_date: tmdbData.first_air_date,
-            poster_path: tmdbData.poster_path,
-        };
-        const card = createContentCard(cardItem, item.type);
-        // Show remove button and hide mylist button for keep watching cards
-        const mylistBtn = card.querySelector('.mylist-btn');
-        const removeBtn = card.querySelector('.remove-btn');
-        if (mylistBtn) mylistBtn.style.display = 'none';
-        if (removeBtn) {
-            removeBtn.style.display = 'flex';
-            removeBtn.onclick = async (e) => {
-                e.stopPropagation();
-                await removeFromKeepWatchingWithUndo(item.id, item.type, card, async () => {
-                    // Undo: re-add the item
-                    await fetch(`${AUTH_API_URL}/user/keep-watching`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${localStorage.getItem('token')}`,
-                        },
-                        body: JSON.stringify(item),
-                    });
-                    loadKeepWatching();
-                });
-                loadKeepWatching();
-            };
-        }
-        container.appendChild(card);
-    }
-    hideKeepWatchingLoading();
-}
-
-async function removeFromKeepWatchingWithUndo(id, type, card, undoCallback) {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        showNotification('You must be logged in to do that.', 'error');
-        return;
-    }
-    try {
-        const response = await fetch(`${AUTH_API_URL}/user/keep-watching/${id}/${type}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-            if (card) card.remove();
-            showMyListToast('Removed from Keep Watching', 'info', async () => {
-                if (undoCallback) await undoCallback();
-                showMyListToast('Undo: Added back to Keep Watching', 'success');
-                loadKeepWatching();
-            });
-        } else {
-            const error = await response.json();
-            handleMyListApiError(error);
-            throw new Error(error.message || 'Failed to remove from list');
-        }
-    } catch (error) {
-        showMyListToast(error.message, 'error');
-        handleMyListApiError(error);
-    }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    await syncMyList();
-    // Enable hero carousel initialization
-    await loadFeaturedContent();
-    loadContent();
-    loadKeepWatching();
-});
-
-// --- ENHANCED MOBILE CAROUSEL JS ---
-(function () {
-    if (window.innerWidth > 768) return;
-
-    // Enhanced card creation with loading states
-    function createMobileCard(item, type) {
-        const poster = item.poster_path
-            ? item.poster_path.startsWith('http')
-                ? item.poster_path
-                : `https://image.tmdb.org/t/p/w300${item.poster_path}`
-            : 'https://via.placeholder.com/120x170?text=No+Image';
-        const title = type === 'movie' ? item.title : item.name;
-        const id = item.id;
-        const rating = item.vote_average ? item.vote_average.toFixed(1) : 'N/A';
-        const isInList = JSON.parse(localStorage.getItem('myList') || '[]').some(
-            (listItem) => listItem.id === id && listItem.type === type
-        );
-
-        const card = document.createElement('div');
-        card.className = 'mobile-carousel-card loading';
-        card.innerHTML = `
-                    <img src="${poster}" alt="${title}" onload="this.parentElement.classList.remove('loading');this.classList.add('fade-in')" onerror="this.src='https://via.placeholder.com/120x170?text=Error'">
-                    <div class="mobile-carousel-title">${title}</div>
-                    <div class="mobile-card-overlay">
-                        <button class="mobile-play-btn"><i class="material-icons">play_arrow</i></button>
-                        <button class="mobile-mylist-btn${isInList ? ' in-list' : ''}" title="" data-i18n-title="addToMyList">
-                          <i class="material-icons">${isInList ? 'check' : 'add'}</i>
-                          <span data-i18n="addToMyList">Add to My List</span>
-                        </button>
-                    </div>
-                `;
-        // Play button
-        card.querySelector('.mobile-play-btn').onclick = function (e) {
-            e.stopPropagation();
-            card.style.transform = 'scale(0.97)';
-            setTimeout(() => {
-                card.style.transform = '';
-                window.location.href = `player.html?type=${type}&id=${id}`;
-            }, 120);
-        };
-        // My List button
-        card.querySelector('.mobile-mylist-btn').onclick = async function (e) {
-            e.stopPropagation();
-            const token = localStorage.getItem('token');
-            if (!token) {
-                if (confirm('You must be logged in to add to My List. Log in or sign up now?')) {
-                    window.location.href = 'account.html';
-                }
-                return;
-            }
-            const btn = this;
-            btn.disabled = true;
-            btn.classList.add('mylist-processing');
-            try {
-                const itemObj = {
-                    id,
-                    title,
-                    type,
-                    poster_path: item.poster_path,
-                    overview: item.overview || '',
-                };
-                const isInListNow = btn.classList.contains('in-list');
-                const method = isInListNow ? 'DELETE' : 'POST';
-                const url = isInListNow
-                    ? `${AUTH_API_URL}/user/mylist/${id}/${type}`
-                    : `${AUTH_API_URL}/user/mylist`;
-                const response = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: method === 'POST' ? JSON.stringify(itemObj) : undefined,
-                });
-                if (!response.ok) throw new Error('Failed to update My List');
-                btn.classList.toggle('in-list', !isInListNow);
-                btn.querySelector('.material-icons').textContent = !isInListNow ? 'check' : 'add';
-                // Update localStorage
-                const updatedList = await response.json();
-                localStorage.setItem('myList', JSON.stringify(updatedList));
-            } catch (err) {
-                alert(err.message || 'Failed to update My List');
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('mylist-processing');
-            }
-        };
-        // Haptic feedback
-        card.addEventListener('touchstart', function () {
-            if (navigator.vibrate) navigator.vibrate(10);
-        });
-        card.onclick = function (e) {
-            if (e.target.closest('.mobile-play-btn, .mobile-mylist-btn')) return;
-            window.location.href = `player.html?type=${type}&id=${id}`;
-        };
-        return card;
-    }
-
-    // Enhanced content loading with error handling
-    async function loadMobileContent() {
-        const sections = [
-            { id: 'mobile-trending-row', url: 'trending/movie/week', title: 'Trending Now' },
-            { id: 'mobile-nowplaying-row', url: 'movie/now_playing', title: 'Now Playing' },
-            { id: 'mobile-toprated-row', url: 'movie/top_rated', title: 'Top Rated' },
-        ];
-
-        for (const section of sections) {
-            const row = document.getElementById(section.id);
-            if (!row) continue;
-
-            // Show loading state
-            row.innerHTML = '<div class="mobile-loading"><div class="loading-spinner"></div></div>';
-
-            try {
-                const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
-                const response = await fetch(`${TMDB_PROXY}/${section.url}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const data = await response.json();
-                const items = data.results || [];
-
-                if (items.length === 0) {
-                    row.innerHTML = '<div class="mobile-error">No content available</div>';
-                    continue;
-                }
-
-                // Clear loading and add content
-                row.innerHTML = '';
-                items.slice(0, 10).forEach((item) => {
-                    row.appendChild(createMobileCard(item, 'movie'));
-                });
-
-                // Add swipe hint
-                const hint = document.createElement('div');
-                hint.className = 'mobile-swipe-hint';
-                hint.textContent = '← swipe →';
-                row.appendChild(hint);
-            } catch (error) {
-                console.error(`Error loading ${section.title}:`, error);
-                row.innerHTML =
-                    '<div class="mobile-error">Failed to load content. Tap to retry.</div>';
-                row.onclick = () => loadMobileContent();
-            }
-        }
-    }
-
-    // Initialize everything
-    document.addEventListener('DOMContentLoaded', function () {
-        loadMobileContent();
-    });
-
-    // Performance optimization: Intersection Observer for lazy loading
-    if ('IntersectionObserver' in window) {
-        const imageObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    const img = entry.target;
-                    img.classList.remove('lazy');
-                    observer.unobserve(img);
-                }
-            });
-        });
-
-        // Observe all carousel images
-        document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.mobile-carousel-card img').forEach((img) => {
-                imageObserver.observe(img);
-            });
-        });
-    }
-
-    // Add more mobile carousel sections
-    document.addEventListener('DOMContentLoaded', function () {
-        // ... existing code ...
-        // Add extra sections
-        const extraSections = [
-            { id: 'mobile-toprated', title: 'Top Rated Movies', url: 'movie/top_rated' },
-            {
-                id: 'mobile-trendingtv',
-                title: '',
-                url: 'trending/tv/week',
-                'data-i18n-title': 'trendingTV',
-            },
-            { id: 'mobile-topratedtv', title: 'Top Rated TV Shows', url: 'tv/top_rated' },
-            {
-                id: 'mobile-anime',
-                title: 'Anime',
-                url: 'discover/tv?with_genres=16&sort_by=popularity.desc',
-            },
-        ];
-        const carouselsDiv = document.querySelector('.mobile-carousels');
-        extraSections.forEach((section) => {
-            if (!document.getElementById(section.id)) {
-                const sec = document.createElement('section');
-                sec.className = 'mobile-carousel-section';
-                sec.id = section.id;
-                sec.innerHTML = `<h3 data-i18n="${section['data-i18n-title'] || ''}">${section.title}</h3><div class="mobile-carousel-row" id="${section.id}-row"></div>`;
-                carouselsDiv.appendChild(sec);
-                i18n.translateStaticContent();
-            }
-        });
-        // Load content for extra sections
-        extraSections.forEach(async (section) => {
-            const row = document.getElementById(section.id + '-row');
-            if (!row) return;
-            row.innerHTML = '<div class="mobile-loading"><div class="loading-spinner"></div></div>';
-            try {
-                const TMDB_PROXY2 = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
-                let response = await fetch(`${TMDB_PROXY2}/${section.url}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                const items = data.results || [];
-                if (items.length === 0) {
-                    row.innerHTML = '<div class="mobile-error">No content available</div>';
-                    return;
-                }
-                row.innerHTML = '';
-                items.slice(0, 10).forEach((item) => {
-                    // Use 'tv' type for TV/anime sections, 'movie' for movie
-                    const type = section.url.startsWith('movie') ? 'movie' : 'tv';
-                    row.appendChild(createMobileCard(item, type));
-                });
-                // Add scroll hint
-                if (!row.querySelector('.mobile-scroll-hint')) {
-                    const hint = document.createElement('div');
-                    hint.className = 'mobile-scroll-hint';
-                    hint.textContent = '⬇ Scroll down';
-                    row.appendChild(hint);
-                }
-            } catch (error) {
-                row.innerHTML =
-                    '<div class="mobile-error">Failed to load content. Tap to retry.</div>';
-                row.onclick = () => location.reload();
-            }
-        });
-    });
-})();
-
-// --- MOBILE HERO CAROUSEL JS ---
-(function () {
-    if (window.innerWidth > 768) return;
-    const slider = document.getElementById('mobileHeroSlider');
-    const indicators = document.getElementById('mobileHeroIndicators');
-    let slides = [];
-    let current = 0;
-    let autoSlideTimer = null;
-    let touchStartX = 0;
-    let touchDeltaX = 0;
-    const SLIDE_INTERVAL = 5000;
-    function goToSlide(idx) {
-        if (!slides.length) return;
-        current = (idx + slides.length) % slides.length;
-        slider.style.transition = 'transform 0.7s cubic-bezier(.4,0,.2,1)';
-        slider.style.transform = `translateX(-${current * 100}vw)`;
-        Array.from(indicators.children).forEach((dot, i) => {
-            dot.classList.toggle('active', i === current);
-        });
-        resetAutoSlide();
-    }
-    function resetAutoSlide() {
-        if (autoSlideTimer) clearTimeout(autoSlideTimer);
-        autoSlideTimer = setTimeout(() => goToSlide(current + 1), SLIDE_INTERVAL);
-    }
-    function setupTouch() {
-        slider.addEventListener(
-            'touchstart',
-            (e) => {
-                if (e.touches.length !== 1) return;
-                touchStartX = e.touches[0].clientX;
-                touchDeltaX = 0;
-                slider.style.transition = 'none';
-            },
-            { passive: true }
-        );
-        slider.addEventListener(
-            'touchmove',
-            (e) => {
-                if (e.touches.length !== 1) return;
-                touchDeltaX = e.touches[0].clientX - touchStartX;
-                slider.style.transform = `translateX(calc(${-current * 100}vw + ${touchDeltaX}px))`;
-            },
-            { passive: true }
-        );
-        slider.addEventListener('touchend', (e) => {
-            slider.style.transition = '';
-            if (Math.abs(touchDeltaX) > 60) {
-                goToSlide(current + (touchDeltaX < 0 ? 1 : -1));
-            } else {
-                goToSlide(current);
-            }
-        });
-    }
-    function renderHeroSlides(movies) {
-        slider.innerHTML = '';
-        indicators.innerHTML = '';
-        slides = movies.slice(0, 5);
-        slides.forEach((movie, i) => {
-            const bg = movie.backdrop_path
-                ? `https://image.tmdb.org/t/p/w780${movie.backdrop_path}`
-                : 'https://via.placeholder.com/780x440?text=No+Image';
-            const title = movie.title || movie.name;
-            const overview = movie.overview || '';
-            const id = movie.id;
-            const type = movie.title ? 'movie' : 'tv';
-            const isInList = JSON.parse(localStorage.getItem('myList') || '[]').some(
-                (listItem) => listItem.id === id && listItem.type === type
-            );
-            const rating = movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A';
-            const year =
-                type === 'movie'
-                    ? movie.release_date
-                        ? movie.release_date.split('-')[0]
-                        : 'N/A'
-                    : movie.first_air_date
-                      ? movie.first_air_date.split('-')[0]
-                      : 'N/A';
-            let duration = 'N/A';
-            if (typeof movie.runtime === 'number') {
-                duration = `${movie.runtime} min`;
-            } else if (
-                type === 'tv' &&
-                movie.episode_run_time &&
-                movie.episode_run_time.length > 0
-            ) {
-                duration = `${movie.episode_run_time[0]} min`;
-            }
-            const slide = document.createElement('div');
-            slide.className = 'mobile-hero-slide';
-            slide.style.backgroundImage = `url('${bg}')`;
-            slide.innerHTML = `
-                        <div class='mobile-hero-gradient'></div>
-                        <div class='mobile-hero-content fade-in'>
-                            <div class='mobile-hero-title'>${title}</div>
-                            <div class='mobile-hero-meta'>
-                                <span class="rating"><i class="material-icons" style="font-size: 16px; vertical-align: middle;">star</i> ${rating}</span>
-                                <span style="margin: 0 8px;">|</span>
-                                <span>${year}</span>
-                                <span style="margin: 0 8px;">|</span>
-                                <span class="duration">${duration}</span>
-                            </div>
-                            <div class='mobile-hero-overview'>${overview}</div>
-                            <div class='mobile-hero-btns'>
-                                <button class='mobile-hero-btn play'><i class="material-icons">play_arrow</i></button>
-                                <button class='mobile-hero-btn mylist${isInList ? ' in-list' : ''}'><i class="material-icons">${isInList ? 'check' : 'add'}</i></button>
-                            </div>
-                        </div>
-                    `;
-            // If duration is N/A, fetch it
-            if (duration === 'N/A') {
-                (async () => {
-                    let fetched = await fetchHeroDuration(movie, type);
-                    const durationSpan = slide.querySelector('.duration');
-                    if (durationSpan) durationSpan.textContent = fetched;
-                })();
-            }
-            // Fade-in effect for slide
-            slide.style.opacity = '0';
-            setTimeout(
-                () => {
-                    slide.style.transition = 'opacity 0.7s';
-                    slide.style.opacity = '1';
-                },
-                50 + i * 100
-            );
-            slide.querySelector('.play').onclick = () =>
-                (window.location.href = `player.html?type=${type}&id=${id}`);
-            // Add to My List button logic
-            slide.querySelector('.mylist').onclick = async function () {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    if (
-                        confirm('You must be logged in to add to My List. Log in or sign up now?')
-                    ) {
-                        window.location.href = 'account.html';
-                    }
-                    return;
-                }
-                const btn = this;
-                btn.disabled = true;
-                btn.classList.add('mylist-processing');
-                try {
-                    const itemObj = {
-                        id,
-                        title,
-                        type,
-                        poster_path: movie.poster_path,
-                        overview: movie.overview || '',
-                    };
-                    const isInListNow = btn.classList.contains('in-list');
-                    const method = isInListNow ? 'DELETE' : 'POST';
-                    const url = isInListNow
-                        ? `${AUTH_API_URL}/user/mylist/${id}/${type}`
-                        : `${AUTH_API_URL}/user/mylist`;
-                    const response = await fetch(url, {
-                        method,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`,
-                        },
-                        body: method === 'POST' ? JSON.stringify(itemObj) : undefined,
-                    });
-                    if (!response.ok) throw new Error('Failed to update My List');
-                    btn.classList.toggle('in-list', !isInListNow);
-                    btn.querySelector('.material-icons').textContent = !isInListNow
-                        ? 'check'
-                        : 'add';
-                } catch (err) {
-                    alert(err.message || 'Failed to update My List');
-                } finally {
-                    btn.disabled = false;
-                    btn.classList.remove('mylist-processing');
-                }
-            };
-            slider.appendChild(slide);
-            const dot = document.createElement('div');
-            dot.className = 'mobile-hero-dot' + (i === 0 ? ' active' : '');
-            dot.onclick = () => goToSlide(i);
-            indicators.appendChild(dot);
-        });
-        slider.style.transform = 'translateX(0vw)';
-        setupTouch();
-        goToSlide(0);
-    }
-    document.addEventListener('DOMContentLoaded', async function () {
-        try {
-            const lang = window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';
-            const movies = await fetchTMDBWithFallback('movie', 'trending', lang);
-            if (movies && movies.length) {
-                renderHeroSlides(movies);
-            }
-        } catch (err) {
-            console.error('Error initializing mobile hero carousel:', err);
-        }
-    });
-})();
-
-// In updateHeroContent, after setting title and overview, add or update a .hero-meta div to show rating, year, and duration
-// Add a helper to fetch and update duration if not present
-async function fetchHeroDuration(content, type) {
-    try {
-        let url = '';
-        if (type === 'movie') {
-            url = `${TMDB_BASE_URL}/movie/${content.id}`;
-        } else if (content.media_type === 'tv' || content.type === 'tv') {
-            url = `${TMDB_BASE_URL}/tv/${content.id}`;
-        }
-        const response = await fetch(url);
-        if (!response.ok) return 'N/A';
-        const data = await response.json();
-        if (type === 'movie' && typeof data.runtime === 'number') {
-            return `${data.runtime} min`;
-        } else if (type === 'tv' && data.episode_run_time && data.episode_run_time.length > 0) {
-            return `${data.episode_run_time[0]} min`;
-        }
-        return 'N/A';
-    } catch (e) {
-        return 'N/A';
-    }
-}
-
-// Attach event listeners for hero buttons after DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function () {
-    const playBtn = document.getElementById('heroPlayBtn');
-    const myListBtn = document.getElementById('heroMyListBtn');
-    if (playBtn) playBtn.onclick = playFeatured;
-    if (myListBtn) myListBtn.onclick = addFeaturedToList;
-});
-
-// Add this helper function after fetchContent
-async function fetchAnimeContent() {
-    try {
-        const response = await fetch('https://animeapi.skin/trending');
-        if (!response.ok) throw new Error('Failed to fetch trending anime');
-        const data = await response.json();
-        // Map to a format compatible with createContentCard
-        return (data || []).map((anime) => ({
-            id: anime.slug, // Use slug for 2Anime
-            name: anime.title_en || anime.title_jp || anime.slug,
-            poster_path: anime.poster_url,
-            overview: anime.description || '',
-            vote_average: anime.score || 'N/A',
-            first_air_date: anime.aired || '',
-            media_type: 'anime',
-            episodes: anime.episodes || [],
-        }));
-    } catch (error) {
-        console.error('Error fetching anime content:', error);
-        return [];
-    }
-}
-
-// Helper: fetch TMDB item with per-language cache and fallback
 async function fetchTMDBItemWithFallback(id, type, lang) {
-    const endpoint = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
-    let data = window.tmdbCache && window.tmdbCache.get(endpoint, lang);
-    if (!data) {
-        const url = `${TMDB_BASE_URL}${endpoint}?language=${lang}`;
-        const resp = await fetch(url);
-        data = await resp.json();
-        if (window.tmdbCache) window.tmdbCache.set(endpoint, lang, data);
-    }
-    // Fallback to en-US for missing fields
+  const ep = (type === 'movie' ? '/movie/' : '/tv/') + id;
+  try {
+    const r = await fetch(TMDB_BASE_URL + ep + '?language=' + encodeURIComponent(lang));
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    let data = await r.json();
     if (lang !== 'en-US' && ((!data.title && !data.name) || !data.overview)) {
-        let enData = window.tmdbCache && window.tmdbCache.get(endpoint, 'en-US');
-        if (!enData) {
-            const enUrl = `${TMDB_BASE_URL}${endpoint}?language=en-US`;
-            const enResp = await fetch(enUrl);
-            enData = await enResp.json();
-            if (window.tmdbCache) window.tmdbCache.set(endpoint, 'en-US', enData);
-        }
-        data.title = data.title || data.name || enData.title || enData.name;
-        data.overview = data.overview || enData.overview || '';
+      const enR = await fetch(TMDB_BASE_URL + ep + '?language=en-US');
+      const en  = enR.ok ? await enR.json() : {};
+      data = Object.assign({}, data, {
+        title:    data.title    || data.name    || en.title    || en.name,
+        overview: data.overview || en.overview  || '',
+      });
     }
     return data;
+  } catch (e) { return {}; }
 }
-// Show/hide keep watching loading spinner
-function showKeepWatchingLoading(container) {
-    let spinner = document.getElementById('keep-watching-loading');
-    if (!spinner) {
-        spinner = document.createElement('div');
-        spinner.id = 'keep-watching-loading';
-        spinner.style =
-            'width:100%;height:120px;display:flex;align-items:center;justify-content:center;';
-        spinner.innerHTML = '<div class="loading-spinner"></div>';
-        container.appendChild(spinner);
-    }
-    spinner.style.display = 'flex';
-}
-function hideKeepWatchingLoading() {
-    const spinner = document.getElementById('keep-watching-loading');
-    if (spinner) spinner.style.display = 'none';
-}
-// Helper to truncate text at word boundary
-function truncateText(text, maxLength) {
-    if (!text) return '';
-    if (text.length <= maxLength) return text;
-    let truncated = text.slice(0, maxLength);
-    // Try to cut at last space for word boundary
-    const lastSpace = truncated.lastIndexOf(' ');
-    if (lastSpace > 0) truncated = truncated.slice(0, lastSpace);
-    return truncated + '...';
-}
-// ... existing code ...
 
-// Debounce helper
-function debounce(fn, delay) {
-    let timer = null;
-    return function (...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn.apply(this, args), delay);
-    };
+async function fetchAnimeContent() {
+  try {
+    const r = await fetch('https://animeapi.skin/trending');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    return (data || []).map(a => ({
+      id:             a.slug,
+      name:           a.title_en || a.title_jp || a.slug,
+      poster_path:    a.poster_url,
+      overview:       a.description || '',
+      vote_average:   a.score,
+      first_air_date: a.aired || '',
+      kind:           'anime',
+      link_url:       a.link_url,
+    }));
+  } catch (e) { return []; }
 }
-// Unified TMDB content reload on language change
-async function reloadAllTMDBContent() {
-    showHeroLoading && showHeroLoading();
-    await loadFeaturedContent();
-    await loadContent();
-    (await loadKeepWatching) && loadKeepWatching();
-    hideHeroLoading && hideHeroLoading();
+
+// ─── My List sync ─────────────────────────────────────────────────────────────
+
+async function syncMyList() {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    const r = await fetch(AUTH_API_URL + '/user/profile', {
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    const data = r.ok ? await r.json() : {};
+    localStorage.setItem('myList', JSON.stringify(data.myList || []));
+  } catch (e) {
+    localStorage.setItem('myList', '[]');
+  }
 }
-// Listen for i18n language change event
-if (window.i18next && typeof window.i18next.on === 'function') {
-    window.i18next.on(
-        'languageChanged',
-        debounce(async (lng) => {
-            await reloadAllTMDBContent();
-        }, 200)
+
+// ─── Play ─────────────────────────────────────────────────────────────────────
+
+function playContent(id, type, link_url) {
+  if (type === 'anime' && link_url) {
+    window.location.href = 'player.html?type=anime&link_url=' + encodeURIComponent(link_url);
+  } else {
+    window.location.href = 'player.html?type=' + type + '&id=' + id;
+  }
+}
+
+// ─── Item → component-compatible shape ───────────────────────────────────────
+
+function normalise(item, type) {
+  return Object.assign({}, item, {
+    kind:   item.kind || type || (item.title ? 'movie' : 'tv'),
+    year:   (item.release_date || item.first_air_date || '').slice(0, 4),
+    rating: item.vote_average ? item.vote_average.toFixed(1) : '',
+    title:  item.title || item.name || '',
+  });
+}
+
+// ─── Remove from Keep Watching ───────────────────────────────────────────────
+
+async function removeFromKeepWatching(id, type) {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+  try {
+    await fetch(AUTH_API_URL + '/user/keep-watching/' + id + '/' + type, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + token },
+    });
+    showToast('Removed from Keep Watching');
+    initPage();
+  } catch (e) {
+    showToast('Failed to remove', 'error');
+  }
+}
+
+// ─── Main page init ───────────────────────────────────────────────────────────
+
+async function initPage() {
+  const lang     = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
+  const heroMnt  = document.getElementById('hero-mount');
+  const rowsMnt  = document.getElementById('rows-mount');
+  if (!rowsMnt) return;
+
+  // Clear rows mount (keep watching re-renders)
+  rowsMnt.innerHTML = '';
+
+  // Show loading skeleton for rows
+  const loadingDiv = document.createElement('div');
+  loadingDiv.className = 'e6-loading';
+  loadingDiv.innerHTML = '<div class="e6-spinner"></div><span>Loading…</span>';
+  rowsMnt.appendChild(loadingDiv);
+
+  // Fetch all data in parallel
+  const [trending, trendingTV, popular, anime, keepWatching] = await Promise.all([
+    fetchTMDBWithFallback('movie', 'trending', lang),
+    fetchTMDBWithFallback('tv',    'trending', lang),
+    fetchTMDBWithFallback('movie', 'popular',  lang),
+    fetchAnimeContent(),
+    fetchKeepWatching(),
+  ]);
+
+  rowsMnt.innerHTML = '';
+
+  // Hero slider — first 7 from trending mix
+  if (heroMnt) {
+    const heroItems = [
+      ...trending.slice(0, 3),
+      ...trendingTV.slice(0, 2),
+      ...popular.slice(0, 2),
+    ]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 7)
+    .map(i => normalise(i));
+
+    makeHeroSlider(heroItems, heroMnt, {
+      onWatch: function (item) { playContent(item.id, item.kind || 'movie'); },
+    });
+  }
+
+  // Keep Watching row (only if logged in and has items)
+  if (keepWatching.length) {
+    const kwItems = await Promise.all(
+      keepWatching.map(function (kw) {
+        return fetchTMDBItemWithFallback(kw.id, kw.type, lang)
+          .then(function (d) {
+            return normalise(Object.assign({ progress: kw.progress || 50 }, d), kw.type);
+          });
+      })
     );
-} else if (window.i18n) {
-    // Patch changeLanguage as fallback
-    const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
-    window.i18n.changeLanguage = debounce(async function (lang) {
-        await origChangeLanguage(lang);
-        await reloadAllTMDBContent();
-    }, 200);
+    const kwRow = makeRow('Keep Watching', kwItems, {
+      onPick: function (item) { playContent(item.id, item.kind || 'movie'); },
+    });
+    rowsMnt.appendChild(kwRow);
+  }
+
+  // Trending Movies
+  if (trending.length) {
+    const row = makeRow('Trending Now', trending.slice(0, 20).map(i => normalise(i, 'movie')), {
+      seeAllHref: 'movies.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Trending TV
+  if (trendingTV.length) {
+    const row = makeRow('Popular TV Shows', trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
+      seeAllHref: 'tvshows.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Top Picks (popular, numbered)
+  if (popular.length) {
+    const row = makeRow('Top Picks', popular.slice(0, 10).map(i => normalise(i, 'movie')), {
+      numbered:   true,
+      seeAllHref: 'movies.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Anime
+  if (anime.length) {
+    const row = makeRow('Anime', anime.slice(0, 20), {
+      seeAllHref: 'anime.html',
+      onPick: function (item) { playContent(item.id, 'anime', item.link_url); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
+  // Footer
+  renderFooter('footer-mount');
 }
+
+// ─── Language change reload ───────────────────────────────────────────────────
+
+function debounce(fn, ms) {
+  let t;
+  return function () { clearTimeout(t); t = setTimeout(fn, ms); };
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', async function () {
+  renderTopNav('home');
+  renderBottomNav('home');
+  await syncMyList();
+  await initPage();
+
+  // Reload on language change
+  if (window.i18n) {
+    const origChange = window.i18n.changeLanguage && window.i18n.changeLanguage.bind(window.i18n);
+    if (origChange) {
+      window.i18n.changeLanguage = debounce(async function (lng) {
+        await origChange(lng);
+        await initPage();
+      }, 300);
+    }
+  }
+
+  // Re-render nav on theme changes
+  document.addEventListener('eli6.themeChanged', function () {
+    renderTopNav('home');
+    renderBottomNav('home');
+  });
+});
