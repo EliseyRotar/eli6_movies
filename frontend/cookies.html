@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cookie Policy — ELI6 Movies</title>
+  <meta name="description" content="How ELI6 Movies uses cookies and local storage." />
+  <script>(function(){try{var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');document.documentElement.dataset.theme=p.theme||'pulse';document.documentElement.dataset.mode=p.mode||'dark';}catch(e){document.documentElement.dataset.theme='pulse';document.documentElement.dataset.mode='dark';}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+  <link rel="icon" href="favicon.ico" />
+</head>
+<body>
+  <div id="topnav-mount"></div>
+
+  <main class="legal">
+    <div class="legal__eyebrow">Legal</div>
+    <h1 class="legal__title">Cookie Policy</h1>
+    <p class="legal__updated">Last updated: May 2025</p>
+
+    <p>This Cookie Policy explains how ELI6 Movies uses cookies and similar storage technologies when you visit our site.</p>
+
+    <h2>1. What are cookies?</h2>
+    <p>Cookies are small text files placed on your device by a website. They allow the site to remember your actions and preferences over time. ELI6 Movies primarily uses the browser's <strong>localStorage</strong> API rather than traditional HTTP cookies — the effect is similar but localStorage data is never automatically sent to our server with every request.</p>
+
+    <h2>2. What we store and why</h2>
+    <p>All storage used by ELI6 Movies from our own domain (<code>eli6movies.vercel.app</code> / <code>eli6movies.com</code>) is listed below.</p>
+
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);text-align:left">
+          <th style="padding:8px 12px;color:var(--fg-muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase">Key</th>
+          <th style="padding:8px 12px;color:var(--fg-muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase">Type</th>
+          <th style="padding:8px 12px;color:var(--fg-muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase">Purpose</th>
+          <th style="padding:8px 12px;color:var(--fg-muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase">Expiry</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">token</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Authentication — keeps you signed in</td>
+          <td style="padding:10px 12px">Until sign-out or expiry</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">user</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Cached user profile (username, email)</td>
+          <td style="padding:10px 12px">Until sign-out</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">eli6.prefs</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Appearance settings (theme, mode, accent, layout)</td>
+          <td style="padding:10px 12px">Persistent until cleared</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">myList</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Cached My List for offline access</td>
+          <td style="padding:10px 12px">Until sign-out or next sync</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">keepWatching</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Cached watch progress for Continue Watching row</td>
+          <td style="padding:10px 12px">Until sign-out or next sync</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px;font-family:var(--font-mono);font-size:13px">eli6.cookies.accepted</td>
+          <td style="padding:10px 12px">localStorage</td>
+          <td style="padding:10px 12px">Records your cookie consent so the banner does not reappear</td>
+          <td style="padding:10px 12px">Persistent until cleared</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>3. Third-party storage</h2>
+    <p>The Player page embeds video streams from third-party providers (VixSrc, VidSrc, Embed.su, AutoEmbed, and others). These embeds load in an iframe from a different domain. Those providers may set their own cookies or localStorage entries, which we have no access to or control over. Please review each provider's own privacy and cookie policies if you have concerns.</p>
+    <p>Google Fonts and the Google Cast SDK are loaded from Google's CDN. Google may set cookies as part of these services. See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a> for details.</p>
+
+    <h2>4. Strictly necessary storage</h2>
+    <p>All storage listed in section 2 is strictly necessary for the service to function. Without the authentication token you cannot sign in; without preferences storage the site cannot apply your chosen theme. Because this storage is essential, it does not require consent to function — however we still show the cookie notice so you are fully informed.</p>
+
+    <h2>5. No advertising or tracking</h2>
+    <p>ELI6 Movies does not use any advertising cookies, tracking pixels, fingerprinting scripts, or analytics services. We do not share browsing data with advertisers.</p>
+
+    <h2>6. How to clear this data</h2>
+    <p>You can clear all locally stored data at any time by:</p>
+    <ul>
+      <li>Opening your browser's developer tools → Application → Local Storage → clearing entries for this site.</li>
+      <li>Using your browser's "Clear site data" or "Clear browsing data" feature.</li>
+      <li>Signing out from the <a href="account.html">Account</a> page, which removes your auth token and cached data.</li>
+      <li>Deleting your account from the <a href="account.html">Account</a> page, which removes all server-side data.</li>
+    </ul>
+
+    <h2>7. Contact</h2>
+    <div class="legal__contact">
+      <p>Questions about our use of cookies or local storage? Email us at <strong>contact@eli6movies.com</strong>.</p>
+    </div>
+  </main>
+
+  <div id="footer-mount"></div>
+  <div id="bottomnav-mount"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/components.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      window.renderTopNav('');
+      window.renderBottomNav('');
+      window.renderFooter('footer-mount');
+    });
+  </script>
+</body>
+</html>
