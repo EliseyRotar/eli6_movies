@@ -1,316 +1,57 @@
 <!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ELI6 MOVIES - Movies</title>
-    <link href="https://fonts.cdnfonts.com/css/netflix-sans" rel="stylesheet" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-    <link rel="stylesheet" href="css/theme.css" />
-    <link rel="stylesheet" href="css/index.css" />
-    <script src="js/config.js"></script>
-    <script src="js/i18n.js"></script>
-    <link rel="stylesheet" href="css/movies.css" />
-    <link rel="stylesheet" href="css/spatial-nav.css" />
-    <!-- Page-specific styles moved to css/movies.css -->
-</head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movies — ELI6 Movies</title>
 
+  <script>
+    (function(){
+      try {
+        var p = JSON.parse(localStorage.getItem('eli6.prefs') || '{}');
+        document.documentElement.dataset.theme = p.theme || 'pulse';
+        document.documentElement.dataset.mode  = p.mode  || 'dark';
+      } catch(e) {
+        document.documentElement.dataset.theme = 'pulse';
+        document.documentElement.dataset.mode  = 'dark';
+      }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+</head>
 <body>
-    <!-- Mobile Overlay and Side Navigation -->
-    <div class="mobile-overlay" id="mobileOverlay" style="display: none"></div>
-    <nav class="mobile-sidenav" id="mobileSidenav" style="display: none">
-        <div class="mobile-sidenav-header">
-            <span class="mobile-sidenav-title" data-i18n="nav.logo">ELI6 MOVIES</span>
-            <button class="mobile-sidenav-close" id="closeMobileSidenav">&times;</button>
-        </div>
-        <ul class="mobile-sidenav-links">
-            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
-            <li><a href="movies.html" data-i18n="nav.movies">Movies</a></li>
-            <li><a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a></li>
-            <li><a href="mylist.html" data-i18n="nav.mylist">My List</a></li>
-            <li><a href="settings.html" data-i18n="nav.settings">Settings</a></li>
-            <li><a href="account.html" data-i18n="nav.account">Account</a></li>
-        </ul>
-    </nav>
-    <!-- Mobile Top Bar -->
-    <div class="mobile-topbar" id="mobileTopbar">
-        <button class="mobile-hamburger" id="openMobileSidenav">
-            <span></span><span></span><span></span>
-        </button>
-        <span class="mobile-logo" data-i18n="nav.logo">ELI6 MOVIES</span>
-        <div class="mobile-top-icons">
-            <a href="search.html" class="mobile-action-btn">
-                <i class="material-icons">search</i>
-            </a>
-            <a href="account.html" class="mobile-action-btn">
-                <i class="material-icons">account_circle</i>
-            </a>
-        </div>
+  <div class="app">
+    <div id="topnav-mount"></div>
+
+    <div class="pagehead">
+      <div class="pagehead__eyebrow">Browse</div>
+      <h1 class="pagehead__title">Movies</h1>
+      <p class="pagehead__sub">Trending, popular, and curated picks from every genre.</p>
     </div>
 
-    <nav class="navbar">
-        <a href="index.html" class="logo" data-i18n="nav.logo">ELI6 MOVIES</a>
-        <div class="nav-links">
-            <a href="index.html" data-i18n="nav.home">Home</a>
-            <a href="movies.html" class="active" data-i18n="nav.movies">Movies</a>
-            <a href="tvshows.html" data-i18n="nav.tvshows">TV Shows</a>
-            <a href="anime.html" data-i18n="nav.anime">Anime</a>
-            <a href="mylist.html" data-i18n="nav.mylist">My List</a>
-        </div>
-        <div class="nav-icons">
-            <a href="search.html" class="nav-icon">
-                <i class="material-icons">search</i>
-            </a>
-            <a href="settings.html" class="nav-icon">
-                <i class="material-icons">settings</i>
-            </a>
-            <a href="account.html" class="nav-icon">
-                <i class="material-icons">account_circle</i>
-            </a>
-        </div>
-    </nav>
-    <script src="js/notifications.js"></script>
+    <!-- Genre filter pills -->
+    <div id="pills-mount"></div>
 
-    <section id="trending-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">trending_up</i>
-            <span data-i18n="movies.sections.trending">Trending Movies</span>
-        </h2>
-        <div class="movie-row" id="trending-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
+    <!-- Grid -->
+    <div id="rows-mount"></div>
 
-    <section id="action-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">local_fire_department</i>
-            <span data-i18n="movies.sections.action">Action Movies</span>
-        </h2>
-        <div class="movie-row" id="action-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="comedy-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">sentiment_very_satisfied</i>
-            <span data-i18n="movies.sections.comedy">Comedy Movies</span>
-        </h2>
-        <div class="movie-row" id="comedy-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="drama-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">theater_comedy</i>
-            <span data-i18n="movies.sections.drama">Drama Movies</span>
-        </h2>
-        <div class="movie-row" id="drama-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="horror-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">nightlight</i>
-            <span data-i18n="movies.sections.horror">Horror Movies</span>
-        </h2>
-        <div class="movie-row" id="horror-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="animation-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">animation</i>
-            <span data-i18n="movies.sections.animation">Animation Movies</span>
-        </h2>
-        <div class="movie-row" id="animation-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="scifi-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">science</i>
-            <span data-i18n="movies.sections.scifi">Science Fiction Movies</span>
-        </h2>
-        <div class="movie-row" id="scifi-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="crime-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">gavel</i>
-            <span data-i18n="movies.sections.crime">Crime Movies</span>
-        </h2>
-        <div class="movie-row" id="crime-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="family-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">family_restroom</i>
-            <span data-i18n="movies.sections.family">Family Movies</span>
-        </h2>
-        <div class="movie-row" id="family-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="romance-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">favorite</i>
-            <span data-i18n="movies.sections.romance">Romance Movies</span>
-        </h2>
-        <div class="movie-row" id="romance-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="mystery-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">help_outline</i>
-            <span data-i18n="movies.sections.mystery">Mystery Movies</span>
-        </h2>
-        <div class="movie-row" id="mystery-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="fantasy-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">auto_awesome</i>
-            <span data-i18n="movies.sections.fantasy">Fantasy Movies</span>
-        </h2>
-        <div class="movie-row" id="fantasy-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="documentary-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">menu_book</i>
-            <span data-i18n="movies.sections.documentary">Documentary Movies</span>
-        </h2>
-        <div class="movie-row" id="documentary-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="adventure-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">explore</i>
-            <span data-i18n="movies.sections.adventure">Adventure Movies</span>
-        </h2>
-        <div class="movie-row" id="adventure-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="history-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">history_edu</i>
-            <span data-i18n="movies.sections.history">History Movies</span>
-        </h2>
-        <div class="movie-row" id="history-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="music-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">music_note</i>
-            <span data-i18n="movies.sections.music">Music Movies</span>
-        </h2>
-        <div class="movie-row" id="music-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="thriller-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">flash_on</i>
-            <span data-i18n="movies.sections.thriller">Thriller Movies</span>
-        </h2>
-        <div class="movie-row" id="thriller-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="war-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">military_tech</i>
-            <span data-i18n="movies.sections.war">War Movies</span>
-        </h2>
-        <div class="movie-row" id="war-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
-    <section id="western-movies" class="movie-section">
-        <h2 class="section-title">
-            <i class="material-icons">terrain</i>
-            <span data-i18n="movies.sections.western">Western Movies</span>
-        </h2>
-        <div class="movie-row" id="western-movies-row">
-            <div class="loading">
-                <div class="loading-spinner"></div>
-            </div>
-        </div>
-    </section>
+    <div id="footer-mount"></div>
+  </div>
 
-    <!-- Mobile bottom navigation -->
-    <nav class="mobile-bottom-nav">
-        <a href="index.html">
-            <i class="material-icons">home</i>
-            <span data-i18n="nav.home">Home</span>
-        </a>
-        <a href="movies.html" class="active">
-            <i class="material-icons">local_movies</i>
-            <span data-i18n="nav.movies">Movies</span>
-        </a>
-        <a href="tvshows.html">
-            <i class="material-icons">tv</i>
-            <span data-i18n="nav.tvshows">TV</span>
-        </a>
-        <a href="mylist.html">
-            <i class="material-icons">playlist_add_check</i>
-            <span data-i18n="nav.mylist">My List</span>
-        </a>
-        <a href="settings.html">
-            <i class="material-icons">settings</i>
-            <span data-i18n="nav.settings">Settings</span>
-        </a>
-    </nav>
+  <div id="bottomnav-mount"></div>
 
-    <script src="js/mylist.js"></script>
-    <script src="js/movies.js"></script>
-    <script src="js/mobile-nav.js"></script>
-    <script src="js/spatial-nav.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/mylist.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/movies.js"></script>
 </body>
-
 </html>
