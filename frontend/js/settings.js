@@ -29,13 +29,18 @@
     // ── head ──
     var head = div("settings__head");
     var backBtn = el("button", "settings__back");
-    backBtn.textContent = "← Back";
+    backBtn.textContent = "← Account";
     backBtn.addEventListener("click", function () { history.back(); });
     head.appendChild(backBtn);
 
+    var eyebrow = el("div", "pagehead__eyebrow");
+    eyebrow.textContent = "CUSTOMIZE";
+    eyebrow.style.marginBottom = "8px";
+    head.appendChild(eyebrow);
+
     var pageTitle = el("h1");
     pageTitle.style.cssText = "font-family:var(--font-head);font-weight:var(--head-weight);font-size:clamp(28px,5vw,48px);letter-spacing:-0.03em;color:var(--fg);margin:0";
-    pageTitle.textContent = "Settings";
+    pageTitle.textContent = "Appearance";
     head.appendChild(pageTitle);
 
     var pageSub = el("p");
@@ -261,6 +266,10 @@
 
     // ── Footer actions ──
     var footerActions = div("settings__footer-actions");
+    var doneBtn = el("button", "btn btn--primary");
+    doneBtn.textContent = "Done — back to home";
+    doneBtn.addEventListener("click", function () { window.location.href = "index.html"; });
+    footerActions.appendChild(doneBtn);
     var resetBtn = el("button", "btn btn--outline");
     resetBtn.textContent = "Reset to defaults";
     resetBtn.addEventListener("click", function () {
