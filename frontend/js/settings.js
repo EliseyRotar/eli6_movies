@@ -256,7 +256,7 @@
       btn.addEventListener("click", function () {
         window.setPref(preset.prefs);
         buildPage();
-        showToast("Preset "" + preset.name + "" applied");
+        showToast('Preset "' + preset.name + '" applied');
       });
       presetGrid.appendChild(btn);
     });
