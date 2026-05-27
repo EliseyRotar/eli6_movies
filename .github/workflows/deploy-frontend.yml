@@ -6,6 +6,12 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  VERCEL_ORG_ID: team_AjBjtNBcHuLPCrwFDt2pgY3Z
+  VERCEL_PROJECT_ID: prj_iCkws3HVTgpzKyRj3zjfMp2Z6Ven
 
 jobs:
   deploy:
@@ -17,25 +23,20 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Pull Vercel project settings
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production
         working-directory: frontend
-        env:
-          VERCEL_ORG_ID: team_AjBjtNBcHuLPCrwFDt2pgY3Z
-          VERCEL_PROJECT_ID: prj_iCkws3HVTgpzKyRj3zjfMp2Z6Ven
+
+      - name: Build project
+        run: vercel build --prod
+        working-directory: frontend
 
       - name: Deploy to Vercel Production
         id: deploy
         run: |
-          url=$(vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }})
+          url=$(vercel deploy --prod --prebuilt)
           echo "url=$url" >> $GITHUB_OUTPUT
         working-directory: frontend
-        env:
-          VERCEL_ORG_ID: team_AjBjtNBcHuLPCrwFDt2pgY3Z
-          VERCEL_PROJECT_ID: prj_iCkws3HVTgpzKyRj3zjfMp2Z6Ven
 
       - name: Assign alias eli6movies.vercel.app
-        run: vercel alias set ${{ steps.deploy.outputs.url }} eli6movies.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel alias set ${{ steps.deploy.outputs.url }} eli6movies.vercel.app
         working-directory: frontend
-        env:
-          VERCEL_ORG_ID: team_AjBjtNBcHuLPCrwFDt2pgY3Z
-          VERCEL_PROJECT_ID: prj_iCkws3HVTgpzKyRj3zjfMp2Z6Ven

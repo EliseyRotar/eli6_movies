@@ -7,6 +7,7 @@ on:
       - 'backend/**'
       - 'render.yaml'
       - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
 
 jobs:
   deploy:
