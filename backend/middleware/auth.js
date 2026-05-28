@@ -18,7 +18,18 @@ async function auth(req, res, next) {
             return res.status(401).json({ error: 'USER_NOT_FOUND' });
         }
 
+        if (decoded.jti && user.sessions.length > 0) {
+            const session = user.sessions.find(s => s.jti === decoded.jti);
+            if (!session) {
+                return res.status(401).json({ error: 'SESSION_REVOKED' });
+            }
+            // update lastSeen without blocking the request
+            session.lastSeen = new Date();
+            user.save().catch(() => {});
+        }
+
         req.user = user;
+        req.jti = decoded.jti || null;
         req.userRole = user.role;
         return next();
     } catch (error) {
