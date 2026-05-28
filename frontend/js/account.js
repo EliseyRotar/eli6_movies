@@ -93,7 +93,7 @@
       e.preventDefault();
       loginBtn.textContent = tr('account.signingIn', 'Signing in…'); loginBtn.disabled = true;
       try {
-        var d = await apiPost('/auth/login', { email: document.getElementById('login-email').value, password: document.getElementById('login-pwd').value });
+        var d = await apiPost('/login', { email: document.getElementById('login-email').value, password: document.getElementById('login-pwd').value });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.signedIn', 'Signed in!'));
@@ -120,7 +120,7 @@
       e.preventDefault();
       regBtn.textContent = tr('account.creating', 'Creating…'); regBtn.disabled = true;
       try {
-        var d = await apiPost('/auth/register', { username: document.getElementById('reg-username').value, email: document.getElementById('reg-email').value, password: document.getElementById('reg-pwd').value });
+        var d = await apiPost('/register', { username: document.getElementById('reg-username').value, email: document.getElementById('reg-email').value, password: document.getElementById('reg-pwd').value });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.accountCreated', 'Account created!'));
