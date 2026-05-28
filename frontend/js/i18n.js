@@ -291,6 +291,9 @@ class I18nManager {
         // Translate dynamic content
         await this.translateDynamicElements();
 
+        // Notify listeners that the language has changed so pages can re-fetch content
+        window.dispatchEvent(new CustomEvent('eli6.langChanged', { detail: { lang: lang } }));
+
         // Close language menu
         this.toggleLanguageMenu();
     }
