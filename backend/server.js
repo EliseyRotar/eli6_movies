@@ -78,6 +78,7 @@ app.use('/api/v1', translationRoutes);
 app.use('/api/v1/tmdb', tmdbRoutes);
 app.use('/api/v1/anime', animeRoutes);
 
+app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
