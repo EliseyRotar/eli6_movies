@@ -3,6 +3,10 @@
 (function () {
   var TMDB_URL = window.TMDB_PROXY_URL || ((window.API_BASE_URL || '') + '/tmdb');
 
+  function tr(key, fallback) {
+    return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
+  }
+
   async function fetchTMDBAnime(endpoint, lang) {
     lang = lang || 'en-US';
     try {
@@ -44,7 +48,7 @@
   async function renderPage() {
     var mount = document.getElementById('rows-mount');
     if (!mount) return;
-    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>Loading…</span></div>';
+    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>' + tr('common.loading', 'Loading…') + '</span></div>';
 
     var lang = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
 
@@ -57,21 +61,21 @@
     mount.innerHTML = '';
 
     if (results[0].length) {
-      var row = window.makeRow('Trending Anime', results[0], {
+      var row = window.makeRow(tr('anime.sections.trending', 'Trending Anime'), results[0], {
         onPick: function (item) { window.location.href = 'player.html?type=anime&id=' + item.id + (item.link_url ? '&link_url=' + encodeURIComponent(item.link_url) : ''); },
       });
       mount.appendChild(row);
     }
 
     if (results[1].length) {
-      var row2 = window.makeRow('Popular on TMDB', results[1].map(normaliseTMDB), {
+      var row2 = window.makeRow(tr('anime.sections.popularOnTMDB', 'Popular on TMDB'), results[1].map(normaliseTMDB), {
         onPick: function (item) { window.openDetailModal(item); },
       });
       mount.appendChild(row2);
     }
 
     if (results[2].length) {
-      var row3 = window.makeRow('Top Rated', results[2].map(normaliseTMDB), {
+      var row3 = window.makeRow(tr('anime.sections.topRated', 'Top Rated'), results[2].map(normaliseTMDB), {
         numbered: true,
         onPick: function (item) { window.openDetailModal(item); },
       });
