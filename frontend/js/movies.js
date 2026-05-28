@@ -132,6 +132,9 @@
       window.renderTopNav('movies');
       window.renderBottomNav('movies');
     });
+    window.addEventListener('eli6.langChanged', function () {
+      renderPage();
+    });
   });
 
 })();
