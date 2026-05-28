@@ -208,7 +208,7 @@ async function initPage() {
           });
       })
     );
-    const kwRow = makeRow('Keep Watching', kwItems, {
+    const kwRow = makeRow(tr('home.rows.keepWatching', 'Keep Watching'), kwItems, {
       onPick: function (item) {
         if ((item.kind === 'tv' || item.type === 'tv') && item.season) {
           window.location.href = 'player.html?type=tv&id=' + item.id + '&season=' + item.season + '&episode=' + (item.episode || 1);
@@ -222,7 +222,7 @@ async function initPage() {
 
   // Trending Now (numbered, 10 items)
   if (trending.length) {
-    const row = makeRow('Trending Now', trending.slice(0, 10).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.trendingNow', 'Trending Now'), trending.slice(0, 10).map(i => normalise(i, 'movie')), {
       numbered:   true,
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
@@ -232,7 +232,7 @@ async function initPage() {
 
   // New Releases
   if (upcoming.length) {
-    const row = makeRow('New Releases', upcoming.slice(0, 20).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.newReleases', 'New Releases'), upcoming.slice(0, 20).map(i => normalise(i, 'movie')), {
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -241,7 +241,7 @@ async function initPage() {
 
   // Critically Acclaimed
   if (topRated.length) {
-    const row = makeRow('Critically Acclaimed', topRated.slice(0, 20).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.criticallyAcclaimed', 'Critically Acclaimed'), topRated.slice(0, 20).map(i => normalise(i, 'movie')), {
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -250,7 +250,7 @@ async function initPage() {
 
   // Anime Spotlight
   if (anime.length) {
-    const row = makeRow('Anime Spotlight', anime.slice(0, 20), {
+    const row = makeRow(tr('home.rows.animeSpotlight', 'Anime Spotlight'), anime.slice(0, 20), {
       seeAllHref: 'anime.html',
       onPick: function (item) { playContent(item.id, 'anime', item.link_url); },
     });
@@ -259,7 +259,7 @@ async function initPage() {
 
   // Because you watched…
   if (trendingTV.length) {
-    const row = makeRow('Because you watched \'Crown of Ashes\'', trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
+    const row = makeRow(tr('home.rows.becauseYouWatched', 'Because You Watched'), trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
       seeAllHref: 'tvshows.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -270,11 +270,10 @@ async function initPage() {
   renderFooter('footer-mount');
 }
 
-// ─── Language change reload ───────────────────────────────────────────────────
+// ─── i18n row-title helper ────────────────────────────────────────────────────
 
-function debounce(fn, ms) {
-  let t;
-  return function () { clearTimeout(t); t = setTimeout(fn, ms); };
+function tr(key, fallback) {
+  return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
 }
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
@@ -285,20 +284,14 @@ document.addEventListener('DOMContentLoaded', async function () {
   await syncMyList();
   await initPage();
 
-  // Reload on language change
-  if (window.i18n) {
-    const origChange = window.i18n.changeLanguage && window.i18n.changeLanguage.bind(window.i18n);
-    if (origChange) {
-      window.i18n.changeLanguage = debounce(async function (lng) {
-        await origChange(lng);
-        await initPage();
-      }, 300);
-    }
-  }
-
   // Re-render nav on theme changes
   document.addEventListener('eli6.themeChanged', function () {
     renderTopNav('home');
     renderBottomNav('home');
   });
+});
+
+// Re-fetch all home page content in the new language when the user switches language
+window.addEventListener('eli6.langChanged', function () {
+  initPage();
 });
