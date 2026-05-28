@@ -1930,7 +1930,7 @@
             <div class="trailer-section">
                 <h2 data-i18n="player.trailersVideos">Trailers & Videos</h2>
                 <div class="trailer-grid" id="trailerGrid">
-                    <div class="loading-text">Loading trailers...</div>
+                    <div class="loading-text" data-i18n="player.loadingTrailers">Loading trailers...</div>
                 </div>
             </div>
         </div>
@@ -1939,7 +1939,7 @@
             <div class="cast-section">
                 <h2 data-i18n="player.castCrew">Cast & Crew</h2>
                 <div class="cast-grid" id="castGrid">
-                    <div class="loading-text">Loading cast information...</div>
+                    <div class="loading-text" data-i18n="player.loadingCast">Loading cast information...</div>
                 </div>
             </div>
         </div>
@@ -1948,7 +1948,7 @@
             <div class="similar-section">
                 <h2 data-i18n="player.moreLikeThis">More Like This</h2>
                 <div class="similar-grid" id="similarGrid">
-                    <div class="loading-text">Loading similar content...</div>
+                    <div class="loading-text" data-i18n="player.loadingSimilar">Loading similar content...</div>
                 </div>
             </div>
         </div>
@@ -1957,7 +1957,7 @@
             <div class="episode-section">
                 <h2 data-i18n="player.episodes">Episodes</h2>
                 <div class="episodes-grid" id="episodesGrid">
-                    <div class="loading-text">Loading episodes...</div>
+                    <div class="loading-text" data-i18n="player.loadingEpisodes">Loading episodes...</div>
                 </div>
             </div>
         </div>
@@ -1976,6 +1976,10 @@
             const d = document.createElement('div');
             d.textContent = String(s);
             return d.innerHTML;
+        }
+
+        function tr(key, fallback) {
+            return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
         }
 
         // Get URL parameters
@@ -2160,22 +2164,23 @@
             const detailedOverviewHTML = `
                 <div class="overview-content">
                     <div class="overview-main">
-                        <div><strong>Type:</strong> ${esc(typeStr)}</div>
-                        <div><strong>Status:</strong> ${esc(status)}</div>
-                        <div><strong>Episodes:</strong> ${esc(episodes)}</div>
-                        <div><strong>Year:</strong> ${esc(year)}</div>
-                        <div><strong>Studios:</strong> ${esc(studios)}</div>
-                        <div><strong>Genres:</strong> ${esc(genres)}</div>
-                        <div><strong>Duration:</strong> ${esc(duration)}</div>
-                        <div><strong>Rating:</strong> ${esc(rating)}</div>
+                        <div><strong>${tr('player.type', 'Type:')}</strong> ${esc(typeStr)}</div>
+                        <div><strong>${tr('player.status', 'Status:')}</strong> ${esc(status)}</div>
+                        <div><strong>${tr('player.episodeCount', 'Episodes:')}</strong> ${esc(episodes)}</div>
+                        <div><strong>${tr('player.year', 'Year:')}</strong> ${esc(year)}</div>
+                        <div><strong>${tr('player.studiosLabel', 'Studios:')}</strong> ${esc(studios)}</div>
+                        <div><strong>${tr('player.genres', 'Genres:')}</strong> ${esc(genres)}</div>
+                        <div><strong>${tr('player.duration', 'Duration:')}</strong> ${esc(duration)}</div>
+                        <div><strong>${tr('player.rating', 'Rating:')}</strong> ${esc(rating)}</div>
                     </div>
                     <div class="overview-extra">
-                        <div><strong>Synopsis:</strong> ${esc(overview)}</div>
+                        <div><strong>${tr('player.synopsis', 'Synopsis')}:</strong> ${esc(overview)}</div>
                         ${trailer ? `<div style='margin-top:20px;'><iframe width='100%' height='315' src='${trailerEmbedUrl}' frameborder='0' allowfullscreen></iframe></div>` : ''}
                     </div>
                 </div>
             `;
             document.getElementById('detailedOverview').innerHTML = detailedOverviewHTML;
+            if (window.i18n && window.i18n.translateStaticContent) window.i18n.translateStaticContent();
         }
 
         // Update content information
@@ -2318,6 +2323,7 @@
             `;
 
             document.getElementById('detailedOverview').innerHTML = detailedOverviewHTML;
+            if (window.i18n && window.i18n.translateStaticContent) window.i18n.translateStaticContent();
 
             // Set backdrop image, fallback to poster if backdrop not available
             const heroBackdropEl = document.getElementById('heroBackdrop');
@@ -2772,7 +2778,7 @@
                             }
                         });
                     } else if (trailerGrid) {
-                        trailerGrid.innerHTML = '<div class="loading-text">No official trailers available</div>';
+                        trailerGrid.innerHTML = '<div class="loading-text">' + tr('player.noTrailers', 'No official trailers available') + '</div>';
                     }
                 }
             } catch (error) {
@@ -2840,7 +2846,7 @@
                             }
                         });
                     } else {
-                        castGrid.innerHTML = '<div class="loading-text">No cast information available</div>';
+                        castGrid.innerHTML = '<div class="loading-text">' + tr('player.noCast', 'No cast information available') + '</div>';
                     }
                 }
             } catch (error) {
@@ -2871,7 +2877,7 @@
                             </div>
                         `).join('');
                     } else {
-                        similarGrid.innerHTML = '<div class="loading-text">No similar content available</div>';
+                        similarGrid.innerHTML = '<div class="loading-text">' + tr('player.noSimilar', 'No similar content available') + '</div>';
                     }
                 }
             } catch (error) {
@@ -2941,7 +2947,7 @@
                         `).join('');
 
                     } else {
-                        episodesGrid.innerHTML = '<div class="loading-text">No episodes available</div>';
+                        episodesGrid.innerHTML = '<div class="loading-text">' + tr('player.noEpisodes', 'No episodes available') + '</div>';
                     }
                 }
             } catch (error) {
