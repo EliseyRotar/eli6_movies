@@ -47,7 +47,7 @@ router.post('/register', async (req, res, next) => {
         const token = createToken({ userId: user._id });
         res.cookie('token', token, cookieBase)
             .status(201)
-            .json({ user: sanitizeUser(user) });
+            .json({ token, user: sanitizeUser(user) });
     } catch (error) {
         logger.error('Register failed', { error: error.message });
         next(error);
@@ -72,7 +72,7 @@ router.post('/login', async (req, res, next) => {
         }
 
         const token = createToken({ userId: user._id });
-        res.cookie('token', token, cookieBase).json({ user: sanitizeUser(user) });
+        res.cookie('token', token, cookieBase).json({ token, user: sanitizeUser(user) });
     } catch (error) {
         logger.error('Login failed', { error: error.message });
         next(error);
