@@ -204,12 +204,18 @@ async function initPage() {
       keepWatching.map(function (kw) {
         return fetchTMDBItemWithFallback(kw.id, kw.type, lang)
           .then(function (d) {
-            return normalise(Object.assign({ progress: kw.progress || 50 }, d), kw.type);
+            return normalise(Object.assign({ progress: kw.progress || 50, season: kw.season, episode: kw.episode }, d), kw.type);
           });
       })
     );
     const kwRow = makeRow('Keep Watching', kwItems, {
-      onPick: function (item) { playContent(item.id, item.kind || 'movie'); },
+      onPick: function (item) {
+        if ((item.kind === 'tv' || item.type === 'tv') && item.season) {
+          window.location.href = 'player.html?type=tv&id=' + item.id + '&season=' + item.season + '&episode=' + (item.episode || 1);
+        } else {
+          playContent(item.id, item.kind || 'movie');
+        }
+      },
     });
     rowsMnt.appendChild(kwRow);
   }
