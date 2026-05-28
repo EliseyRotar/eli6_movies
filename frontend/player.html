@@ -1144,6 +1144,22 @@
             color: #fff;
         }
 
+        /* Resume banner */
+        .resume-banner {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 9990;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            padding: 32px 18px 14px;
+            display: none; align-items: center; gap: 10px; flex-wrap: wrap;
+        }
+        .resume-banner.visible { display: flex; }
+        .resume-banner__text { flex: 1; color: #fff; font-size: 14px; min-width: 160px; }
+        .resume-banner__text strong { color: var(--accent, #e50914); }
+        .resume-banner__btn { background: var(--accent, #e50914); color: #fff; border: none; padding: 7px 16px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .resume-banner__skip { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 7px 14px; border-radius: 5px; cursor: pointer; font-size: 13px; }
+        .resume-banner__close { background: none; border: none; color: #aaa; cursor: pointer; font-size: 22px; line-height: 1; padding: 0 4px; }
+        .resume-banner__btn:hover { filter: brightness(1.15); }
+        .resume-banner__skip:hover { background: rgba(255,255,255,0.25); }
+
         /* Server Error Modal Styles */
         #serverErrorModal {
             display: none;
@@ -1884,6 +1900,14 @@
                         allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share"
                         sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
                     
+                    <!-- Resume Banner -->
+                    <div class="resume-banner" id="resumeBanner" role="status" aria-live="polite">
+                        <span class="resume-banner__text" id="resumeBannerText"></span>
+                        <button class="resume-banner__btn" id="resumeApplyBtn" onclick="applyResume()" style="display:none">▶ Resume</button>
+                        <button class="resume-banner__skip" onclick="dismissResume()">Start over</button>
+                        <button class="resume-banner__close" onclick="dismissResume()" aria-label="Dismiss">×</button>
+                    </div>
+
                     <!-- Mouse Catcher: Transparent overlay to capture mouse events when controls are hidden -->
                     <div id="mouse-catcher" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2147483647; display:none; background: transparent;"></div>
 
@@ -2011,9 +2035,19 @@
             } else {
                 document.getElementById('episodeSelector').style.display = 'none';
             }
+            // Restore saved play state — server applied silently, season/episode offered via banner
+            _savedState = loadPlayState();
+            if (_savedState) {
+                const savedIdx = SERVER_LIST.findIndex(s => s.key === _savedState.server);
+                if (savedIdx >= 0) currentServerIndex = savedIdx;
+            }
+
             // Auto-load the video player on page load
             loadVideoPlayer();
             isVideoPlaying = true;
+
+            // Show resume banner if there's something to restore
+            if (_savedState) showResumeBanner(_savedState);
 
             // --- Add manual control buttons ---
             const videoPlayerDiv = document.querySelector('.video-player');
@@ -2397,6 +2431,10 @@
         // Load video player
         function loadVideoPlayer() {
             errorHandled = false; // Reset error flag on each load
+            // Save progress before switching content
+            if (watchStartTime) { savePlayState(); }
+            watchStartTime = null;
+            if (watchTimer) { clearInterval(watchTimer); watchTimer = null; }
             const playerLoading = document.getElementById('playerLoading');
             const videoIframe = document.getElementById('videoIframe');
 
@@ -2689,8 +2727,10 @@
                 console.log(`[Player] Iframe loaded successfully for server: ${SERVER_LIST[currentServerIndex].label}`);
                 errorHandled = false;
                 if (failoverTimeout) clearTimeout(failoverTimeout);
-                // For cross-origin iframes, we cannot check the content. If onload fires, assume success.
-                // (Removed setTimeout that tried to access contentWindow/contentDocument)
+                // Start progress tracking from actual iframe load time
+                watchStartTime = Date.now();
+                if (watchTimer) clearInterval(watchTimer);
+                watchTimer = setInterval(function() { sendWatchProgress(); savePlayState(); }, 15000);
             };
             
             // Set a timeout for iframe loading
@@ -3829,76 +3869,176 @@
             resetHideTimer();
         })();
 
-        // === WATCH PROGRESS TRACKING FOR IFRAME PLAYERS ===
+        // === WATCH PROGRESS + PLAY STATE ===
+
         let watchStartTime = null;
-        let watchTimer = null;
-        let estimatedProgress = 0;
-        let estimatedDuration = 0;
+        let watchTimer     = null;
+        let _savedState    = null;
 
+        // ── Duration estimate ──────────────────────────────────────────────────
         function getEstimatedDuration() {
-            // Try to get duration from contentData
-            if (type === 'movie' && contentData && contentData.runtime) {
-                return contentData.runtime * 60; // seconds
-            }
-            if (type === 'tv' && contentData && contentData.episode_run_time && contentData.episode_run_time.length > 0) {
-                return contentData.episode_run_time[0] * 60; // seconds
-            }
-            // Fallback: 90 min for movies, 45 min for TV
-            return type === 'movie' ? 5400 : 2700;
+            if (type === 'movie' && contentData && contentData.runtime)
+                return contentData.runtime * 60;
+            if (type === 'tv' && contentData && contentData.episode_run_time && contentData.episode_run_time.length)
+                return contentData.episode_run_time[0] * 60;
+            if (type === 'anime') return 24 * 60;
+            return type === 'movie' ? 6300 : 2520; // 105 min / 42 min defaults
         }
 
-        function startWatchProgressTimer() {
-            watchStartTime = Date.now();
-            estimatedDuration = getEstimatedDuration();
-            if (watchTimer) clearInterval(watchTimer);
-            watchTimer = setInterval(sendWatchProgress, 15000); // every 15s
+        function _currentSeason() {
+            const el = document.getElementById('overlaySeasonSelectMini') || document.getElementById('seasonSelect');
+            return el ? (parseInt(el.value) || 1) : (parseInt(season) || 1);
+        }
+        function _currentEpisode() {
+            const el = document.getElementById('overlayEpisodeSelectMini') || document.getElementById('episodeSelect');
+            return el ? (parseInt(el.value) || 1) : (parseInt(episode) || 1);
         }
 
-        function stopWatchProgressTimer() {
-            if (watchTimer) clearInterval(watchTimer);
-            sendWatchProgress(true); // send final progress
+        function formatTimeSec(s) {
+            s = Math.max(0, Math.round(s));
+            const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+            return h > 0
+                ? h + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0')
+                : m + ':' + String(sec).padStart(2,'0');
         }
 
-        function sendWatchProgress(isFinal = false) {
-            if (!localStorage.getItem('token')) return;
-            if (!id || !type) return;
-            if (!watchStartTime) return;
-            const now = Date.now();
-            const secondsWatched = Math.floor((now - watchStartTime) / 1000);
-            // If final, assume they watched the rest
-            let progress = Math.min(100, Math.round((secondsWatched / estimatedDuration) * 100));
-            if (isFinal && progress < 95) progress = 95; // If they leave, assume almost done
-            // Don't send if progress is 0
-            if (progress <= 0) return;
-            // Send to backend
+        // ── Send progress to backend (keep-watching) ───────────────────────────
+        function sendWatchProgress() {
+            const token = localStorage.getItem('token');
+            if (!token || !id || !type || !watchStartTime || !contentData) return;
+            const dur = getEstimatedDuration();
+            const base = (_savedState && _savedState.time) ? _savedState.time : 0;
+            const elapsed = (Date.now() - watchStartTime) / 1000;
+            const currentSec = Math.min(dur, base + elapsed);
+            const progress = Math.max(1, Math.min(100, Math.round((currentSec / dur) * 100)));
+            const title = type === 'tv'  ? contentData.name
+                        : type === 'anime' ? (contentData.title || contentData.title_english || String(id))
+                        : contentData.title;
+            const poster = type === 'anime'
+                ? (contentData.images && contentData.images.jpg ? contentData.images.jpg.image_url || '' : '')
+                : (contentData.poster_path || '');
             const payload = {
-                id: parseInt(id),
-                title: type === 'tv' ? (contentData ? contentData.name : '') : (contentData ? contentData.title : ''),
-                type: type,
-                poster_path: contentData ? contentData.poster_path : '',
-                overview: contentData ? contentData.overview : '',
-                progress: progress,
+                id:          type === 'anime' ? contentData.mal_id : parseInt(id),
+                type, title, poster_path: poster,
+                overview:    type === 'anime' ? (contentData.synopsis || '') : (contentData.overview || ''),
+                progress,
             };
-            if (type === 'tv') {
-                payload.season  = parseInt(season)  || 1;
-                payload.episode = parseInt(episode) || 1;
-            }
-            fetch(`${AUTH_API_URL}/user/keep-watching`, {
+            if (type === 'tv') { payload.season = _currentSeason(); payload.episode = _currentEpisode(); }
+            fetch(AUTH_API_URL + '/user/keep-watching', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                },
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
                 body: JSON.stringify(payload),
-            });
+            }).catch(function() {});
         }
 
-        // Start/stop timer on player load/unload
-        window.addEventListener('DOMContentLoaded', () => {
-            startWatchProgressTimer();
+        // ── localStorage play state (server + season/ep + time) ───────────────
+        const PS_KEY    = 'eli6.ps.' + type + '.' + id;
+        const PS_EXPIRY = 90 * 24 * 60 * 60 * 1000;
+
+        function loadPlayState() {
+            try {
+                const raw = localStorage.getItem(PS_KEY);
+                if (!raw) return null;
+                const s = JSON.parse(raw);
+                if (!s || s.v !== 1) return null;
+                if (Date.now() - (s.savedAt || 0) > PS_EXPIRY) { localStorage.removeItem(PS_KEY); return null; }
+                return s;
+            } catch(e) { return null; }
+        }
+
+        function savePlayState() {
+            if (!id || !type) return;
+            const dur = getEstimatedDuration();
+            const base = (_savedState && _savedState.time) ? _savedState.time : 0;
+            const elapsed = watchStartTime ? (Date.now() - watchStartTime) / 1000 : 0;
+            const time = Math.min(dur, base + elapsed);
+            const progress = Math.max(0, Math.min(100, Math.round((time / dur) * 100)));
+            const s = {
+                v: 1,
+                server:  SERVER_LIST[currentServerIndex].key,
+                season:  type === 'tv' ? _currentSeason() : undefined,
+                episode: type === 'tv' ? _currentEpisode() : undefined,
+                time:    Math.round(time),
+                progress,
+                savedAt: Date.now(),
+            };
+            try { localStorage.setItem(PS_KEY, JSON.stringify(s)); } catch(e) {}
+        }
+
+        // ── Resume banner ──────────────────────────────────────────────────────
+        function showResumeBanner(state) {
+            const banner  = document.getElementById('resumeBanner');
+            const textEl  = document.getElementById('resumeBannerText');
+            const resumeBtn = document.getElementById('resumeApplyBtn');
+            if (!banner || !textEl) return;
+
+            const srv = SERVER_LIST.find(function(s) { return s.key === state.server; });
+            const parts = [];
+            if (srv) parts.push(srv.label);
+            if (state.season && state.episode) parts.push('S' + state.season + 'E' + state.episode);
+            if (state.time && state.time > 60) parts.push('~' + formatTimeSec(state.time));
+
+            // Determine if there's something to actively restore
+            const savedSrvIdx = SERVER_LIST.findIndex(function(s) { return s.key === state.server; });
+            const urlS = parseInt(urlParams.get('season'))  || 1;
+            const urlE = parseInt(urlParams.get('episode')) || 1;
+            const epChanged = type === 'tv' && ((state.season || 1) !== urlS || (state.episode || 1) !== urlE);
+            const needsResume = epChanged; // server already silently applied
+
+            if (!needsResume && (!state.time || state.time < 60)) return;
+
+            textEl.innerHTML = parts.length
+                ? 'Last watched: <strong>' + parts.join(' · ') + '</strong>'
+                : 'Continue where you left off?';
+            if (resumeBtn) resumeBtn.style.display = needsResume ? '' : 'none';
+            banner.classList.add('visible');
+            setTimeout(function() { dismissResume(); }, 14000);
+        }
+
+        function applyResume() {
+            if (!_savedState) return;
+            if (type === 'tv' && _savedState.season && _savedState.episode) {
+                const s = _savedState.season, e2 = _savedState.episode;
+                ['seasonSelect','overlaySeasonSelectMini'].forEach(function(i2) {
+                    const el = document.getElementById(i2); if (el) el.value = s;
+                });
+                ['episodeSelect','overlayEpisodeSelectMini'].forEach(function(i2) {
+                    const el = document.getElementById(i2); if (el) el.value = e2;
+                });
+            }
+            dismissResume();
+            loadVideoPlayer();
+            if (typeof updateOverlayDropdowns === 'function') updateOverlayDropdowns();
+            if (typeof updateNextEpisodeBtnOverlay === 'function') updateNextEpisodeBtnOverlay();
+        }
+
+        function dismissResume() {
+            const b = document.getElementById('resumeBanner');
+            if (b) b.classList.remove('visible');
+        }
+
+        // ── postMessage time events from embed players ─────────────────────────
+        window.addEventListener('message', function(ev) {
+            try {
+                const d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
+                if (!d || typeof d !== 'object') return;
+                if (d.event === 'time' && d.time) {
+                    if (typeof d.time.current === 'number') {
+                        const elapsed = d.time.current;
+                        const base = (_savedState && _savedState.time) ? _savedState.time : 0;
+                        if (elapsed > 0) watchStartTime = Date.now() - (elapsed - base) * 1000;
+                    }
+                }
+                if (typeof d.currentTime === 'number' && d.currentTime > 0) {
+                    const base = (_savedState && _savedState.time) ? _savedState.time : 0;
+                    watchStartTime = Date.now() - (d.currentTime - base) * 1000;
+                }
+            } catch(e) {}
         });
-        window.addEventListener('beforeunload', () => {
-            stopWatchProgressTimer();
+
+        window.addEventListener('beforeunload', function() {
+            sendWatchProgress();
+            savePlayState();
         });
 
         function getTMDBLang() {
