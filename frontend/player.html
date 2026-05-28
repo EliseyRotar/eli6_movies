@@ -1991,7 +1991,7 @@
 
     <script>
         const TMDB_BASE_URL = (window.TMDB_PROXY_URL || (window.API_BASE_URL || '') + '/tmdb');
-        const VIDSRC_API_URL = 'https://vidsrc.to/embed';
+        const VIDSRC_API_URL = 'https://vidsrc.fyi/embed';
         const VIXSRC_API_URL = 'https://vixsrc.to';
         const AUTH_API_URL = window.API_BASE_URL || '';
 
@@ -2380,17 +2380,17 @@
         // --- Server Switching System ---
         const SERVER_LIST = [
             { key: 'vixsrc',      label: 'VixSrc' },
-            { key: 'vidsrc',      label: 'VidSrc' },
+            { key: 'vidsrcfyi',   label: 'VidSrc' },
             { key: 'embedsu',     label: 'Embed.su' },
             { key: 'autoembed',   label: 'AutoEmbed' },
             { key: 'superembed',  label: 'MultiEmbed' },
             { key: 'vidsrcme',    label: 'VidSrc.me' },
-            { key: 'vidsrcxyz',   label: 'VidSrc.xyz' },
+            { key: 'vidsrccc',    label: 'VidSrc.cc' },
             { key: '2embed',      label: '2Embed' },
             { key: 'smashystream',label: 'Smashy' },
-            { key: 'vidcloud',    label: 'VidCloud' },
-            { key: 'dood',        label: 'Dood' },
-            { key: 'streamlare',  label: 'Streamlare' },
+            { key: 'vidlink',     label: 'VidLink' },
+            { key: 'vidsrcrip',   label: 'VidSrc.rip' },
+            { key: 'vidfast',     label: 'VidFast' },
             { key: '2anime',      label: '2Anime' },
         ];
         let currentServerIndex = 0;
@@ -2456,45 +2456,22 @@
 
             let videoUrl = '';
             const currentServer = SERVER_LIST[currentServerIndex].key;
-            let vidSrcId = id;
-            let imdbId = '';
-            if (type === 'tv' && contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
-                vidSrcId = contentData.external_ids.imdb_id;
-                imdbId = contentData.external_ids.imdb_id;
-            } else if (type === 'movie' && contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
-                imdbId = contentData.external_ids.imdb_id;
-            }
-            let vidsrcMovieId = '';
-            if (type === 'movie') {
-                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                    vidsrcMovieId = contentData.external_ids.imdb_id;
-                } else {
-                    vidsrcMovieId = id;
-                }
-            }
-            if (currentServer === 'vidsrc') {
+            if (currentServer === 'vidsrcfyi') {
                 if (type === 'movie') {
-                    // VidSrc uses IMDB ID for movies, fallback to TMDB ID
                     if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://vidsrc.to/embed/movie/${contentData.external_ids.imdb_id}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://vidsrc.to/embed/movie/${contentData.external_ids.tmdb_id}`;
+                        videoUrl = `https://vidsrc.fyi/embed/movie/${contentData.external_ids.imdb_id}`;
                     } else {
-                        videoUrl = `https://vidsrc.to/embed/movie/${id}`;
+                        videoUrl = `https://vidsrc.fyi/embed/movie/${id}`;
                     }
                 } else if (type === 'tv') {
-                    // VidSrc uses IMDB ID for TV shows, fallback to TMDB ID
                     if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://vidsrc.to/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://vidsrc.to/embed/tv/${contentData.external_ids.tmdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                        videoUrl = `https://vidsrc.fyi/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
                     } else {
-                        videoUrl = `https://vidsrc.to/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                        videoUrl = `https://vidsrc.fyi/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                     }
                 } else {
-                    videoUrl = `https://vidsrc.to/embed/movie/${id}`;
+                    videoUrl = `https://vidsrc.fyi/embed/movie/${id}`;
                 }
-                // Do NOT add query string for VidSrc
             } else if (currentServer === 'vixsrc') {
                 if (type === 'movie') {
                     // VIXSRC uses TMDB ID for movies
@@ -2539,121 +2516,51 @@
                 }
                 videoUrl = superembedBase + params.join('&');
             } else if (currentServer === '2anime') {
-                // 2Anime server logic
-                // If link_url is present, use it directly
-                const linkUrl = urlParams.get('link_url');
-                if (type === 'anime' && linkUrl) {
-                    videoUrl = `https://2anime.xyz/embed/${linkUrl}`;
-                } else {
-                    // Fallback to old logic
-                    let animeTitle = id; // id should be the anime slug (e.g., 'one-piece')
-                    let episodeNum = episode || 1;
-                    if (type === 'anime' && animeTitle && episodeNum) {
-                        videoUrl = `https://2anime.xyz/embed/${animeTitle}-episode-${episodeNum}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                        setTimeout(() => {
-                            const iframe = document.getElementById('videoIframe');
-                            if (iframe) {
-                                iframe.style.display = 'none';
-                                const playerLoading = document.getElementById('playerLoading');
-                                if (playerLoading) {
-                                    playerLoading.style.display = 'block';
-                                    playerLoading.innerHTML = `Anime server requires type=anime, id (anime slug), and episode number in the URL.<br>type=${type}, id=${animeTitle}, episode=${episodeNum}`;
-                                }
-                            }
-                        }, 100);
-                    }
-                }
-            } else if (currentServer === '2embed') {
-                // 2Embed logic
-                let imdb = '';
-                let tmdb = '';
-                if (contentData && contentData.external_ids) {
-                    imdb = contentData.external_ids.imdb_id || '';
-                    tmdb = contentData.external_ids.tmdb_id || '';
-                }
-                if (type === 'movie') {
-                    if (imdb && imdb.startsWith('tt')) {
-                        videoUrl = `https://www.2embed.cc/embed/${imdb}`;
-                    } else if (tmdb) {
-                        videoUrl = `https://www.2embed.cc/embed/${tmdb}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                    }
-                } else if (type === 'tv') {
-                    if (imdb && imdb.startsWith('tt')) {
-                        videoUrl = `https://www.2embed.cc/embedtv/${imdb}&s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else if (tmdb) {
-                        videoUrl = `https://www.2embed.cc/embedtv/${tmdb}&s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                    }
+                if (type === 'anime') {
+                    let episodeNum = currentEpisodeValue || parseInt(episode) || 1;
+                    videoUrl = `https://vidsrc.rip/embed/anime/${id}/${episodeNum}`;
                 } else {
                     videoUrl = 'about:blank';
                 }
-            } else if (currentServer === 'vidcloud') {
-                // VidCloud server logic - more permissive
+            } else if (currentServer === '2embed') {
                 if (type === 'movie') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://vidcloud.to/embed/${contentData.external_ids.imdb_id}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://vidcloud.to/embed/${contentData.external_ids.tmdb_id}`;
-                    } else {
-                        videoUrl = `https://vidcloud.to/embed/${id}`;
-                    }
+                    videoUrl = `https://www.2embed.stream/embed/movie/${id}`;
                 } else if (type === 'tv') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://vidcloud.to/embed/${contentData.external_ids.imdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://vidcloud.to/embed/${contentData.external_ids.tmdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else {
-                        videoUrl = `https://vidcloud.to/embed/${id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    }
+                    videoUrl = `https://www.2embed.stream/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 } else {
-                    videoUrl = `https://vidcloud.to/embed/${id}`;
+                    videoUrl = 'about:blank';
                 }
-            } else if (currentServer === 'dood') {
-                // Dood server logic - more permissive
+            } else if (currentServer === 'vidlink') {
                 if (type === 'movie') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://dood.ws/e/${contentData.external_ids.imdb_id}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://dood.ws/e/${contentData.external_ids.tmdb_id}`;
-                    } else {
-                        videoUrl = `https://dood.ws/e/${id}`;
-                    }
+                    videoUrl = `https://vidlink.pro/movie/${id}`;
                 } else if (type === 'tv') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://dood.ws/e/${contentData.external_ids.imdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://dood.ws/e/${contentData.external_ids.tmdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else {
-                        videoUrl = `https://dood.ws/e/${id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    }
+                    videoUrl = `https://vidlink.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 } else {
-                    videoUrl = `https://dood.ws/e/${id}`;
+                    videoUrl = `https://vidlink.pro/movie/${id}`;
                 }
-            } else if (currentServer === 'streamlare') {
-                // Streamlare server logic - more permissive
+            } else if (currentServer === 'vidsrcrip') {
                 if (type === 'movie') {
                     if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://streamlare.to/e/${contentData.external_ids.imdb_id}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://streamlare.to/e/${contentData.external_ids.tmdb_id}`;
+                        videoUrl = `https://vidsrc.rip/embed/movie/${contentData.external_ids.imdb_id}`;
                     } else {
-                        videoUrl = `https://streamlare.to/e/${id}`;
+                        videoUrl = `https://vidsrc.rip/embed/movie/${id}`;
                     }
                 } else if (type === 'tv') {
                     if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
-                        videoUrl = `https://streamlare.to/e/${contentData.external_ids.imdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        videoUrl = `https://streamlare.to/e/${contentData.external_ids.tmdb_id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
+                        videoUrl = `https://vidsrc.rip/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
                     } else {
-                        videoUrl = `https://streamlare.to/e/${id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
+                        videoUrl = `https://vidsrc.rip/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                     }
                 } else {
-                    videoUrl = `https://streamlare.to/e/${id}`;
+                    videoUrl = `https://vidsrc.rip/embed/movie/${id}`;
+                }
+            } else if (currentServer === 'vidfast') {
+                if (type === 'movie') {
+                    videoUrl = `https://vidfast.pro/movie/${id}?autoPlay=true`;
+                } else if (type === 'tv') {
+                    videoUrl = `https://vidfast.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}?autoPlay=true`;
+                } else {
+                    videoUrl = `https://vidfast.pro/movie/${id}?autoPlay=true`;
                 }
             } else if (currentServer === 'embedsu') {
                 if (type === 'movie') {
@@ -2669,15 +2576,23 @@
                 }
             } else if (currentServer === 'vidsrcme') {
                 if (type === 'movie') {
-                    videoUrl = `https://vidsrc.me/embed/movie?tmdb=${id}`;
+                    videoUrl = `https://vidsrcme.ru/embed/movie?tmdb=${id}`;
                 } else if (type === 'tv') {
-                    videoUrl = `https://vidsrc.me/embed/tv?tmdb=${id}&season=${currentSeasonValue}&episode=${currentEpisodeValue}`;
+                    videoUrl = `https://vidsrcme.ru/embed/tv?tmdb=${id}&season=${currentSeasonValue}&episode=${currentEpisodeValue}`;
                 }
-            } else if (currentServer === 'vidsrcxyz') {
+            } else if (currentServer === 'vidsrccc') {
                 if (type === 'movie') {
-                    videoUrl = `https://vidsrc.xyz/embed/movie?tmdb=${id}`;
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://vidsrc.cc/v2/embed/movie/${contentData.external_ids.imdb_id}`;
+                    } else {
+                        videoUrl = `https://vidsrc.cc/v2/embed/movie/${id}`;
+                    }
                 } else if (type === 'tv') {
-                    videoUrl = `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${currentSeasonValue}&episode=${currentEpisodeValue}`;
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://vidsrc.cc/v2/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    } else {
+                        videoUrl = `https://vidsrc.cc/v2/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    }
                 }
             } else if (currentServer === 'smashystream') {
                 if (type === 'movie') {
@@ -3532,95 +3447,57 @@
             if (!currentEpisodeValue || isNaN(currentEpisodeValue) || currentEpisodeValue < 1) currentEpisodeValue = 1;
             let videoUrl = '';
             const currentServer = SERVER_LIST[currentServerIndex].key;
-            let vidSrcId = id;
-            if (type === 'tv' && contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
-                vidSrcId = contentData.external_ids.imdb_id;
-            }
-            if (currentServer === 'vidsrc') {
-                videoUrl = `https://vidsrc.to/embed/tv/${vidSrcId}/${currentSeasonValue}/${currentEpisodeValue}`;
+            if (currentServer === 'vidsrcfyi') {
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                    videoUrl = `https://vidsrc.fyi/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                } else {
+                    videoUrl = `https://vidsrc.fyi/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                }
             } else if (currentServer === 'vixsrc') {
                 videoUrl = `https://vixsrc.to/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 videoUrl += '?primaryColor=E50914&secondaryColor=170000&autoplay=true';
+            } else if (currentServer === 'embedsu') {
+                videoUrl = `https://embed.su/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+            } else if (currentServer === 'autoembed') {
+                videoUrl = `https://autoembed.co/tv/tmdb/${id}-${currentSeasonValue}-${currentEpisodeValue}`;
             } else if (currentServer === 'superembed') {
-                // Use public Superembed player URL directly
                 let superembedBase = 'https://multiembed.mov/?';
                 let params = [];
-                if (type === 'movie') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
-                        params.push('video_id=' + contentData.external_ids.imdb_id);
-                    } else {
-                        params.push('video_id=' + id);
-                    }
-                    if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        params.push('tmdb=1');
-                    }
-                } else if (type === 'tv') {
-                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
-                        params.push('video_id=' + contentData.external_ids.imdb_id);
-                    } else {
-                        params.push('video_id=' + id);
-                    }
-                    if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
-                        params.push('tmdb=1');
-                    }
-                    params.push('s=' + currentSeasonValue);
-                    params.push('e=' + currentEpisodeValue);
-                }
-                videoUrl = superembedBase + params.join('&');
-            } else if (currentServer === '2anime') {
-                // 2Anime server logic
-                // If link_url is present, use it directly
-                const linkUrl = urlParams.get('link_url');
-                if (type === 'anime' && linkUrl) {
-                    videoUrl = `https://2anime.xyz/embed/${linkUrl}`;
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id) {
+                    params.push('video_id=' + contentData.external_ids.imdb_id);
                 } else {
-                    // Fallback to old logic
-                    let animeTitle = id; // id should be the anime slug (e.g., 'one-piece')
-                    let episodeNum = episode || 1;
-                    if (type === 'anime' && animeTitle && episodeNum) {
-                        videoUrl = `https://2anime.xyz/embed/${animeTitle}-episode-${episodeNum}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                        setTimeout(() => {
-                            const iframe = document.getElementById('videoIframe');
-                            if (iframe) {
-                                iframe.style.display = 'none';
-                                const playerLoading = document.getElementById('playerLoading');
-                                if (playerLoading) {
-                                    playerLoading.style.display = 'block';
-                                    playerLoading.innerHTML = `Anime server requires type=anime, id (anime slug), and episode number in the URL.<br>type=${type}, id=${animeTitle}, episode=${episodeNum}`;
-                                }
-                            }
-                        }, 100);
-                    }
+                    params.push('video_id=' + id);
+                }
+                if (contentData && contentData.external_ids && contentData.external_ids.tmdb_id) {
+                    params.push('tmdb=1');
+                }
+                params.push('s=' + currentSeasonValue);
+                params.push('e=' + currentEpisodeValue);
+                videoUrl = superembedBase + params.join('&');
+            } else if (currentServer === 'vidsrcme') {
+                videoUrl = `https://vidsrcme.ru/embed/tv?tmdb=${id}&season=${currentSeasonValue}&episode=${currentEpisodeValue}`;
+            } else if (currentServer === 'vidsrccc') {
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                    videoUrl = `https://vidsrc.cc/v2/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                } else {
+                    videoUrl = `https://vidsrc.cc/v2/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 }
             } else if (currentServer === '2embed') {
-                // 2Embed logic
-                let imdb = '';
-                let tmdb = '';
-                if (contentData && contentData.external_ids) {
-                    imdb = contentData.external_ids.imdb_id || '';
-                    tmdb = contentData.external_ids.tmdb_id || '';
-                }
-                if (type === 'movie') {
-                    if (imdb && imdb.startsWith('tt')) {
-                        videoUrl = `https://www.2embed.cc/embed/${imdb}`;
-                    } else if (tmdb) {
-                        videoUrl = `https://www.2embed.cc/embed/${tmdb}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                    }
-                } else if (type === 'tv') {
-                    if (imdb && imdb.startsWith('tt')) {
-                        videoUrl = `https://www.2embed.cc/embedtv/${imdb}&s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else if (tmdb) {
-                        videoUrl = `https://www.2embed.cc/embedtv/${tmdb}&s=${currentSeasonValue}&e=${currentEpisodeValue}`;
-                    } else {
-                        videoUrl = 'about:blank';
-                    }
+                videoUrl = `https://www.2embed.stream/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+            } else if (currentServer === 'smashystream') {
+                videoUrl = `https://player.smashy.stream/tv/${id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
+            } else if (currentServer === 'vidlink') {
+                videoUrl = `https://vidlink.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+            } else if (currentServer === 'vidsrcrip') {
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                    videoUrl = `https://vidsrc.rip/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 } else {
-                    videoUrl = 'about:blank';
+                    videoUrl = `https://vidsrc.rip/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 }
+            } else if (currentServer === 'vidfast') {
+                videoUrl = `https://vidfast.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}?autoPlay=true`;
+            } else if (currentServer === '2anime') {
+                videoUrl = `https://vidsrc.rip/embed/anime/${id}/${currentEpisodeValue}`;
             }
             videoIframe.src = videoUrl;
             if (currentServer === 'vixsrc') {
