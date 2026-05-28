@@ -72,6 +72,16 @@ const userSchema = new mongoose.Schema(
                         type: String,
                         default: '',
                     },
+                    progress: {
+                        type: Number,
+                        default: 0,
+                    },
+                    season: {
+                        type: Number,
+                    },
+                    episode: {
+                        type: Number,
+                    },
                     addedAt: {
                         type: Date,
                         default: Date.now,
