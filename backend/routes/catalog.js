@@ -9,11 +9,15 @@ const MOVIE_CATEGORIES = ['now_playing', 'popular', 'top_rated', 'upcoming'];
 const TV_CATEGORIES = ['airing_today', 'popular', 'top_rated', 'on_the_air'];
 const TREND_MEDIA_TYPES = ['all', 'movie', 'tv', 'person'];
 const TREND_WINDOWS = ['day', 'week'];
+const VIDSRC_ALLOWED_TYPES = ['add', 'new'];
 
 // VidSrc proxy (kept for compatibility, namespaced)
 router.get('/catalog/vidsrc/:type', async (req, res) => {
     try {
         const { type } = req.params;
+        if (!VIDSRC_ALLOWED_TYPES.includes(type)) {
+            return res.status(400).json({ error: 'INVALID_TYPE' });
+        }
         const response = await axios.get(`https://vidsrc.to/vapi/movie/${type}`, {
             headers: {
                 'User-Agent':
