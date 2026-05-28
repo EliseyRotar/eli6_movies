@@ -36,6 +36,7 @@
     },
     "movies": {
         "title": "Фильмы",
+        "subtitle": "Трендовые, популярные и подборки из каждого жанра.",
         "sections": {
             "trending": "Фильмы в Тренде",
             "popular": "Популярные Фильмы",
@@ -64,6 +65,7 @@
     },
     "tvshows": {
         "title": "Сериалы",
+        "subtitle": "Сериалы, мини-сериалы и документальные — всё в одном месте.",
         "sections": {
             "trending": "Сериалы в Тренде",
             "popular": "Популярные Сериалы",
@@ -81,7 +83,8 @@
             "mystery": "Детективные сериалы",
             "reality": "Реалити-шоу",
             "warpolitics": "Военные и политические сериалы",
-            "western": "Вестерны"
+            "western": "Вестерны",
+            "onTheAir": "В Эфире"
         }
     },
     "search": {
@@ -170,7 +173,21 @@
         "financialInfo": "Финансовая информация",
         "budget": "Бюджет:",
         "revenue": "Доход:",
-        "retry": "Повторить"
+        "retry": "Повторить",
+        "moreInfo": "Подробнее",
+        "loadingTrailers": "Загрузка трейлеров...",
+        "loadingCast": "Загрузка актёрского состава...",
+        "loadingEpisodes": "Загрузка эпизодов...",
+        "loadingSimilar": "Загрузка похожего контента...",
+        "noOverview": "Описание недоступно.",
+        "unableToLoad": "Не удалось загрузить информацию.",
+        "studiosLabel": "Студии:",
+        "episodeCount": "Эпизодов:",
+        "thankYouReport": "Спасибо за жалобу. Мы проверим этот поток.",
+        "noTrailers": "Официальные трейлеры отсутствуют",
+        "noCast": "Информация о составе отсутствует",
+        "noSimilar": "Похожий контент отсутствует",
+        "noEpisodes": "Эпизоды отсутствуют"
     },
     "account": {
         "title": "Аккаунт",
@@ -206,7 +223,39 @@
         "emailPlaceholder": "Email",
         "signUp": "Зарегистрироваться",
         "forgotPassword": "Забыли пароль?",
-        "changePasswordBtn": "Сменить пароль"
+        "changePasswordBtn": "Сменить пароль",
+        "welcomeBack": "С возвращением",
+        "createAccountTab": "Создать аккаунт",
+        "signingIn": "Вход…",
+        "creating": "Создание…",
+        "signedIn": "Вход выполнен!",
+        "accountCreated": "Аккаунт создан!",
+        "appearance": "Внешний вид и тема",
+        "customizeLink": "Настроить ›",
+        "plan": "Тарифный план",
+        "planFree": "Бесплатно · Навсегда",
+        "playbackQuality": "Качество воспроизведения",
+        "playbackAuto": "Авто (до 4K)",
+        "autoplayNext": "Авто-воспроизведение следующего эпизода",
+        "on": "Вкл",
+        "wifiOnly": "Загрузка только по Wi-Fi",
+        "changePassword": "Изменить пароль",
+        "currentPassword": "Текущий пароль",
+        "newPassword": "Новый пароль",
+        "confirmNewPassword": "Подтвердите новый пароль",
+        "updatePassword": "Обновить пароль",
+        "customizeAppearance": "Настроить внешний вид",
+        "editProfile": "Редактировать профиль",
+        "deleteAccount": "Удалить аккаунт",
+        "passwordsDoNotMatch": "Пароли не совпадают",
+        "minChars": "Минимум 8 символов",
+        "passwordUpdated": "Пароль обновлён!",
+        "failedUpdatePassword": "Не удалось обновить пароль",
+        "signInFailed": "Ошибка входа",
+        "deleteConfirm": "Удалить аккаунт? Это действие нельзя отменить.",
+        "accountDeleted": "Аккаунт удалён",
+        "failedDelete": "Не удалось удалить аккаунт",
+        "signedOut": "Выполнен выход"
     },
     "settings": {
         "title": "Настройки",
@@ -260,7 +309,10 @@
         "terms": "Условия использования",
         "privacy": "Политика конфиденциальности",
         "cookies": "Политика cookie",
-        "reloadRequired": "Для смены языка требуется перезагрузка."
+        "reloadRequired": "Для смены языка требуется перезагрузка.",
+        "browse": "Просмотр",
+        "all": "Все",
+        "tryDifferentGenre": "Попробуйте другой жанр."
     },
     "languages": {
         "en": "English",
@@ -291,7 +343,8 @@
             "drama": "Драматические аниме",
             "fantasy": "Аниме-фэнтези",
             "romance": "Романтические аниме",
-            "thisSeason": "В этом сезоне"
+            "thisSeason": "В этом сезоне",
+            "popularOnTMDB": "Популярные на TMDB"
         }
     },
     "animeSearch": {
