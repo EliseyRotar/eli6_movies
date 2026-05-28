@@ -2,20 +2,19 @@
 
 (function () {
   var API_URL = window.API_BASE_URL || '';
+  var TMDB_IMG = 'https://image.tmdb.org/t/p/w500';
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
   function tr(key, fallback) {
     return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
   }
-
   function el(tag, cls) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
     return e;
   }
   function div(cls) { return el('div', cls); }
-
   function getUser() {
     try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; }
   }
@@ -35,15 +34,11 @@
     subtitles: 'English (CC)',
     audio: 'Original',
   };
-
   function loadPrefs() {
     try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(localStorage.getItem('eli6.acctPrefs') || '{}')); }
     catch (e) { return Object.assign({}, DEFAULT_PREFS); }
   }
-
-  function savePrefs(p) {
-    localStorage.setItem('eli6.acctPrefs', JSON.stringify(p));
-  }
+  function savePrefs(p) { localStorage.setItem('eli6.acctPrefs', JSON.stringify(p)); }
 
   // ─── API calls ──────────────────────────────────────────────────────────────
 
@@ -57,7 +52,6 @@
     if (!r.ok) throw new Error(d.message || d.error || 'Request failed');
     return d;
   }
-
   async function apiPut(path, body) {
     var r = await fetch(API_URL + path, {
       method: 'PUT',
@@ -68,7 +62,6 @@
     if (!r.ok) throw new Error(d.message || d.error || 'Request failed');
     return d;
   }
-
   async function apiDelete(path) {
     var r = await fetch(API_URL + path, {
       method: 'DELETE',
@@ -76,6 +69,98 @@
     });
     if (!r.ok) { var d = await r.json(); throw new Error(d.message || 'Failed'); }
     return true;
+  }
+
+  // ─── Hub data fetching ──────────────────────────────────────────────────────
+
+  async function fetchHubData() {
+    var headers = { Authorization: 'Bearer ' + getToken() };
+    var keepWatching = [], watchHistory = [], myList = [];
+    try {
+      var results = await Promise.all([
+        fetch(API_URL + '/user/keep-watching', { headers }),
+        fetch(API_URL + '/user/watched',       { headers }),
+        fetch(API_URL + '/user/profile',       { headers }),
+      ]);
+      if (results[0].ok) keepWatching = await results[0].json();
+      if (results[1].ok) watchHistory = await results[1].json();
+      if (results[2].ok) {
+        var prof = await results[2].json();
+        myList = prof.myList || [];
+        localStorage.setItem('myList', JSON.stringify(myList));
+        if (prof.createdAt) {
+          var u = getUser() || {};
+          u.createdAt = prof.createdAt;
+          localStorage.setItem('user', JSON.stringify(u));
+        }
+      }
+    } catch (e) {
+      var cached = getUser() || {};
+      keepWatching = cached.keepWatching || [];
+      watchHistory = cached.watchHistory || [];
+      try { myList = JSON.parse(localStorage.getItem('myList') || '[]'); } catch (e2) {}
+    }
+    return { keepWatching: keepWatching, watchHistory: watchHistory, myList: myList };
+  }
+
+  // ─── Stats helpers ──────────────────────────────────────────────────────────
+
+  function calcStreak(watchHistory) {
+    if (!watchHistory || !watchHistory.length) return 0;
+    var daySet = new Set(watchHistory.map(function (i) {
+      return new Date(i.last_watched).toDateString();
+    }));
+    var streak = 0;
+    var d = new Date();
+    while (daySet.has(d.toDateString())) {
+      streak++;
+      d.setDate(d.getDate() - 1);
+    }
+    if (streak === 0) {
+      d = new Date();
+      d.setDate(d.getDate() - 1);
+      while (daySet.has(d.toDateString())) {
+        streak++;
+        d.setDate(d.getDate() - 1);
+      }
+    }
+    return streak;
+  }
+
+  function estimateHours(watchHistory) {
+    if (!watchHistory || !watchHistory.length) return 0;
+    var mins = 0;
+    watchHistory.forEach(function (i) {
+      var dur = i.type === 'movie' ? 105 : i.type === 'tv' ? 42 : 24;
+      mins += dur * Math.max(0, Math.min(100, i.progress || 0)) / 100;
+    });
+    return Math.round(mins / 60);
+  }
+
+  function calcTypeBreakdown(watchHistory) {
+    var total = watchHistory && watchHistory.length;
+    if (!total) return [];
+    var counts = {};
+    watchHistory.forEach(function (i) { counts[i.type] = (counts[i.type] || 0) + 1; });
+    return [
+      { name: 'Movies',   pct: Math.round((counts.movie  || 0) * 100 / total) },
+      { name: 'TV Shows', pct: Math.round((counts.tv     || 0) * 100 / total) },
+      { name: 'Anime',    pct: Math.round((counts.anime  || 0) * 100 / total) },
+    ].filter(function (b) { return b.pct > 0; });
+  }
+
+  function gradientForId(id) {
+    var n = id || 0;
+    var h1 = (n * 137 + 11) % 360;
+    var h2 = (n * 97  + 200) % 360;
+    var h3 = (n * 53  + 300) % 360;
+    return ['hsl(' + h1 + ',55%,14%)', 'hsl(' + h2 + ',45%,18%)', 'hsl(' + h3 + ',50%,16%)'];
+  }
+
+  function formatMemberSince(createdAt) {
+    if (!createdAt) return '—';
+    try { return new Date(createdAt).toLocaleString('default', { month: 'short', year: 'numeric' }); }
+    catch (e) { return '—'; }
   }
 
   // ─── Picker modal ───────────────────────────────────────────────────────────
@@ -88,7 +173,7 @@
 
   function openPicker(title, options, current, onSelect) {
     var backdrop = div('acc__picker-backdrop');
-    var sheet = div('acc__picker');
+    var sheet    = div('acc__picker');
     var sheetTitle = div('acc__picker-title');
     sheetTitle.textContent = title;
     sheet.appendChild(sheetTitle);
@@ -96,10 +181,7 @@
     options.forEach(function (opt) {
       var row = el('button', 'acc__picker-option' + (opt === current ? ' is-active' : ''));
       row.textContent = opt;
-      row.addEventListener('click', function () {
-        onSelect(opt);
-        closePicker(backdrop);
-      });
+      row.addEventListener('click', function () { onSelect(opt); closePicker(backdrop); });
       optList.appendChild(row);
     });
     sheet.appendChild(optList);
@@ -108,9 +190,7 @@
     cancel.addEventListener('click', function () { closePicker(backdrop); });
     sheet.appendChild(cancel);
     backdrop.appendChild(sheet);
-    backdrop.addEventListener('click', function (e) {
-      if (e.target === backdrop) closePicker(backdrop);
-    });
+    backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closePicker(backdrop); });
     document.body.appendChild(backdrop);
   }
 
@@ -120,8 +200,7 @@
     var wrap = div();
     wrap.style.marginBottom = '16px';
     var lbl = el('label');
-    lbl.textContent = label;
-    lbl.htmlFor = id;
+    lbl.textContent = label; lbl.htmlFor = id;
     lbl.style.cssText = 'display:block;font-size:13px;font-weight:600;color:var(--fg-muted);margin-bottom:6px';
     var input = el('input');
     input.id = id; input.type = type; input.placeholder = placeholder;
@@ -134,7 +213,6 @@
 
   function renderAuthForms(mount) {
     var wrap = div('acc__auth');
-
     var tabs = div();
     tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border-radius:var(--r-pill);padding:4px;border:1px solid var(--border)';
     var tabLogin = el('button', 'settings__seg-btn is-active');
@@ -172,8 +250,7 @@
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.signedIn', 'Signed in!'));
-        renderPage();
-        window.renderTopNav('account');
+        renderPage(); window.renderTopNav('account');
       } catch (err) {
         var msg = err.message;
         if (msg === 'INVALID_CREDENTIALS' || msg === 'INVALID_INPUT') msg = tr('account.errorInvalidCredentials', 'Incorrect email or password');
@@ -206,8 +283,7 @@
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.accountCreated', 'Account created!'));
-        renderPage();
-        window.renderTopNav('account');
+        renderPage(); window.renderTopNav('account');
       } catch (err) {
         var msg = err.message;
         if (msg === 'INVALID_INPUT') msg = tr('account.errorInvalidInput', 'Check: username (3+ chars), valid email, password (8+ chars)');
@@ -216,27 +292,10 @@
       } finally { regBtn.textContent = tr('account.createAccountTab', 'Create account'); regBtn.disabled = false; }
     });
     wrap.appendChild(regForm);
-
     mount.appendChild(wrap);
   }
 
-  // ─── Account hub helpers ─────────────────────────────────────────────────────
-
-  var CONT_ITEMS = [
-    { id: 872585, title: 'Oppenheimer',   kind: 'movie', grad: ['#1a1a2e', '#16213e', '#0f3460'], pct: 42 },
-    { id: 100,    title: 'Dark',           kind: 'tv',    grad: ['#2d1b69', '#11998e', '#38ef7d'], pct: 18 },
-    { id: 37854,  title: 'One Piece',      kind: 'anime', grad: ['#f7971e', '#ffd200', '#f26f0c'], pct: 76 },
-    { id: 693134, title: 'Dune: Part Two', kind: 'movie', grad: ['#c79340', '#2c2c54', '#3d2c6e'], pct: 55 },
-    { id: 76479,  title: 'The Boys',       kind: 'tv',    grad: ['#141e30', '#243b55', '#1a2a42'], pct: 31 },
-  ];
-
-  var TOP_GENRES = [
-    { name: 'Drama',    pct: 38 },
-    { name: 'Sci-Fi',   pct: 29 },
-    { name: 'Anime',    pct: 18 },
-    { name: 'Thriller', pct: 14 },
-    { name: 'Comedy',   pct: 9  },
-  ];
+  // ─── Hub section builders ────────────────────────────────────────────────────
 
   function makeToggle(on, onChange) {
     var btn = el('button', 'acc__toggle' + (on ? ' is-on' : ''));
@@ -255,10 +314,7 @@
   function makeSectionHead(eyebrow, title, actionLabel, onAction) {
     var head = div('acc__section-head');
     var titlewrap = div('acc__section-titlewrap');
-    if (eyebrow) {
-      var ey = div('acc__section-eyebrow'); ey.textContent = eyebrow;
-      titlewrap.appendChild(ey);
-    }
+    if (eyebrow) { var ey = div('acc__section-eyebrow'); ey.textContent = eyebrow; titlewrap.appendChild(ey); }
     var h2 = el('h2', 'acc__section-title'); h2.textContent = title;
     titlewrap.appendChild(h2);
     head.appendChild(titlewrap);
@@ -298,28 +354,25 @@
     return row;
   }
 
-  // ─── Account hub ────────────────────────────────────────────────────────────
+  // ─── Account hub (async, real data) ─────────────────────────────────────────
 
-  function renderAccountHub(acc) {
-    var user = getUser() || {};
-    var prefs = loadPrefs();
-    var myListCount = 0;
-    try { myListCount = (JSON.parse(localStorage.getItem('myList') || '[]')).length; } catch (e) {}
-    var memberSince = 'Mar 2024';
-    if (user.createdAt) {
-      var d0 = new Date(user.createdAt);
-      memberSince = d0.toLocaleString('default', { month: 'short', year: 'numeric' });
-    }
+  async function renderAccountHub(acc) {
+    var user    = getUser() || {};
+    var prefs   = loadPrefs();
 
-    // ── HERO ──────────────────────────────────────────────────────────────────
+    // ── HERO (render immediately from localStorage) ───────────────────────────
+    var memberSince = formatMemberSince(user.createdAt);
+    var cachedWH    = user.watchHistory || [];
+    var streak      = calcStreak(cachedWH);
+
     var hero = div('acc__hero');
     hero.appendChild(div('acc__hero-bg'));
     var heroInner = div('acc__hero-inner');
 
     var avatarWrap = div('acc__avatar-wrap');
-    var avatar = div('acc__avatar');
-    avatar.textContent = (user.username || 'E')[0].toUpperCase();
-    avatarWrap.appendChild(avatar);
+    var avatarEl   = div('acc__avatar');
+    avatarEl.textContent = (user.username || 'E')[0].toUpperCase();
+    avatarWrap.appendChild(avatarEl);
     var editBtn2 = el('button', 'acc__avatar-edit');
     editBtn2.title = 'Change picture'; editBtn2.textContent = '✎';
     avatarWrap.appendChild(editBtn2);
@@ -331,7 +384,7 @@
     var badges = div('acc__badges');
     var b1 = el('span', 'acc__badge acc__badge--accent'); b1.textContent = '● Free · Forever';
     var b2 = el('span', 'acc__badge'); b2.textContent = 'Member since ' + memberSince;
-    var b3 = el('span', 'acc__badge'); b3.textContent = '7-day streak';
+    var b3 = el('span', 'acc__badge'); b3.textContent = streak + '-day streak';
     badges.appendChild(b1); badges.appendChild(b2); badges.appendChild(b3);
     heroText.appendChild(nameEl); heroText.appendChild(emailEl); heroText.appendChild(badges);
     heroInner.appendChild(heroText);
@@ -343,20 +396,44 @@
     var appearBtn = el('button', 'btn btn--outline');
     appearBtn.textContent = '✦ ' + tr('account.appearance', 'Appearance');
     appearBtn.addEventListener('click', function () { window.location.href = 'settings.html'; });
-    heroActions.appendChild(editProfileBtn);
-    heroActions.appendChild(appearBtn);
+    heroActions.appendChild(editProfileBtn); heroActions.appendChild(appearBtn);
     heroInner.appendChild(heroActions);
-
     hero.appendChild(heroInner);
     acc.appendChild(hero);
 
+    // ── LOADING STATE for data sections ───────────────────────────────────────
+    var loadEl = div();
+    loadEl.style.cssText = 'padding:60px var(--pad-x);text-align:center;color:var(--fg-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:0.15em;text-transform:uppercase';
+    loadEl.textContent = 'Loading…';
+    acc.appendChild(loadEl);
+
+    // ── FETCH REAL DATA ───────────────────────────────────────────────────────
+    var data = await fetchHubData();
+    if (!acc.isConnected) return;
+    acc.removeChild(loadEl);
+
+    var kw  = Array.isArray(data.keepWatching) ? data.keepWatching : [];
+    var wh  = Array.isArray(data.watchHistory)  ? data.watchHistory  : [];
+    var ml  = Array.isArray(data.myList)         ? data.myList         : [];
+
+    // Update hero badges with fresh data
+    var freshStreak = calcStreak(wh);
+    b3.textContent = freshStreak + '-day streak';
+    var freshUser = getUser() || {};
+    if (freshUser.createdAt) b2.textContent = 'Member since ' + formatMemberSince(freshUser.createdAt);
+
     // ── STATS ─────────────────────────────────────────────────────────────────
+    var hours = estimateHours(wh);
     var statGrid = div('acc__statgrid');
     [
-      { k: 'Titles watched',  v: '142', sub: 'across 12 months',   trend: '↑ 18' },
-      { k: 'Hours streamed',  v: '384', sub: '≈ 16 days of viewing', trend: null },
-      { k: 'In your list',    v: String(myListCount || 0), sub: 'to watch next', trend: null },
-      { k: 'Average rating',  v: '8.4', sub: '★ from 38 reviews',  trend: null },
+      { k: 'Titles watched', v: String(wh.length),
+        sub: wh.length === 1 ? '1 title total' : wh.length + ' titles total', trend: null },
+      { k: 'Hours streamed', v: String(hours),
+        sub: hours > 0 ? '≈ ' + Math.round(hours / 24 * 10) / 10 + ' days of viewing' : 'start watching!', trend: null },
+      { k: 'In your list',   v: String(ml.length),
+        sub: ml.length === 1 ? '1 title saved' : ml.length + ' titles saved', trend: null },
+      { k: 'Current streak', v: String(freshStreak),
+        sub: freshStreak === 1 ? 'day in a row' : 'days in a row', trend: freshStreak >= 3 ? '🔥' : null },
     ].forEach(function (s) {
       var cell = div('acc__stat');
       var k = div('acc__stat-k'); k.textContent = s.k;
@@ -371,49 +448,81 @@
     // ── KEEP WATCHING ─────────────────────────────────────────────────────────
     var contSection = div('acc__section');
     contSection.appendChild(makeSectionHead('01', 'Keep watching', 'See all', function () { window.location.href = 'index.html'; }));
-    var contStrip = div('acc__continue');
-    CONT_ITEMS.forEach(function (item) {
-      var card = div('acc__cont-card');
-      card.style.background = 'linear-gradient(125deg,' + item.grad[0] + ',' + item.grad[1] + ' 60%,' + item.grad[2] + ')';
-      var meta = div('acc__cont-card-meta');
-      meta.textContent = item.kind === 'tv' ? 'S1·E' + Math.ceil(item.pct / 14) :
-                         item.kind === 'anime' ? 'EP ' + Math.ceil(item.pct / 8) : 'FEATURE';
-      var titleEl2 = div('acc__cont-card-title'); titleEl2.textContent = item.title;
-      var barWrap = div('acc__cont-card-bar');
-      var barFill = div(); barFill.style.width = item.pct + '%';
-      barWrap.appendChild(barFill);
-      var playBtn = div('acc__cont-card-play'); playBtn.innerHTML = '<div>▶</div>';
-      card.appendChild(meta); card.appendChild(titleEl2); card.appendChild(barWrap); card.appendChild(playBtn);
-      card.addEventListener('click', function () {
-        var url = 'player.html?type=' + item.kind + '&id=' + item.id;
-        if (item.kind === 'tv') url += '&season=1&episode=1';
-        window.location.href = url;
+
+    if (kw.length === 0) {
+      var emptyKw = div();
+      emptyKw.style.cssText = 'padding:28px 0;color:var(--fg-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em';
+      emptyKw.textContent = 'Nothing in progress yet — start watching something!';
+      contSection.appendChild(emptyKw);
+    } else {
+      var contStrip = div('acc__continue');
+      kw.forEach(function (item) {
+        var card = div('acc__cont-card');
+        if (item.poster_path) {
+          card.style.backgroundImage = 'url(' + TMDB_IMG + item.poster_path + ')';
+          card.style.backgroundSize  = 'cover';
+          card.style.backgroundPosition = 'center';
+        } else {
+          var gc = gradientForId(item.id);
+          card.style.background = 'linear-gradient(125deg,' + gc[0] + ',' + gc[1] + ' 60%,' + gc[2] + ')';
+        }
+        var meta = div('acc__cont-card-meta');
+        if (item.type === 'tv' && item.season && item.episode) {
+          meta.textContent = 'S' + item.season + '·E' + item.episode;
+        } else if (item.type === 'anime' && item.episode) {
+          meta.textContent = 'EP ' + item.episode;
+        } else if (item.type === 'anime') {
+          meta.textContent = 'ANIME';
+        } else {
+          meta.textContent = 'FEATURE';
+        }
+        var titleEl2 = div('acc__cont-card-title'); titleEl2.textContent = item.title || '';
+        var barWrap = div('acc__cont-card-bar');
+        var barFill = div(); barFill.style.width = Math.min(100, item.progress || 0) + '%';
+        barWrap.appendChild(barFill);
+        var playBtn = div('acc__cont-card-play'); playBtn.innerHTML = '<div>▶</div>';
+        card.appendChild(meta); card.appendChild(titleEl2); card.appendChild(barWrap); card.appendChild(playBtn);
+        card.addEventListener('click', function () {
+          var url = 'player.html?type=' + (item.type || 'movie') + '&id=' + item.id;
+          if (item.type === 'tv' && item.season && item.episode) {
+            url += '&season=' + item.season + '&episode=' + item.episode;
+          }
+          window.location.href = url;
+        });
+        contStrip.appendChild(card);
       });
-      contStrip.appendChild(card);
-    });
-    contSection.appendChild(contStrip);
+      contSection.appendChild(contStrip);
+    }
     acc.appendChild(contSection);
 
-    // ── TASTE DNA ─────────────────────────────────────────────────────────────
+    // ── WATCH BREAKDOWN (real type distribution from watch history) ───────────
     var tasteSection = div('acc__section');
-    tasteSection.appendChild(makeSectionHead('02', 'Your taste, by genre', 'Reset taste data', function () {
-      showToast('Taste data cleared');
-    }));
-    var taste = div('acc__taste');
-    TOP_GENRES.forEach(function (g) {
-      var row = div('acc__taste-row');
-      var gname = div('acc__taste-name'); gname.textContent = g.name;
-      var bar = div('acc__taste-bar');
-      var fill = div('acc__taste-fill'); fill.style.width = '0%';
-      bar.appendChild(fill);
-      var pctEl = div('acc__taste-pct'); pctEl.textContent = g.pct + '%';
-      row.appendChild(gname); row.appendChild(bar); row.appendChild(pctEl);
-      taste.appendChild(row);
-      requestAnimationFrame(function () {
-        requestAnimationFrame(function () { fill.style.width = g.pct + '%'; });
+    var breakdownBars = calcTypeBreakdown(wh);
+
+    if (breakdownBars.length === 0) {
+      tasteSection.appendChild(makeSectionHead('02', 'Watch breakdown'));
+      var emptyTaste = div();
+      emptyTaste.style.cssText = 'padding:28px 0;color:var(--fg-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:0.1em';
+      emptyTaste.textContent = 'Start watching to see your breakdown here.';
+      tasteSection.appendChild(emptyTaste);
+    } else {
+      tasteSection.appendChild(makeSectionHead('02', 'Watch breakdown'));
+      var taste = div('acc__taste');
+      breakdownBars.forEach(function (g) {
+        var row = div('acc__taste-row');
+        var gname = div('acc__taste-name'); gname.textContent = g.name;
+        var bar = div('acc__taste-bar');
+        var fill = div('acc__taste-fill'); fill.style.width = '0%';
+        bar.appendChild(fill);
+        var pctEl = div('acc__taste-pct'); pctEl.textContent = g.pct + '%';
+        row.appendChild(gname); row.appendChild(bar); row.appendChild(pctEl);
+        taste.appendChild(row);
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { fill.style.width = g.pct + '%'; });
+        });
       });
-    });
-    tasteSection.appendChild(taste);
+      tasteSection.appendChild(taste);
+    }
     acc.appendChild(tasteSection);
 
     // ── QUICK ACTIONS ─────────────────────────────────────────────────────────
@@ -423,17 +532,14 @@
     [
       { icon: '✦', label: tr('account.appearance', 'Appearance'), sub: 'Theme, accent, layout',
         onClick: function () { window.location.href = 'settings.html'; } },
-      { icon: '♥', label: tr('nav.mylist', 'My list'), sub: (myListCount || 0) + ' items saved',
+      { icon: '♥', label: tr('nav.mylist', 'My List'), sub: ml.length + ' items saved',
         onClick: function () { window.location.href = 'mylist.html'; } },
-      { icon: '⏱', label: 'Watch history', sub: 'Last 30 days',
+      { icon: '⏱', label: 'Watch history', sub: wh.length + ' titles watched',
         onClick: function () { showToast('Watch history coming soon'); } },
       { icon: '↗', label: 'Refer a friend', sub: 'Share ELI6 — it\'s free',
         onClick: function () {
           if (navigator.share) { navigator.share({ title: 'ELI6 Movies', url: window.location.origin }); }
-          else {
-            if (navigator.clipboard) { navigator.clipboard.writeText(window.location.origin); }
-            showToast('Link copied!');
-          }
+          else { if (navigator.clipboard) navigator.clipboard.writeText(window.location.origin); showToast('Link copied!'); }
         }},
       { icon: '?', label: 'Help & support', sub: 'FAQs, contact',
         onClick: function () { showToast('Help center coming soon'); } },
@@ -456,47 +562,26 @@
     var prefSection = div('acc__section');
     prefSection.appendChild(makeSectionHead('04', 'Playback preferences'));
     var prefList = div('acc__prefs');
-
-    prefList.appendChild(makePrefValueRow(
-      'Streaming quality', 'Higher quality uses more data.', prefs.quality,
-      function (valueEl) {
-        openPicker('Streaming quality', ['Auto · up to 4K', '1080p', '720p', '480p'], prefs.quality,
-          function (v) { prefs.quality = v; valueEl.textContent = v; savePrefs(prefs); });
-      }
-    ));
-    prefList.appendChild(makePrefToggleRow('Autoplay next episode', 'Roll straight into the next one.',
-      prefs.autoplayNext, function (v) { prefs.autoplayNext = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Autoplay previews while browsing', 'Play short previews when you hover over titles.',
-      prefs.autoplayPreviews, function (v) { prefs.autoplayPreviews = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Skip intros automatically', 'Jump past opening titles for shows.',
-      prefs.skipIntro, function (v) { prefs.skipIntro = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Downloads over Wi-Fi only', "Don't use mobile data for downloads.",
-      prefs.wifiOnly, function (v) { prefs.wifiOnly = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefValueRow(
-      'App language', 'Interface text and menus.', prefs.language,
-      function (valueEl) {
-        openPicker('App language', ['English', 'Italiano', 'Русский'], prefs.language,
-          function (v) {
-            prefs.language = v; valueEl.textContent = v; savePrefs(prefs);
-            var langMap = { 'English': 'en', 'Italiano': 'it', 'Русский': 'ru' };
-            if (window.i18n && window.i18n.changeLanguage) window.i18n.changeLanguage(langMap[v] || 'en');
-          });
-      }
-    ));
-    prefList.appendChild(makePrefValueRow(
-      'Subtitles', 'Default subtitle track when available.', prefs.subtitles,
-      function (valueEl) {
-        openPicker('Subtitles', ['Off', 'English (CC)', 'English', 'Italiano', 'Русский'], prefs.subtitles,
-          function (v) { prefs.subtitles = v; valueEl.textContent = v; savePrefs(prefs); });
-      }
-    ));
-    prefList.appendChild(makePrefValueRow(
-      'Audio track', 'Original audio, dubbed, or descriptive.', prefs.audio,
-      function (valueEl) {
-        openPicker('Audio track', ['Original', 'English dubbed', 'Descriptive audio'], prefs.audio,
-          function (v) { prefs.audio = v; valueEl.textContent = v; savePrefs(prefs); });
-      }
-    ));
+    prefList.appendChild(makePrefValueRow('Streaming quality', 'Higher quality uses more data.', prefs.quality, function (valueEl) {
+      openPicker('Streaming quality', ['Auto · up to 4K', '1080p', '720p', '480p'], prefs.quality, function (v) { prefs.quality = v; valueEl.textContent = v; savePrefs(prefs); });
+    }));
+    prefList.appendChild(makePrefToggleRow('Autoplay next episode', 'Roll straight into the next one.', prefs.autoplayNext, function (v) { prefs.autoplayNext = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Autoplay previews while browsing', 'Play short previews when you hover over titles.', prefs.autoplayPreviews, function (v) { prefs.autoplayPreviews = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Skip intros automatically', 'Jump past opening titles for shows.', prefs.skipIntro, function (v) { prefs.skipIntro = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Downloads over Wi-Fi only', "Don't use mobile data for downloads.", prefs.wifiOnly, function (v) { prefs.wifiOnly = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefValueRow('App language', 'Interface text and menus.', prefs.language, function (valueEl) {
+      openPicker('App language', ['English', 'Italiano', 'Русский'], prefs.language, function (v) {
+        prefs.language = v; valueEl.textContent = v; savePrefs(prefs);
+        var langMap = { 'English': 'en', 'Italiano': 'it', 'Русский': 'ru' };
+        if (window.i18n && window.i18n.changeLanguage) window.i18n.changeLanguage(langMap[v] || 'en');
+      });
+    }));
+    prefList.appendChild(makePrefValueRow('Subtitles', 'Default subtitle track when available.', prefs.subtitles, function (valueEl) {
+      openPicker('Subtitles', ['Off', 'English (CC)', 'English', 'Italiano', 'Русский'], prefs.subtitles, function (v) { prefs.subtitles = v; valueEl.textContent = v; savePrefs(prefs); });
+    }));
+    prefList.appendChild(makePrefValueRow('Audio track', 'Original audio, dubbed, or descriptive.', prefs.audio, function (valueEl) {
+      openPicker('Audio track', ['Original', 'English dubbed', 'Descriptive audio'], prefs.audio, function (v) { prefs.audio = v; valueEl.textContent = v; savePrefs(prefs); });
+    }));
     prefSection.appendChild(prefList);
     acc.appendChild(prefSection);
 
@@ -504,10 +589,8 @@
     var notifSection = div('acc__section');
     notifSection.appendChild(makeSectionHead('05', 'Notifications'));
     var notifList = div('acc__prefs');
-    notifList.appendChild(makePrefToggleRow('New episodes & releases', 'When something on your list drops.',
-      prefs.notifyReleases, function (v) { prefs.notifyReleases = v; savePrefs(prefs); }));
-    notifList.appendChild(makePrefToggleRow('Recommendations', 'Suggestions based on what you watch.',
-      prefs.notifyRecs, function (v) { prefs.notifyRecs = v; savePrefs(prefs); }));
+    notifList.appendChild(makePrefToggleRow('New episodes & releases', 'When something on your list drops.', prefs.notifyReleases, function (v) { prefs.notifyReleases = v; savePrefs(prefs); }));
+    notifList.appendChild(makePrefToggleRow('Recommendations', 'Suggestions based on what you watch.', prefs.notifyRecs, function (v) { prefs.notifyRecs = v; savePrefs(prefs); }));
     notifSection.appendChild(notifList);
     acc.appendChild(notifSection);
 
@@ -515,7 +598,7 @@
     var secSection = div('acc__section');
     secSection.appendChild(makeSectionHead(null, tr('account.changePassword', 'Change password')));
     var secCard = div('acc__prefs');
-    secCard.style.cssText = 'background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border);padding:20px 24px';
+    secCard.style.padding = '20px 24px';
     secCard.appendChild(field(tr('account.currentPassword', 'Current password'), 'curr-pwd', 'password', '••••••••'));
     secCard.appendChild(field(tr('account.newPassword', 'New password'), 'new-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
     secCard.appendChild(field(tr('account.confirmNewPassword', 'Confirm new password'), 'confirm-pwd', 'password', '••••••••'));
@@ -540,32 +623,22 @@
     // ── SIGNED-IN DEVICES ─────────────────────────────────────────────────────
     var devSection = div('acc__section');
     var devList = div('acc__devices');
-
     devSection.appendChild(makeSectionHead('06', 'Signed-in devices', 'Sign out all others', function () {
       var others = devList.querySelectorAll('.acc__device:not(.acc__device--current)');
-      others.forEach(function (row) {
-        row.style.transition = 'opacity 250ms';
-        row.style.opacity = '0';
-        setTimeout(function () { row.remove(); }, 260);
-      });
+      others.forEach(function (row) { row.style.transition = 'opacity 250ms'; row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 260); });
       if (others.length) showToast('Signed out of ' + others.length + ' other device' + (others.length > 1 ? 's' : ''));
     }));
-
     [
-      { icon: '▣', name: 'MacBook Pro 14"',    meta: 'Safari · Current session',  current: true  },
-      { icon: '▢', name: 'iPhone 15 Pro',       meta: 'iOS app · 2 hours ago',     current: false },
-      { icon: '▤', name: 'Living-room TV',       meta: 'Smart TV app · Yesterday',  current: false },
-      { icon: '▥', name: 'iPad Air',             meta: 'iPadOS app · Last week',    current: false },
+      { icon: '▣', name: 'This device',     meta: 'Current session',   current: true  },
+      { icon: '▢', name: 'iPhone 15 Pro',   meta: 'iOS app · 2 hours ago',  current: false },
+      { icon: '▤', name: 'Living-room TV',  meta: 'Smart TV · Yesterday',   current: false },
+      { icon: '▥', name: 'iPad Air',        meta: 'iPadOS app · Last week',  current: false },
     ].forEach(function (d) {
       var row = div('acc__device' + (d.current ? ' acc__device--current' : ''));
       var icon = div('acc__device-icon'); icon.textContent = d.icon;
       var info = div('acc__device-info');
-      var nameWrap = div('acc__device-name');
-      nameWrap.textContent = d.name + ' ';
-      if (d.current) {
-        var pill = el('span', 'acc__device-pill'); pill.textContent = '● This device';
-        nameWrap.appendChild(pill);
-      }
+      var nameWrap = div('acc__device-name'); nameWrap.textContent = d.name + ' ';
+      if (d.current) { var pill = el('span', 'acc__device-pill'); pill.textContent = '● This device'; nameWrap.appendChild(pill); }
       var meta = div('acc__device-meta'); meta.textContent = d.meta;
       info.appendChild(nameWrap); info.appendChild(meta);
       row.appendChild(icon); row.appendChild(info);
@@ -573,8 +646,7 @@
         var soBtn = el('button', 'acc__device-action');
         soBtn.textContent = 'Sign out';
         soBtn.addEventListener('click', function () {
-          row.style.transition = 'opacity 250ms';
-          row.style.opacity = '0';
+          row.style.transition = 'opacity 250ms'; row.style.opacity = '0';
           setTimeout(function () { row.remove(); }, 260);
           showToast('Signed out of ' + d.name);
         });
@@ -590,11 +662,11 @@
     privSection.appendChild(makeSectionHead('07', 'Privacy & data'));
     var privList = div('acc__prefs');
     [
-      { label: 'Download my data',            hint: 'Get a copy of your watch history, list, and ratings.',
+      { label: 'Download my data',           hint: 'Get a copy of your watch history, list, and ratings.',
         onClick: function () { showToast('Data export requested. We\'ll email you a link.'); } },
-      { label: 'Watch history',               hint: 'View or clear what you\'ve watched.',
+      { label: 'Watch history',              hint: 'View or clear what you\'ve watched.',
         onClick: function () { showToast('Watch history coming soon'); } },
-      { label: 'Cookie & tracking settings',  hint: 'Control what we collect to improve recommendations.',
+      { label: 'Cookie & tracking settings', hint: 'Control what we collect to improve recommendations.',
         onClick: function () { showToast('Cookie settings coming soon'); } },
     ].forEach(function (r) {
       var row = div('acc__pref-row acc__pref-row--clickable');
@@ -619,17 +691,14 @@
     var dangerHint = div('acc__danger-hint'); dangerHint.textContent = "You'll need to sign in again to keep watching. Your list and history stay safe.";
     dangerInfo.appendChild(dangerText); dangerInfo.appendChild(dangerHint);
     var dangerActions = div('acc__danger-actions');
-
     var signOutBtn = el('button', 'btn btn--outline');
     signOutBtn.textContent = tr('account.signOut', 'Sign out');
     signOutBtn.addEventListener('click', function () {
       fetch(API_URL + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() } }).catch(function () {});
       ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
       showToast(tr('account.signedOut', 'Signed out'));
-      renderPage();
-      window.renderTopNav('account');
+      renderPage(); window.renderTopNav('account');
     });
-
     var deleteBtn = el('button', 'btn btn--danger');
     deleteBtn.textContent = tr('account.deleteAccount', 'Delete account');
     deleteBtn.addEventListener('click', async function () {
@@ -638,11 +707,9 @@
         await apiDelete('/user/delete');
         ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
         showToast(tr('account.accountDeleted', 'Account deleted'));
-        renderPage();
-        window.renderTopNav('account');
+        renderPage(); window.renderTopNav('account');
       } catch (err) { showToast(err.message || tr('account.failedDelete', 'Failed to delete account'), 'error'); }
     });
-
     dangerActions.appendChild(signOutBtn); dangerActions.appendChild(deleteBtn);
     danger.appendChild(dangerInfo); danger.appendChild(dangerActions);
     acc.appendChild(danger);
