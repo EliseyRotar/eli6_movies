@@ -271,8 +271,9 @@
     const scroll = el("div", "row__scroll");
     items.forEach(function (item, i) {
       const poster = makePoster(item, {
-        rank:    opts.numbered ? i : null,
-        badge:   opts.badge ? opts.badge(item) : null,
+        rank:     opts.numbered ? i : null,
+        badge:    opts.badge ? opts.badge(item) : null,
+        progress: item.progress != null ? item.progress : null,
         onClick: function () {
           if (opts.onPick) opts.onPick(item);
           else openDetailModal(item);
