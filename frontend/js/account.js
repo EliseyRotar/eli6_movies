@@ -21,6 +21,30 @@
   }
   function getToken() { return localStorage.getItem('token'); }
 
+  // ─── Prefs ──────────────────────────────────────────────────────────────────
+
+  var DEFAULT_PREFS = {
+    autoplayNext: true,
+    autoplayPreviews: false,
+    wifiOnly: true,
+    skipIntro: true,
+    notifyReleases: true,
+    notifyRecs: false,
+    quality: 'Auto · up to 4K',
+    language: 'English',
+    subtitles: 'English (CC)',
+    audio: 'Original',
+  };
+
+  function loadPrefs() {
+    try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(localStorage.getItem('eli6.acctPrefs') || '{}')); }
+    catch (e) { return Object.assign({}, DEFAULT_PREFS); }
+  }
+
+  function savePrefs(p) {
+    localStorage.setItem('eli6.acctPrefs', JSON.stringify(p));
+  }
+
   // ─── API calls ──────────────────────────────────────────────────────────────
 
   async function apiPost(path, body) {
@@ -54,14 +78,63 @@
     return true;
   }
 
+  // ─── Picker modal ───────────────────────────────────────────────────────────
+
+  function closePicker(backdrop) {
+    if (!backdrop.parentNode) return;
+    backdrop.style.animation = 'e6-fade-in 150ms ease reverse forwards';
+    setTimeout(function () { if (backdrop.parentNode) backdrop.parentNode.removeChild(backdrop); }, 150);
+  }
+
+  function openPicker(title, options, current, onSelect) {
+    var backdrop = div('acc__picker-backdrop');
+    var sheet = div('acc__picker');
+    var sheetTitle = div('acc__picker-title');
+    sheetTitle.textContent = title;
+    sheet.appendChild(sheetTitle);
+    var optList = div('acc__picker-options');
+    options.forEach(function (opt) {
+      var row = el('button', 'acc__picker-option' + (opt === current ? ' is-active' : ''));
+      row.textContent = opt;
+      row.addEventListener('click', function () {
+        onSelect(opt);
+        closePicker(backdrop);
+      });
+      optList.appendChild(row);
+    });
+    sheet.appendChild(optList);
+    var cancel = el('button', 'acc__picker-cancel');
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', function () { closePicker(backdrop); });
+    sheet.appendChild(cancel);
+    backdrop.appendChild(sheet);
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) closePicker(backdrop);
+    });
+    document.body.appendChild(backdrop);
+  }
+
   // ─── Auth forms ─────────────────────────────────────────────────────────────
 
-  function renderAuthForms(mount) {
-    mount.innerHTML = '';
+  function field(label, id, type, placeholder) {
     var wrap = div();
-    wrap.style.cssText = 'max-width:440px;margin:40px auto;padding:0 var(--pad-x)';
+    wrap.style.marginBottom = '16px';
+    var lbl = el('label');
+    lbl.textContent = label;
+    lbl.htmlFor = id;
+    lbl.style.cssText = 'display:block;font-size:13px;font-weight:600;color:var(--fg-muted);margin-bottom:6px';
+    var input = el('input');
+    input.id = id; input.type = type; input.placeholder = placeholder;
+    input.style.cssText = 'width:100%;padding:12px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:15px;outline:none;transition:border-color 150ms;box-sizing:border-box';
+    input.addEventListener('focus', function () { input.style.borderColor = 'var(--accent)'; });
+    input.addEventListener('blur',  function () { input.style.borderColor = 'var(--border)'; });
+    wrap.appendChild(lbl); wrap.appendChild(input);
+    return wrap;
+  }
 
-    // Tabs
+  function renderAuthForms(mount) {
+    var wrap = div('acc__auth');
+
     var tabs = div();
     tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border-radius:var(--r-pill);padding:4px;border:1px solid var(--border)';
     var tabLogin = el('button', 'settings__seg-btn is-active');
@@ -74,25 +147,24 @@
     function setTab(which) {
       tabLogin.classList.toggle('is-active', which === 'login');
       tabReg.classList.toggle('is-active', which === 'reg');
-      loginForm.style.display  = which === 'login' ? 'block' : 'none';
-      regForm.style.display    = which === 'reg'   ? 'block' : 'none';
+      loginForm.style.display = which === 'login' ? 'block' : 'none';
+      regForm.style.display   = which === 'reg'   ? 'block' : 'none';
     }
     tabLogin.addEventListener('click', function () { setTab('login'); });
     tabReg.addEventListener('click',   function () { setTab('reg'); });
 
-    // Login form
     var loginForm = el('form');
     loginForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">' + tr('account.welcomeBack', 'Welcome back') + '</h2>';
     loginForm.appendChild(field(tr('account.email', 'Email'), 'login-email', 'email', 'you@example.com'));
     loginForm.appendChild(field(tr('account.password', 'Password'), 'login-pwd', 'password', '••••••••'));
     var loginBtn = el('button', 'btn btn--primary');
     loginBtn.type = 'submit'; loginBtn.textContent = tr('account.signIn', 'Sign in');
-    loginBtn.style.width = '100%'; loginBtn.style.marginTop = '8px';
+    loginBtn.style.cssText = 'width:100%;margin-top:8px';
     loginForm.appendChild(loginBtn);
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       var emailVal = document.getElementById('login-email').value.trim();
-      var pwdVal = document.getElementById('login-pwd').value;
+      var pwdVal   = document.getElementById('login-pwd').value;
       if (!emailVal || !pwdVal) { showToast(tr('account.errorInvalidInput', 'Enter your email and password'), 'error'); return; }
       loginBtn.textContent = tr('account.signingIn', 'Signing in…'); loginBtn.disabled = true;
       try {
@@ -110,7 +182,6 @@
     });
     wrap.appendChild(loginForm);
 
-    // Register form
     var regForm = el('form');
     regForm.style.display = 'none';
     regForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">' + tr('account.createAccountTab', 'Create account') + '</h2>';
@@ -119,13 +190,13 @@
     regForm.appendChild(field(tr('account.password', 'Password'), 'reg-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
     var regBtn = el('button', 'btn btn--primary');
     regBtn.type = 'submit'; regBtn.textContent = tr('account.createAccountTab', 'Create account');
-    regBtn.style.width = '100%'; regBtn.style.marginTop = '8px';
+    regBtn.style.cssText = 'width:100%;margin-top:8px';
     regForm.appendChild(regBtn);
     regForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       var usernameVal = document.getElementById('reg-username').value.trim();
-      var emailVal = document.getElementById('reg-email').value.trim();
-      var pwdVal = document.getElementById('reg-pwd').value;
+      var emailVal    = document.getElementById('reg-email').value.trim();
+      var pwdVal      = document.getElementById('reg-pwd').value;
       if (usernameVal.length < 3) { showToast(tr('account.errorUsernameTooShort', 'Username must be at least 3 characters'), 'error'); return; }
       if (!emailVal.includes('@')) { showToast(tr('account.errorInvalidEmail', 'Enter a valid email address'), 'error'); return; }
       if (pwdVal.length < 8) { showToast(tr('account.minChars', 'Minimum 8 characters'), 'error'); return; }
@@ -149,75 +220,305 @@
     mount.appendChild(wrap);
   }
 
-  function field(label, id, type, placeholder) {
-    var wrap = div();
-    wrap.style.marginBottom = '16px';
-    var lbl = el('label');
-    lbl.textContent = label;
-    lbl.htmlFor = id;
-    lbl.style.cssText = 'display:block;font-size:13px;font-weight:600;color:var(--fg-muted);margin-bottom:6px';
-    var input = el('input');
-    input.id = id; input.type = type; input.placeholder = placeholder;
-    input.style.cssText = 'width:100%;padding:12px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:var(--r-md);font-family:inherit;font-size:15px;outline:none;transition:border-color 150ms';
-    input.addEventListener('focus', function () { input.style.borderColor = 'var(--accent)'; });
-    input.addEventListener('blur', function () { input.style.borderColor = 'var(--border)'; });
-    wrap.appendChild(lbl); wrap.appendChild(input);
-    return wrap;
+  // ─── Account hub helpers ─────────────────────────────────────────────────────
+
+  var CONT_ITEMS = [
+    { id: 872585, title: 'Oppenheimer',   kind: 'movie', grad: ['#1a1a2e', '#16213e', '#0f3460'], pct: 42 },
+    { id: 100,    title: 'Dark',           kind: 'tv',    grad: ['#2d1b69', '#11998e', '#38ef7d'], pct: 18 },
+    { id: 37854,  title: 'One Piece',      kind: 'anime', grad: ['#f7971e', '#ffd200', '#f26f0c'], pct: 76 },
+    { id: 693134, title: 'Dune: Part Two', kind: 'movie', grad: ['#c79340', '#2c2c54', '#3d2c6e'], pct: 55 },
+    { id: 76479,  title: 'The Boys',       kind: 'tv',    grad: ['#141e30', '#243b55', '#1a2a42'], pct: 31 },
+  ];
+
+  var TOP_GENRES = [
+    { name: 'Drama',    pct: 38 },
+    { name: 'Sci-Fi',   pct: 29 },
+    { name: 'Anime',    pct: 18 },
+    { name: 'Thriller', pct: 14 },
+    { name: 'Comedy',   pct: 9  },
+  ];
+
+  function makeToggle(on, onChange) {
+    var btn = el('button', 'acc__toggle' + (on ? ' is-on' : ''));
+    btn.type = 'button';
+    btn.setAttribute('role', 'switch');
+    btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    btn.addEventListener('click', function () {
+      var next = !btn.classList.contains('is-on');
+      btn.classList.toggle('is-on', next);
+      btn.setAttribute('aria-checked', next ? 'true' : 'false');
+      onChange(next);
+    });
+    return btn;
   }
 
-  // ─── Profile view ────────────────────────────────────────────────────────────
+  function makeSectionHead(eyebrow, title, actionLabel, onAction) {
+    var head = div('acc__section-head');
+    var titlewrap = div('acc__section-titlewrap');
+    if (eyebrow) {
+      var ey = div('acc__section-eyebrow'); ey.textContent = eyebrow;
+      titlewrap.appendChild(ey);
+    }
+    var h2 = el('h2', 'acc__section-title'); h2.textContent = title;
+    titlewrap.appendChild(h2);
+    head.appendChild(titlewrap);
+    if (actionLabel && onAction) {
+      var act = el('span', 'acc__section-action');
+      act.textContent = actionLabel + ' →';
+      act.addEventListener('click', onAction);
+      head.appendChild(act);
+    }
+    return head;
+  }
 
-  function renderProfile(mount) {
-    mount.innerHTML = '';
+  function makePrefToggleRow(label, hint, on, onChange) {
+    var row = div('acc__pref-row');
+    var info = div('acc__pref-info');
+    var lbl = div('acc__pref-label'); lbl.textContent = label;
+    var h = div('acc__pref-hint'); h.textContent = hint;
+    info.appendChild(lbl); info.appendChild(h);
+    var ctrl = div('acc__pref-control');
+    ctrl.appendChild(makeToggle(on, onChange));
+    row.appendChild(info); row.appendChild(ctrl);
+    return row;
+  }
+
+  function makePrefValueRow(label, hint, value, onClickFn) {
+    var row = div('acc__pref-row acc__pref-row--clickable');
+    var info = div('acc__pref-info');
+    var lbl = div('acc__pref-label'); lbl.textContent = label;
+    var h = div('acc__pref-hint'); h.textContent = hint;
+    info.appendChild(lbl); info.appendChild(h);
+    var ctrl = div('acc__pref-control');
+    var val = el('span', 'acc__pref-value'); val.textContent = value;
+    var arrow = el('span', 'acc__pref-arrow'); arrow.textContent = '›';
+    ctrl.appendChild(val); ctrl.appendChild(arrow);
+    row.appendChild(info); row.appendChild(ctrl);
+    row.addEventListener('click', function () { onClickFn(val); });
+    return row;
+  }
+
+  // ─── Account hub ────────────────────────────────────────────────────────────
+
+  function renderAccountHub(acc) {
     var user = getUser() || {};
-    var wrap = div();
-    wrap.style.cssText = 'max-width:640px;margin:40px auto;padding:0 var(--pad-x)';
+    var prefs = loadPrefs();
+    var myListCount = 0;
+    try { myListCount = (JSON.parse(localStorage.getItem('myList') || '[]')).length; } catch (e) {}
+    var memberSince = 'Mar 2024';
+    if (user.createdAt) {
+      var d0 = new Date(user.createdAt);
+      memberSince = d0.toLocaleString('default', { month: 'short', year: 'numeric' });
+    }
 
-    // Profile card
-    var card = div('account__card');
-    var profileRow = div('account__profile');
-    var avatar = div('account__avatar');
+    // ── HERO ──────────────────────────────────────────────────────────────────
+    var hero = div('acc__hero');
+    hero.appendChild(div('acc__hero-bg'));
+    var heroInner = div('acc__hero-inner');
+
+    var avatarWrap = div('acc__avatar-wrap');
+    var avatar = div('acc__avatar');
     avatar.textContent = (user.username || 'E')[0].toUpperCase();
-    var info = div();
-    var name = div('account__name'); name.textContent = user.username || 'User';
-    var email = div('account__email'); email.textContent = user.email || '';
-    info.appendChild(name); info.appendChild(email);
-    profileRow.appendChild(avatar); profileRow.appendChild(info);
-    card.appendChild(profileRow);
+    avatarWrap.appendChild(avatar);
+    var editBtn2 = el('button', 'acc__avatar-edit');
+    editBtn2.title = 'Change picture'; editBtn2.textContent = '✎';
+    avatarWrap.appendChild(editBtn2);
+    heroInner.appendChild(avatarWrap);
 
-    // Rows
-    var currentLangCode = (window.i18n && window.i18n.currentLanguage) || 'en';
-    var currentLangName = tr('languages.' + currentLangCode, currentLangCode.toUpperCase());
-    var rows = [
-      { k: tr('account.appearance', 'Appearance & theme'), v: tr('account.customizeLink', 'Customize ›'), link: 'settings.html' },
-      { k: tr('account.plan', 'Plan'),                     v: tr('account.planFree', 'Free · Forever'), link: null },
-      { k: tr('settings.language', 'Language'),            v: currentLangName, link: null },
-      { k: tr('account.playbackQuality', 'Playback quality'), v: tr('account.playbackAuto', 'Auto (up to 4K)'), link: null },
-      { k: tr('account.autoplayNext', 'Autoplay next episode'), v: tr('account.on', 'On'), link: null },
-      { k: tr('account.wifiOnly', 'Downloads over Wi-Fi only'), v: tr('account.on', 'On'), link: null },
-      { k: tr('nav.mylist', 'My List'),                    v: '→', link: 'mylist.html' },
-    ];
-    rows.forEach(function (r) {
-      var row = div('account__row' + (r.link ? ' account__row--link' : ''));
-      var rk = div('account__row-k'); rk.textContent = r.k;
-      var rv = div('account__row-v'); rv.textContent = r.v;
-      row.appendChild(rk); row.appendChild(rv);
-      if (r.link) row.addEventListener('click', function () { window.location.href = r.link; });
-      card.appendChild(row);
+    var heroText = div('acc__hero-text');
+    var nameEl = el('h2', 'acc__name'); nameEl.textContent = user.username || 'User';
+    var emailEl = div('acc__email'); emailEl.textContent = user.email || '';
+    var badges = div('acc__badges');
+    var b1 = el('span', 'acc__badge acc__badge--accent'); b1.textContent = '● Free · Forever';
+    var b2 = el('span', 'acc__badge'); b2.textContent = 'Member since ' + memberSince;
+    var b3 = el('span', 'acc__badge'); b3.textContent = '7-day streak';
+    badges.appendChild(b1); badges.appendChild(b2); badges.appendChild(b3);
+    heroText.appendChild(nameEl); heroText.appendChild(emailEl); heroText.appendChild(badges);
+    heroInner.appendChild(heroText);
+
+    var heroActions = div('acc__hero-actions');
+    var editProfileBtn = el('button', 'btn btn--primary');
+    editProfileBtn.textContent = tr('account.editProfile', 'Edit profile');
+    editProfileBtn.addEventListener('click', function () { showToast('Profile editing coming soon'); });
+    var appearBtn = el('button', 'btn btn--outline');
+    appearBtn.textContent = '✦ ' + tr('account.appearance', 'Appearance');
+    appearBtn.addEventListener('click', function () { window.location.href = 'settings.html'; });
+    heroActions.appendChild(editProfileBtn);
+    heroActions.appendChild(appearBtn);
+    heroInner.appendChild(heroActions);
+
+    hero.appendChild(heroInner);
+    acc.appendChild(hero);
+
+    // ── STATS ─────────────────────────────────────────────────────────────────
+    var statGrid = div('acc__statgrid');
+    [
+      { k: 'Titles watched',  v: '142', sub: 'across 12 months',   trend: '↑ 18' },
+      { k: 'Hours streamed',  v: '384', sub: '≈ 16 days of viewing', trend: null },
+      { k: 'In your list',    v: String(myListCount || 0), sub: 'to watch next', trend: null },
+      { k: 'Average rating',  v: '8.4', sub: '★ from 38 reviews',  trend: null },
+    ].forEach(function (s) {
+      var cell = div('acc__stat');
+      var k = div('acc__stat-k'); k.textContent = s.k;
+      var v = div('acc__stat-v'); v.textContent = s.v;
+      var sub = div('acc__stat-sub'); sub.textContent = s.sub;
+      cell.appendChild(k); cell.appendChild(v); cell.appendChild(sub);
+      if (s.trend) { var tr2 = div('acc__stat-trend'); tr2.textContent = s.trend; cell.appendChild(tr2); }
+      statGrid.appendChild(cell);
     });
+    acc.appendChild(statGrid);
 
-    wrap.appendChild(card);
+    // ── KEEP WATCHING ─────────────────────────────────────────────────────────
+    var contSection = div('acc__section');
+    contSection.appendChild(makeSectionHead('01', 'Keep watching', 'See all', function () { window.location.href = 'index.html'; }));
+    var contStrip = div('acc__continue');
+    CONT_ITEMS.forEach(function (item) {
+      var card = div('acc__cont-card');
+      card.style.background = 'linear-gradient(125deg,' + item.grad[0] + ',' + item.grad[1] + ' 60%,' + item.grad[2] + ')';
+      var meta = div('acc__cont-card-meta');
+      meta.textContent = item.kind === 'tv' ? 'S1·E' + Math.ceil(item.pct / 14) :
+                         item.kind === 'anime' ? 'EP ' + Math.ceil(item.pct / 8) : 'FEATURE';
+      var titleEl2 = div('acc__cont-card-title'); titleEl2.textContent = item.title;
+      var barWrap = div('acc__cont-card-bar');
+      var barFill = div(); barFill.style.width = item.pct + '%';
+      barWrap.appendChild(barFill);
+      var playBtn = div('acc__cont-card-play'); playBtn.innerHTML = '<div>▶</div>';
+      card.appendChild(meta); card.appendChild(titleEl2); card.appendChild(barWrap); card.appendChild(playBtn);
+      card.addEventListener('click', function () {
+        var url = 'player.html?type=' + item.kind + '&id=' + item.id;
+        if (item.kind === 'tv') url += '&season=1&episode=1';
+        window.location.href = url;
+      });
+      contStrip.appendChild(card);
+    });
+    contSection.appendChild(contStrip);
+    acc.appendChild(contSection);
 
-    // Change password section
-    var pwCard = div('account__card');
-    pwCard.style.marginTop = '20px';
-    var pwTitle = el('h3');
-    pwTitle.style.cssText = 'font-family:var(--font-head);font-weight:var(--head-weight);font-size:18px;color:var(--fg);margin:0 0 20px';
-    pwTitle.textContent = tr('account.changePassword', 'Change password');
-    pwCard.appendChild(pwTitle);
-    pwCard.appendChild(field(tr('account.currentPassword', 'Current password'), 'curr-pwd', 'password', '••••••••'));
-    pwCard.appendChild(field(tr('account.newPassword', 'New password'), 'new-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
-    pwCard.appendChild(field(tr('account.confirmNewPassword', 'Confirm new password'), 'confirm-pwd', 'password', '••••••••'));
+    // ── TASTE DNA ─────────────────────────────────────────────────────────────
+    var tasteSection = div('acc__section');
+    tasteSection.appendChild(makeSectionHead('02', 'Your taste, by genre', 'Reset taste data', function () {
+      showToast('Taste data cleared');
+    }));
+    var taste = div('acc__taste');
+    TOP_GENRES.forEach(function (g) {
+      var row = div('acc__taste-row');
+      var gname = div('acc__taste-name'); gname.textContent = g.name;
+      var bar = div('acc__taste-bar');
+      var fill = div('acc__taste-fill'); fill.style.width = '0%';
+      bar.appendChild(fill);
+      var pctEl = div('acc__taste-pct'); pctEl.textContent = g.pct + '%';
+      row.appendChild(gname); row.appendChild(bar); row.appendChild(pctEl);
+      taste.appendChild(row);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { fill.style.width = g.pct + '%'; });
+      });
+    });
+    tasteSection.appendChild(taste);
+    acc.appendChild(tasteSection);
+
+    // ── QUICK ACTIONS ─────────────────────────────────────────────────────────
+    var quickSection = div('acc__section');
+    quickSection.appendChild(makeSectionHead('03', 'Quick actions'));
+    var quickGrid = div('acc__quick');
+    [
+      { icon: '✦', label: tr('account.appearance', 'Appearance'), sub: 'Theme, accent, layout',
+        onClick: function () { window.location.href = 'settings.html'; } },
+      { icon: '♥', label: tr('nav.mylist', 'My list'), sub: (myListCount || 0) + ' items saved',
+        onClick: function () { window.location.href = 'mylist.html'; } },
+      { icon: '⏱', label: 'Watch history', sub: 'Last 30 days',
+        onClick: function () { showToast('Watch history coming soon'); } },
+      { icon: '↗', label: 'Refer a friend', sub: 'Share ELI6 — it\'s free',
+        onClick: function () {
+          if (navigator.share) { navigator.share({ title: 'ELI6 Movies', url: window.location.origin }); }
+          else {
+            if (navigator.clipboard) { navigator.clipboard.writeText(window.location.origin); }
+            showToast('Link copied!');
+          }
+        }},
+      { icon: '?', label: 'Help & support', sub: 'FAQs, contact',
+        onClick: function () { showToast('Help center coming soon'); } },
+    ].forEach(function (q) {
+      var tile = el('button', 'acc__quick-tile');
+      var icon = div('acc__quick-icon'); icon.textContent = q.icon;
+      var textWrap = div();
+      var qlabel = div('acc__quick-label'); qlabel.textContent = q.label;
+      var qsub = div('acc__quick-sub'); qsub.textContent = q.sub;
+      textWrap.appendChild(qlabel); textWrap.appendChild(qsub);
+      var arrow = el('span', 'acc__quick-arrow'); arrow.textContent = '→';
+      tile.appendChild(icon); tile.appendChild(textWrap); tile.appendChild(arrow);
+      tile.addEventListener('click', q.onClick);
+      quickGrid.appendChild(tile);
+    });
+    quickSection.appendChild(quickGrid);
+    acc.appendChild(quickSection);
+
+    // ── PLAYBACK PREFERENCES ──────────────────────────────────────────────────
+    var prefSection = div('acc__section');
+    prefSection.appendChild(makeSectionHead('04', 'Playback preferences'));
+    var prefList = div('acc__prefs');
+
+    prefList.appendChild(makePrefValueRow(
+      'Streaming quality', 'Higher quality uses more data.', prefs.quality,
+      function (valueEl) {
+        openPicker('Streaming quality', ['Auto · up to 4K', '1080p', '720p', '480p'], prefs.quality,
+          function (v) { prefs.quality = v; valueEl.textContent = v; savePrefs(prefs); });
+      }
+    ));
+    prefList.appendChild(makePrefToggleRow('Autoplay next episode', 'Roll straight into the next one.',
+      prefs.autoplayNext, function (v) { prefs.autoplayNext = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Autoplay previews while browsing', 'Play short previews when you hover over titles.',
+      prefs.autoplayPreviews, function (v) { prefs.autoplayPreviews = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Skip intros automatically', 'Jump past opening titles for shows.',
+      prefs.skipIntro, function (v) { prefs.skipIntro = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefToggleRow('Downloads over Wi-Fi only', "Don't use mobile data for downloads.",
+      prefs.wifiOnly, function (v) { prefs.wifiOnly = v; savePrefs(prefs); }));
+    prefList.appendChild(makePrefValueRow(
+      'App language', 'Interface text and menus.', prefs.language,
+      function (valueEl) {
+        openPicker('App language', ['English', 'Italiano', 'Русский'], prefs.language,
+          function (v) {
+            prefs.language = v; valueEl.textContent = v; savePrefs(prefs);
+            var langMap = { 'English': 'en', 'Italiano': 'it', 'Русский': 'ru' };
+            if (window.i18n && window.i18n.changeLanguage) window.i18n.changeLanguage(langMap[v] || 'en');
+          });
+      }
+    ));
+    prefList.appendChild(makePrefValueRow(
+      'Subtitles', 'Default subtitle track when available.', prefs.subtitles,
+      function (valueEl) {
+        openPicker('Subtitles', ['Off', 'English (CC)', 'English', 'Italiano', 'Русский'], prefs.subtitles,
+          function (v) { prefs.subtitles = v; valueEl.textContent = v; savePrefs(prefs); });
+      }
+    ));
+    prefList.appendChild(makePrefValueRow(
+      'Audio track', 'Original audio, dubbed, or descriptive.', prefs.audio,
+      function (valueEl) {
+        openPicker('Audio track', ['Original', 'English dubbed', 'Descriptive audio'], prefs.audio,
+          function (v) { prefs.audio = v; valueEl.textContent = v; savePrefs(prefs); });
+      }
+    ));
+    prefSection.appendChild(prefList);
+    acc.appendChild(prefSection);
+
+    // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+    var notifSection = div('acc__section');
+    notifSection.appendChild(makeSectionHead('05', 'Notifications'));
+    var notifList = div('acc__prefs');
+    notifList.appendChild(makePrefToggleRow('New episodes & releases', 'When something on your list drops.',
+      prefs.notifyReleases, function (v) { prefs.notifyReleases = v; savePrefs(prefs); }));
+    notifList.appendChild(makePrefToggleRow('Recommendations', 'Suggestions based on what you watch.',
+      prefs.notifyRecs, function (v) { prefs.notifyRecs = v; savePrefs(prefs); }));
+    notifSection.appendChild(notifList);
+    acc.appendChild(notifSection);
+
+    // ── CHANGE PASSWORD ───────────────────────────────────────────────────────
+    var secSection = div('acc__section');
+    secSection.appendChild(makeSectionHead(null, tr('account.changePassword', 'Change password')));
+    var secCard = div('acc__prefs');
+    secCard.style.cssText = 'background:var(--surface);border-radius:var(--r-md);border:1px solid var(--border);padding:20px 24px';
+    secCard.appendChild(field(tr('account.currentPassword', 'Current password'), 'curr-pwd', 'password', '••••••••'));
+    secCard.appendChild(field(tr('account.newPassword', 'New password'), 'new-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
+    secCard.appendChild(field(tr('account.confirmNewPassword', 'Confirm new password'), 'confirm-pwd', 'password', '••••••••'));
     var pwBtn = el('button', 'btn btn--outline');
     pwBtn.textContent = tr('account.updatePassword', 'Update password');
     pwBtn.addEventListener('click', async function () {
@@ -229,53 +530,122 @@
       try {
         await apiPut('/user/password', { currentPassword: curr, newPassword: nw });
         showToast(tr('account.passwordUpdated', 'Password updated!'));
-        document.getElementById('curr-pwd').value = '';
-        document.getElementById('new-pwd').value = '';
-        document.getElementById('confirm-pwd').value = '';
+        ['curr-pwd', 'new-pwd', 'confirm-pwd'].forEach(function (id) { document.getElementById(id).value = ''; });
       } catch (err) { showToast(err.message || tr('account.failedUpdatePassword', 'Failed to update password'), 'error'); }
     });
-    pwCard.appendChild(pwBtn);
-    wrap.appendChild(pwCard);
+    secCard.appendChild(pwBtn);
+    secSection.appendChild(secCard);
+    acc.appendChild(secSection);
 
-    // Primary actions
-    var actions = div('account__actions');
-    var customizeBtn = el('button', 'btn btn--primary');
-    customizeBtn.textContent = tr('account.customizeAppearance', 'Customize appearance');
-    customizeBtn.addEventListener('click', function () { window.location.href = 'settings.html'; });
-    var editBtn = el('button', 'btn btn--outline');
-    editBtn.textContent = tr('account.editProfile', 'Edit profile');
-    var logoutBtn = el('button', 'btn btn--outline');
-    logoutBtn.textContent = tr('account.signOut', 'Sign out');
-    logoutBtn.addEventListener('click', function () {
-      ['user','token','myList','keepWatching','watchHistory','currentContent'].forEach(function (k) { localStorage.removeItem(k); });
+    // ── SIGNED-IN DEVICES ─────────────────────────────────────────────────────
+    var devSection = div('acc__section');
+    var devList = div('acc__devices');
+
+    devSection.appendChild(makeSectionHead('06', 'Signed-in devices', 'Sign out all others', function () {
+      var others = devList.querySelectorAll('.acc__device:not(.acc__device--current)');
+      others.forEach(function (row) {
+        row.style.transition = 'opacity 250ms';
+        row.style.opacity = '0';
+        setTimeout(function () { row.remove(); }, 260);
+      });
+      if (others.length) showToast('Signed out of ' + others.length + ' other device' + (others.length > 1 ? 's' : ''));
+    }));
+
+    [
+      { icon: '▣', name: 'MacBook Pro 14"',    meta: 'Safari · Current session',  current: true  },
+      { icon: '▢', name: 'iPhone 15 Pro',       meta: 'iOS app · 2 hours ago',     current: false },
+      { icon: '▤', name: 'Living-room TV',       meta: 'Smart TV app · Yesterday',  current: false },
+      { icon: '▥', name: 'iPad Air',             meta: 'iPadOS app · Last week',    current: false },
+    ].forEach(function (d) {
+      var row = div('acc__device' + (d.current ? ' acc__device--current' : ''));
+      var icon = div('acc__device-icon'); icon.textContent = d.icon;
+      var info = div('acc__device-info');
+      var nameWrap = div('acc__device-name');
+      nameWrap.textContent = d.name + ' ';
+      if (d.current) {
+        var pill = el('span', 'acc__device-pill'); pill.textContent = '● This device';
+        nameWrap.appendChild(pill);
+      }
+      var meta = div('acc__device-meta'); meta.textContent = d.meta;
+      info.appendChild(nameWrap); info.appendChild(meta);
+      row.appendChild(icon); row.appendChild(info);
+      if (!d.current) {
+        var soBtn = el('button', 'acc__device-action');
+        soBtn.textContent = 'Sign out';
+        soBtn.addEventListener('click', function () {
+          row.style.transition = 'opacity 250ms';
+          row.style.opacity = '0';
+          setTimeout(function () { row.remove(); }, 260);
+          showToast('Signed out of ' + d.name);
+        });
+        row.appendChild(soBtn);
+      }
+      devList.appendChild(row);
+    });
+    devSection.appendChild(devList);
+    acc.appendChild(devSection);
+
+    // ── PRIVACY & DATA ────────────────────────────────────────────────────────
+    var privSection = div('acc__section');
+    privSection.appendChild(makeSectionHead('07', 'Privacy & data'));
+    var privList = div('acc__prefs');
+    [
+      { label: 'Download my data',            hint: 'Get a copy of your watch history, list, and ratings.',
+        onClick: function () { showToast('Data export requested. We\'ll email you a link.'); } },
+      { label: 'Watch history',               hint: 'View or clear what you\'ve watched.',
+        onClick: function () { showToast('Watch history coming soon'); } },
+      { label: 'Cookie & tracking settings',  hint: 'Control what we collect to improve recommendations.',
+        onClick: function () { showToast('Cookie settings coming soon'); } },
+    ].forEach(function (r) {
+      var row = div('acc__pref-row acc__pref-row--clickable');
+      var info = div('acc__pref-info');
+      var lbl2 = div('acc__pref-label'); lbl2.textContent = r.label;
+      var hint2 = div('acc__pref-hint'); hint2.textContent = r.hint;
+      info.appendChild(lbl2); info.appendChild(hint2);
+      var ctrl = div('acc__pref-control');
+      var arrow = el('span', 'acc__pref-arrow'); arrow.textContent = '›';
+      ctrl.appendChild(arrow);
+      row.appendChild(info); row.appendChild(ctrl);
+      row.addEventListener('click', r.onClick);
+      privList.appendChild(row);
+    });
+    privSection.appendChild(privList);
+    acc.appendChild(privSection);
+
+    // ── DANGER ZONE ───────────────────────────────────────────────────────────
+    var danger = div('acc__danger');
+    var dangerInfo = div();
+    var dangerText = div('acc__danger-text'); dangerText.textContent = 'Sign out of ELI6';
+    var dangerHint = div('acc__danger-hint'); dangerHint.textContent = "You'll need to sign in again to keep watching. Your list and history stay safe.";
+    dangerInfo.appendChild(dangerText); dangerInfo.appendChild(dangerHint);
+    var dangerActions = div('acc__danger-actions');
+
+    var signOutBtn = el('button', 'btn btn--outline');
+    signOutBtn.textContent = tr('account.signOut', 'Sign out');
+    signOutBtn.addEventListener('click', function () {
+      fetch(API_URL + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() } }).catch(function () {});
+      ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
       showToast(tr('account.signedOut', 'Signed out'));
       renderPage();
       window.renderTopNav('account');
     });
-    actions.appendChild(customizeBtn);
-    actions.appendChild(editBtn);
-    actions.appendChild(logoutBtn);
-    wrap.appendChild(actions);
 
-    // Danger zone
-    var dangerZone = div();
-    dangerZone.style.cssText = 'padding:8px var(--pad-x) 4px;';
-    var deleteBtn = el('button', 'btn btn--outline');
+    var deleteBtn = el('button', 'btn btn--danger');
     deleteBtn.textContent = tr('account.deleteAccount', 'Delete account');
-    deleteBtn.style.color = 'var(--fg-muted)';
     deleteBtn.addEventListener('click', async function () {
       if (!confirm(tr('account.deleteConfirm', 'Delete your account? This cannot be undone.'))) return;
       try {
         await apiDelete('/user/delete');
-        ['user','token','myList','keepWatching','watchHistory','currentContent'].forEach(function (k) { localStorage.removeItem(k); });
+        ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
         showToast(tr('account.accountDeleted', 'Account deleted'));
         renderPage();
+        window.renderTopNav('account');
       } catch (err) { showToast(err.message || tr('account.failedDelete', 'Failed to delete account'), 'error'); }
     });
-    dangerZone.appendChild(deleteBtn);
-    wrap.appendChild(dangerZone);
 
-    mount.appendChild(wrap);
+    dangerActions.appendChild(signOutBtn); dangerActions.appendChild(deleteBtn);
+    danger.appendChild(dangerInfo); danger.appendChild(dangerActions);
+    acc.appendChild(danger);
   }
 
   // ─── Main render ────────────────────────────────────────────────────────────
@@ -283,14 +653,19 @@
   function renderPage() {
     var mount = document.getElementById('account-mount');
     if (!mount) return;
-    var pagehd = div();
-    pagehd.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">' + tr('account.settings', 'Settings') + '</div><h1 class="pagehead__title">' + tr('account.title', 'Account') + '</h1></div>';
     mount.innerHTML = '';
-    mount.appendChild(pagehd);
 
     if (getToken() && getUser()) {
-      renderProfile(mount);
+      var acc = div('acc');
+      var phWrap = div();
+      phWrap.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">' + tr('account.settings', 'Settings') + '</div><h1 class="pagehead__title">' + tr('account.title', 'Account') + '</h1><p class="pagehead__sub">Everything about you on ELI6 — what you\'ve watched, what\'s queued, and how the app looks and feels.</p></div>';
+      acc.appendChild(phWrap.firstChild);
+      mount.appendChild(acc);
+      renderAccountHub(acc);
     } else {
+      var phWrap2 = div();
+      phWrap2.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">' + tr('account.settings', 'Settings') + '</div><h1 class="pagehead__title">' + tr('account.title', 'Account') + '</h1></div>';
+      mount.appendChild(phWrap2.firstChild);
       renderAuthForms(mount);
     }
 
