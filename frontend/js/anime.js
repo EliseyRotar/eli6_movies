@@ -93,5 +93,8 @@
       window.renderTopNav('anime');
       window.renderBottomNav('anime');
     });
+    window.addEventListener('eli6.langChanged', function () {
+      renderPage();
+    });
   });
 })();
