@@ -211,6 +211,39 @@ router.put('/user/password', auth, async (req, res) => {
     }
 });
 
+router.get('/user/sessions', auth, async (req, res) => {
+    res.json({
+        sessions: req.user.sessions || [],
+        currentJti: req.jti || null,
+    });
+});
+
+router.delete('/user/sessions/others', auth, async (req, res) => {
+    try {
+        const currentJti = req.jti;
+        if (!currentJti) {
+            req.user.sessions = [];
+        } else {
+            req.user.sessions = req.user.sessions.filter(s => s.jti === currentJti);
+        }
+        await req.user.save();
+        res.json({ message: 'SESSIONS_CLEARED' });
+    } catch (error) {
+        res.status(500).json({ error: 'SESSION_ERROR' });
+    }
+});
+
+router.delete('/user/sessions/:jti', auth, async (req, res) => {
+    try {
+        const { jti } = req.params;
+        req.user.sessions = req.user.sessions.filter(s => s.jti !== jti);
+        await req.user.save();
+        res.json({ message: 'SESSION_REVOKED' });
+    } catch (error) {
+        res.status(500).json({ error: 'SESSION_ERROR' });
+    }
+});
+
 router.delete('/user/delete', auth, async (req, res) => {
     try {
         await userService.deleteUser(req.user._id);
