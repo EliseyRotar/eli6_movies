@@ -3,6 +3,10 @@
 (function () {
   var TMDB_URL = window.TMDB_PROXY_URL || ((window.API_BASE_URL || '') + '/tmdb');
 
+  function tr(key, fallback) {
+    return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
+  }
+
   var GENRES = [
     { id: 10759, name: "Action & Adventure" },
     { id: 35,    name: "Comedy" },
@@ -14,6 +18,18 @@
     { id: 10768, name: "War & Politics" },
     { id: 99,    name: "Documentary" },
   ];
+
+  var TV_GENRE_KEYS = {
+    10759: 'tvshows.sections.action',
+    35:    'tvshows.sections.comedy',
+    18:    'tvshows.sections.drama',
+    10765: 'tvshows.sections.scifi',
+    80:    'tvshows.sections.crime',
+    9648:  'tvshows.sections.mystery',
+    10762: 'tvshows.sections.kids',
+    10768: 'tvshows.sections.warpolitics',
+    99:    'tvshows.sections.documentary',
+  };
 
   var activeGenre = null;
 
@@ -44,14 +60,14 @@
 
     var allPill = document.createElement('button');
     allPill.className = 'pill' + (!activeGenre ? ' pill--active' : '');
-    allPill.textContent = 'All';
+    allPill.textContent = tr('common.all', 'All');
     allPill.addEventListener('click', function () { activeGenre = null; renderPage(); });
     wrap.appendChild(allPill);
 
     GENRES.forEach(function (g) {
       var pill = document.createElement('button');
       pill.className = 'pill' + (activeGenre === g.id ? ' pill--active' : '');
-      pill.textContent = g.name;
+      pill.textContent = tr(TV_GENRE_KEYS[g.id] || '', g.name);
       pill.addEventListener('click', function () { activeGenre = g.id; renderPage(); });
       wrap.appendChild(pill);
     });
@@ -64,14 +80,14 @@
     buildPills();
     var mount = document.getElementById('rows-mount');
     if (!mount) return;
-    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>Loading…</span></div>';
+    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>' + tr('common.loading', 'Loading…') + '</span></div>';
     var lang = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
 
     if (activeGenre) {
       var items = await fetchTV('/discover/tv?with_genres=' + activeGenre + '&sort_by=popularity.desc', lang);
       mount.innerHTML = '';
       if (!items.length) {
-        mount.innerHTML = '<div class="empty"><div class="empty__icon">◻</div><div class="empty__title">No results</div></div>';
+        mount.innerHTML = '<div class="empty"><div class="empty__icon">◻</div><div class="empty__title">' + tr('common.noResults', 'No results') + '</div></div>';
         return;
       }
       var grid = document.createElement('div');
@@ -91,10 +107,10 @@
       ]);
       mount.innerHTML = '';
       var rows = [
-        { title: 'Trending TV',    items: results[0] },
-        { title: 'Popular Shows',  items: results[1] },
-        { title: 'Top Rated',      items: results[2], numbered: true },
-        { title: 'On the Air',     items: results[3] },
+        { title: tr('tvshows.sections.trending',  'Trending TV'),    items: results[0] },
+        { title: tr('tvshows.sections.popular',   'Popular Shows'),  items: results[1] },
+        { title: tr('tvshows.sections.topRated',  'Top Rated'),      items: results[2], numbered: true },
+        { title: tr('tvshows.sections.onTheAir',  'On the Air'),     items: results[3] },
       ];
       rows.forEach(function (r) {
         if (!r.items || !r.items.length) return;
