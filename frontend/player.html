@@ -3839,23 +3839,25 @@
             // Don't send if progress is 0
             if (progress <= 0) return;
             // Send to backend
-            fetch(`${AUTH_API_URL}/user/watch-history`, {
+            const payload = {
+                id: parseInt(id),
+                title: type === 'tv' ? (contentData ? contentData.name : '') : (contentData ? contentData.title : ''),
+                type: type,
+                poster_path: contentData ? contentData.poster_path : '',
+                overview: contentData ? contentData.overview : '',
+                progress: progress,
+            };
+            if (type === 'tv') {
+                payload.season  = parseInt(season)  || 1;
+                payload.episode = parseInt(episode) || 1;
+            }
+            fetch(`${AUTH_API_URL}/user/keep-watching`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({
-                    item: {
-                        id: parseInt(id),
-                        title: type === 'tv' ? (contentData ? contentData.name : '') : (contentData ? contentData.title : ''),
-                        type: type,
-                        poster_path: contentData ? contentData.poster_path : '',
-                        overview: contentData ? contentData.overview : '',
-                        progress: progress,
-                        last_watched: new Date().toISOString()
-                    }
-                })
+                body: JSON.stringify(payload),
             });
         }
 
