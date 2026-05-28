@@ -150,5 +150,12 @@
       window.renderTopNav('search');
       window.renderBottomNav('search');
     });
+    window.addEventListener('eli6.langChanged', function () {
+      if (_currentQuery) {
+        doSearch(_currentQuery);
+      } else {
+        showDefaultContent();
+      }
+    });
   });
 })();
