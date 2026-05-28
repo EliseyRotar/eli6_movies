@@ -22,6 +22,7 @@ router.get('/user/profile', auth, async (req, res) => {
         email: req.user.email,
         role: req.user.role,
         myList: req.user.myList || [],
+        createdAt: req.user.createdAt,
     });
 });
 
