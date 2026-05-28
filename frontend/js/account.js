@@ -75,12 +75,13 @@
 
   async function fetchHubData() {
     var headers = { Authorization: 'Bearer ' + getToken() };
-    var keepWatching = [], watchHistory = [], myList = [];
+    var keepWatching = [], watchHistory = [], myList = [], sessions = [], currentJti = null;
     try {
       var results = await Promise.all([
         fetch(API_URL + '/user/keep-watching', { headers }),
         fetch(API_URL + '/user/watched',       { headers }),
         fetch(API_URL + '/user/profile',       { headers }),
+        fetch(API_URL + '/user/sessions',      { headers }),
       ]);
       if (results[0].ok) keepWatching = await results[0].json();
       if (results[1].ok) watchHistory = await results[1].json();
@@ -94,13 +95,18 @@
           localStorage.setItem('user', JSON.stringify(u));
         }
       }
+      if (results[3].ok) {
+        var sessData = await results[3].json();
+        sessions   = sessData.sessions   || [];
+        currentJti = sessData.currentJti || null;
+      }
     } catch (e) {
       var cached = getUser() || {};
       keepWatching = cached.keepWatching || [];
       watchHistory = cached.watchHistory || [];
       try { myList = JSON.parse(localStorage.getItem('myList') || '[]'); } catch (e2) {}
     }
-    return { keepWatching: keepWatching, watchHistory: watchHistory, myList: myList };
+    return { keepWatching: keepWatching, watchHistory: watchHistory, myList: myList, sessions: sessions, currentJti: currentJti };
   }
 
   // ─── Stats helpers ──────────────────────────────────────────────────────────
@@ -155,6 +161,35 @@
     var h2 = (n * 97  + 200) % 360;
     var h3 = (n * 53  + 300) % 360;
     return ['hsl(' + h1 + ',55%,14%)', 'hsl(' + h2 + ',45%,18%)', 'hsl(' + h3 + ',50%,16%)'];
+  }
+
+  function timeAgo(dateStr) {
+    if (!dateStr) return '';
+    var diff = Date.now() - new Date(dateStr).getTime();
+    var mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return mins + 'm ago';
+    var hours = Math.floor(mins / 60);
+    if (hours < 24) return hours + 'h ago';
+    var days = Math.floor(hours / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return days + 'd ago';
+    return Math.floor(days / 7) + 'w ago';
+  }
+
+  function parseUA(ua) {
+    if (!ua) return { name: 'Unknown device', meta: 'Unknown platform', icon: '▦' };
+    var u = ua.toLowerCase();
+    var browser = /edg\/|edge\//.test(u) ? 'Edge' : /firefox/.test(u) ? 'Firefox' : /chrome/.test(u) ? 'Chrome' : /safari/.test(u) ? 'Safari' : 'Browser';
+    if (/iphone/.test(u))             return { name: 'iPhone',          meta: 'iOS · ' + browser,     icon: '▢' };
+    if (/ipad/.test(u))               return { name: 'iPad',            meta: 'iPadOS · ' + browser,  icon: '▣' };
+    if (/android.*mobile/.test(u))    return { name: 'Android phone',   meta: 'Android · ' + browser, icon: '▢' };
+    if (/android/.test(u))            return { name: 'Android tablet',  meta: 'Android · ' + browser, icon: '▣' };
+    if (/tv|smarttv|crkey|webos|tizen/.test(u)) return { name: 'Smart TV', meta: 'TV browser', icon: '▥' };
+    if (/macintosh|mac os x/.test(u)) return { name: 'Mac',             meta: 'macOS · ' + browser,   icon: '▤' };
+    if (/windows/.test(u))            return { name: 'Windows PC',      meta: 'Windows · ' + browser, icon: '▤' };
+    if (/linux/.test(u))              return { name: 'Linux',           meta: 'Linux · ' + browser,   icon: '▤' };
+    return { name: 'Unknown device', meta: 'Unknown platform', icon: '▦' };
   }
 
   function formatMemberSince(createdAt) {
@@ -412,9 +447,11 @@
     if (!acc.isConnected) return;
     acc.removeChild(loadEl);
 
-    var kw  = Array.isArray(data.keepWatching) ? data.keepWatching : [];
-    var wh  = Array.isArray(data.watchHistory)  ? data.watchHistory  : [];
-    var ml  = Array.isArray(data.myList)         ? data.myList         : [];
+    var kw         = Array.isArray(data.keepWatching) ? data.keepWatching : [];
+    var wh         = Array.isArray(data.watchHistory)  ? data.watchHistory  : [];
+    var ml         = Array.isArray(data.myList)         ? data.myList         : [];
+    var sessions   = Array.isArray(data.sessions)       ? data.sessions       : [];
+    var currentJti = data.currentJti || null;
 
     // Update hero badges with fresh data
     var freshStreak = calcStreak(wh);
@@ -623,37 +660,64 @@
     // ── SIGNED-IN DEVICES ─────────────────────────────────────────────────────
     var devSection = div('acc__section');
     var devList = div('acc__devices');
-    devSection.appendChild(makeSectionHead('06', 'Signed-in devices', 'Sign out all others', function () {
-      var others = devList.querySelectorAll('.acc__device:not(.acc__device--current)');
-      others.forEach(function (row) { row.style.transition = 'opacity 250ms'; row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 260); });
-      if (others.length) showToast('Signed out of ' + others.length + ' other device' + (others.length > 1 ? 's' : ''));
+    var otherCount = sessions.filter(function (s) { return s.jti !== currentJti; }).length;
+    devSection.appendChild(makeSectionHead('06', 'Signed-in devices', otherCount > 0 ? 'Sign out all others' : null, function () {
+      fetch(API_URL + '/user/sessions/others', { method: 'DELETE', headers: { Authorization: 'Bearer ' + getToken() } })
+        .then(function () {
+          var others = devList.querySelectorAll('.acc__device:not(.acc__device--current)');
+          others.forEach(function (row) { row.style.transition = 'opacity 250ms'; row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 260); });
+          if (others.length) showToast('Signed out of ' + others.length + ' other session' + (others.length > 1 ? 's' : ''));
+        })
+        .catch(function () { showToast('Could not sign out other sessions'); });
     }));
-    [
-      { icon: '▣', name: 'This device',     meta: 'Current session',   current: true  },
-      { icon: '▢', name: 'iPhone 15 Pro',   meta: 'iOS app · 2 hours ago',  current: false },
-      { icon: '▤', name: 'Living-room TV',  meta: 'Smart TV · Yesterday',   current: false },
-      { icon: '▥', name: 'iPad Air',        meta: 'iPadOS app · Last week',  current: false },
-    ].forEach(function (d) {
-      var row = div('acc__device' + (d.current ? ' acc__device--current' : ''));
-      var icon = div('acc__device-icon'); icon.textContent = d.icon;
-      var info = div('acc__device-info');
-      var nameWrap = div('acc__device-name'); nameWrap.textContent = d.name + ' ';
-      if (d.current) { var pill = el('span', 'acc__device-pill'); pill.textContent = '● This device'; nameWrap.appendChild(pill); }
-      var meta = div('acc__device-meta'); meta.textContent = d.meta;
-      info.appendChild(nameWrap); info.appendChild(meta);
-      row.appendChild(icon); row.appendChild(info);
-      if (!d.current) {
-        var soBtn = el('button', 'acc__device-action');
-        soBtn.textContent = 'Sign out';
-        soBtn.addEventListener('click', function () {
-          row.style.transition = 'opacity 250ms'; row.style.opacity = '0';
-          setTimeout(function () { row.remove(); }, 260);
-          showToast('Signed out of ' + d.name);
-        });
-        row.appendChild(soBtn);
-      }
-      devList.appendChild(row);
-    });
+
+    if (!sessions.length) {
+      var noSess = div('acc__device');
+      var noSessInfo = div('acc__device-info');
+      var noSessName = div('acc__device-name'); noSessName.textContent = 'This device';
+      var noSessMeta = div('acc__device-meta'); noSessMeta.textContent = 'Current session';
+      noSessInfo.appendChild(noSessName); noSessInfo.appendChild(noSessMeta);
+      var noSessIcon = div('acc__device-icon'); noSessIcon.textContent = '▤';
+      noSess.appendChild(noSessIcon); noSess.appendChild(noSessInfo);
+      devList.appendChild(noSess);
+    } else {
+      // Sort: current session first, then by lastSeen desc
+      var sorted = sessions.slice().sort(function (a, b) {
+        if (a.jti === currentJti) return -1;
+        if (b.jti === currentJti) return 1;
+        return new Date(b.lastSeen) - new Date(a.lastSeen);
+      });
+      sorted.forEach(function (s) {
+        var isCurrent = s.jti === currentJti;
+        var parsed = parseUA(s.ua);
+        var row = div('acc__device' + (isCurrent ? ' acc__device--current' : ''));
+        var icon = div('acc__device-icon'); icon.textContent = parsed.icon;
+        var info = div('acc__device-info');
+        var nameWrap = div('acc__device-name'); nameWrap.textContent = parsed.name + ' ';
+        if (isCurrent) { var pill = el('span', 'acc__device-pill'); pill.textContent = '● This device'; nameWrap.appendChild(pill); }
+        var metaStr = parsed.meta + (s.lastSeen ? ' · ' + timeAgo(s.lastSeen) : '');
+        var meta = div('acc__device-meta'); meta.textContent = metaStr;
+        info.appendChild(nameWrap); info.appendChild(meta);
+        row.appendChild(icon); row.appendChild(info);
+        if (!isCurrent) {
+          var soBtn = el('button', 'acc__device-action');
+          soBtn.textContent = 'Sign out';
+          soBtn.addEventListener('click', (function (jti, devName, rowEl) {
+            return function () {
+              fetch(API_URL + '/user/sessions/' + jti, { method: 'DELETE', headers: { Authorization: 'Bearer ' + getToken() } })
+                .then(function () {
+                  rowEl.style.transition = 'opacity 250ms'; rowEl.style.opacity = '0';
+                  setTimeout(function () { rowEl.remove(); }, 260);
+                  showToast('Signed out of ' + devName);
+                })
+                .catch(function () { showToast('Could not sign out that session'); });
+            };
+          })(s.jti, parsed.name, row));
+          row.appendChild(soBtn);
+        }
+        devList.appendChild(row);
+      });
+    }
     devSection.appendChild(devList);
     acc.appendChild(devSection);
 
