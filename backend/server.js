@@ -65,7 +65,7 @@ app.use('/api', userRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', catalogRoutes);
 app.use('/api', translationRoutes);
-app.use('/api/tmdb', auth, tmdbRoutes);
+app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/anime', animeRoutes);
 
 app.use('/api/v1', authRoutes);
@@ -73,7 +73,7 @@ app.use('/api/v1', userRoutes);
 app.use('/api/v1', adminRoutes);
 app.use('/api/v1', catalogRoutes);
 app.use('/api/v1', translationRoutes);
-app.use('/api/v1/tmdb', auth, tmdbRoutes);
+app.use('/api/v1/tmdb', tmdbRoutes);
 app.use('/api/v1/anime', animeRoutes);
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
