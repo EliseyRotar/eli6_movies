@@ -1,5 +1,6 @@
 {
     "nav": {
+        "logo": "ELI6 Movies",
         "home": "Главная",
         "movies": "Фильмы",
         "tvshows": "Сериалы",
@@ -13,6 +14,15 @@
         "hero": {
             "watchNow": "Смотреть Сейчас",
             "moreInfo": "Подробнее"
+        },
+        "rows": {
+            "keepWatching": "Продолжить просмотр",
+            "trendingNow": "В Тренде",
+            "newReleases": "Новые релизы",
+            "criticallyAcclaimed": "Признанные критиками",
+            "animeSpotlight": "Аниме на виду",
+            "becauseYouWatched": "Потому что вы смотрели",
+            "continueWatching": "Продолжить просмотр"
         },
         "sections": {
             "trending": "В Тренде",
@@ -135,6 +145,9 @@
         "server": "Сервер:",
         "seasonShort": "Сезон:",
         "episodeShort": "Серия:",
+        "season": "Сезон:",
+        "episode": "Серия:",
+        "server_notice": "Попробуйте другой сервер, если видео не загружается",
         "skipToNextEpisode": "Перейти к следующей серии",
         "trailersVideos": "Трейлеры и Видео",
         "castCrew": "Актеры и Съемочная группа",
@@ -153,6 +166,7 @@
         "status": "Статус:",
         "originalLanguage": "Оригинальный язык:",
         "productionCompanies": "Кинокомпании",
+        "languages": "Языки",
         "financialInfo": "Финансовая информация",
         "budget": "Бюджет:",
         "revenue": "Доход:",
@@ -185,6 +199,12 @@
         "usernameEmailPlaceholder": "Имя пользователя или email",
         "passwordLabel": "Пароль*",
         "passwordPlaceholder": "Пароль",
+        "signIn": "Войти",
+        "usernameLabel": "Имя пользователя*",
+        "usernamePlaceholder": "Имя пользователя",
+        "emailLabel": "Адрес электронной почты*",
+        "emailPlaceholder": "Email",
+        "signUp": "Зарегистрироваться",
         "forgotPassword": "Забыли пароль?",
         "changePasswordBtn": "Сменить пароль"
     },
