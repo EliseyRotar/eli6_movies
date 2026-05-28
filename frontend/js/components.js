@@ -24,6 +24,18 @@
 
   // ─── Top Nav ────────────────────────────────────────────────────────────────
 
+  var _LANG_OPTS = [
+    { code: "en", label: "English",  flag: "🇺🇸" },
+    { code: "it", label: "Italiano", flag: "🇮🇹" },
+    { code: "ru", label: "Русский",  flag: "🇷🇺" },
+  ];
+
+  function _getCurrentLang() {
+    if (window.i18n && window.i18n.currentLanguage) return window.i18n.currentLanguage;
+    var m = document.cookie.match(/(?:^|;\s*)eli6_language=([a-z]+)/);
+    return (m && m[1]) || "en";
+  }
+
   function renderTopNav(active) {
     const mountId = "topnav-mount";
     const mount = document.getElementById(mountId);
@@ -84,9 +96,48 @@
     avatar.textContent = user && user.username ? user.username[0].toUpperCase() : "E";
     avatar.addEventListener("click", function () { window.location.href = "account.html"; });
 
+    // Language switcher
+    var curLang  = _getCurrentLang();
+    var curData  = _LANG_OPTS.filter(function(l) { return l.code === curLang; })[0] || _LANG_OPTS[0];
+    var langWrap = el("div", "topnav__lang");
+    var langBtn  = el("button", "topnav__icon-btn topnav__lang-btn");
+    langBtn.id   = "topnav-lang-btn";
+    langBtn.title = "Language / Lingua / Язык";
+    langBtn.innerHTML = curData.flag + '<span class="topnav__lang-code"> ' + curLang.toUpperCase() + "</span>";
+
+    var langMenu = el("div", "topnav__lang-menu");
+    langMenu.id  = "topnav-lang-menu";
+    _LANG_OPTS.forEach(function(l) {
+      var opt = el("button", "topnav__lang-opt" + (l.code === curLang ? " topnav__lang-opt--active" : ""));
+      opt.setAttribute("data-lang", l.code);
+      opt.innerHTML = '<span class="topnav__lang-flag">' + l.flag + '</span><span>' + l.label + '</span>';
+      opt.addEventListener("click", function(e) {
+        e.stopPropagation();
+        langMenu.classList.remove("topnav__lang-menu--open");
+        if (window.i18n) {
+          window.i18n.changeLanguage(l.code);
+        } else {
+          document.cookie = "eli6_language=" + l.code + "; path=/; max-age=31536000";
+          window.location.reload();
+        }
+      });
+      langMenu.appendChild(opt);
+    });
+
+    langBtn.addEventListener("click", function(e) {
+      e.stopPropagation();
+      var isOpen = langMenu.classList.contains("topnav__lang-menu--open");
+      document.querySelectorAll(".topnav__lang-menu--open").forEach(function(m) { m.classList.remove("topnav__lang-menu--open"); });
+      if (!isOpen) langMenu.classList.add("topnav__lang-menu--open");
+    });
+
+    langWrap.appendChild(langBtn);
+    langWrap.appendChild(langMenu);
+
     right.appendChild(searchWide);
     right.appendChild(searchMobile);
     right.appendChild(tweaksBtn);
+    right.appendChild(langWrap);
     right.appendChild(avatar);
 
     nav.appendChild(left);
@@ -698,6 +749,9 @@
 
   document.addEventListener("DOMContentLoaded", function () {
     renderCookieBanner();
+    document.addEventListener("click", function() {
+      document.querySelectorAll(".topnav__lang-menu--open").forEach(function(m) { m.classList.remove("topnav__lang-menu--open"); });
+    });
   });
 
 })(window);
