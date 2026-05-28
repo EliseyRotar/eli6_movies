@@ -2672,6 +2672,13 @@
 
             // Remove previous event listeners by replacing the iframe
             const newIframe = videoIframe.cloneNode(true);
+            // VixSrc actively detects the sandbox attribute and refuses to render video when present.
+            // Remove it for vixsrc; restore it for all other servers.
+            if (currentServer === 'vixsrc') {
+                newIframe.removeAttribute('sandbox');
+            } else {
+                newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox allow-forms');
+            }
             videoIframe.parentNode.replaceChild(newIframe, videoIframe);
 
             // Attach error and load handlers
@@ -3576,6 +3583,11 @@
                 }
             }
             videoIframe.src = videoUrl;
+            if (currentServer === 'vixsrc') {
+                videoIframe.removeAttribute('sandbox');
+            } else {
+                videoIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox allow-forms');
+            }
         }
 
         function goToNextEpisodeInPlayer() {
