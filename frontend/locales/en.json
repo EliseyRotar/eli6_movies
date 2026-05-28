@@ -36,6 +36,7 @@
     },
     "movies": {
         "title": "Movies",
+        "subtitle": "Trending, popular, and curated picks from every genre.",
         "sections": {
             "trending": "Trending Movies",
             "popular": "Popular Movies",
@@ -64,6 +65,7 @@
     },
     "tvshows": {
         "title": "TV Shows",
+        "subtitle": "Series, miniseries, and documentaries — all in one place.",
         "sections": {
             "trending": "Trending TV Shows",
             "popular": "Popular TV Shows",
@@ -81,7 +83,8 @@
             "mystery": "Mystery TV",
             "reality": "Reality TV",
             "warpolitics": "War & Politics TV",
-            "western": "Western TV"
+            "western": "Western TV",
+            "onTheAir": "On the Air"
         }
     },
     "search": {
@@ -170,7 +173,17 @@
         "financialInfo": "Financial Information",
         "budget": "Budget:",
         "revenue": "Revenue:",
-        "retry": "Retry"
+        "retry": "Retry",
+        "moreInfo": "More Info",
+        "loadingTrailers": "Loading trailers...",
+        "loadingCast": "Loading cast information...",
+        "loadingEpisodes": "Loading episodes...",
+        "loadingSimilar": "Loading similar content...",
+        "noOverview": "No overview available.",
+        "unableToLoad": "Unable to load information.",
+        "studiosLabel": "Studios:",
+        "episodeCount": "Episodes:",
+        "thankYouReport": "Thank you for reporting. We will investigate this stream."
     },
     "account": {
         "title": "Account",
@@ -204,7 +217,38 @@
         "emailPlaceholder": "Email",
         "signUp": "Sign Up",
         "forgotPassword": "Forgot password?",
-        "changePasswordBtn": "Change Password"
+        "changePasswordBtn": "Change Password",
+        "welcomeBack": "Welcome back",
+        "createAccountTab": "Create account",
+        "signingIn": "Signing in…",
+        "creating": "Creating…",
+        "signedIn": "Signed in!",
+        "accountCreated": "Account created!",
+        "appearance": "Appearance & theme",
+        "customizeLink": "Customize ›",
+        "plan": "Plan",
+        "planFree": "Free · Forever",
+        "playbackQuality": "Playback quality",
+        "playbackAuto": "Auto (up to 4K)",
+        "autoplayNext": "Autoplay next episode",
+        "on": "On",
+        "wifiOnly": "Downloads over Wi-Fi only",
+        "changePassword": "Change password",
+        "currentPassword": "Current password",
+        "newPassword": "New password",
+        "confirmNewPassword": "Confirm new password",
+        "updatePassword": "Update password",
+        "customizeAppearance": "Customize appearance",
+        "editProfile": "Edit profile",
+        "deleteAccount": "Delete account",
+        "passwordsDoNotMatch": "Passwords do not match",
+        "minChars": "Minimum 8 characters",
+        "passwordUpdated": "Password updated!",
+        "failedUpdatePassword": "Failed to update password",
+        "signInFailed": "Sign in failed",
+        "deleteConfirm": "Delete your account? This cannot be undone.",
+        "accountDeleted": "Account deleted",
+        "failedDelete": "Failed to delete account"
     },
     "settings": {
         "title": "Settings",
@@ -258,7 +302,10 @@
         "terms": "Terms of Service",
         "privacy": "Privacy Policy",
         "cookies": "Cookie Policy",
-        "reloadRequired": "Reload required to change language."
+        "reloadRequired": "Reload required to change language.",
+        "browse": "Browse",
+        "all": "All",
+        "tryDifferentGenre": "Try a different genre."
     },
     "languages": {
         "en": "English",
@@ -289,7 +336,8 @@
             "drama": "Drama Anime",
             "fantasy": "Fantasy Anime",
             "romance": "Romance Anime",
-            "thisSeason": "This Season"
+            "thisSeason": "This Season",
+            "popularOnTMDB": "Popular on TMDB"
         }
     },
     "animeSearch": {
