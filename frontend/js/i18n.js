@@ -155,71 +155,10 @@ class I18nManager {
     }
 
     /**
-     * Setup language switcher in navbar
+     * Setup language switcher — UI is built by renderTopNav() in components.js.
+     * Nothing to do here; updateLanguageSwitcher() handles post-change updates.
      */
-    setupLanguageSwitcher() {
-        const navbar = document.querySelector('.navbar');
-        if (!navbar) return;
-
-        // Find the nav-icons container
-        let navIcons = navbar.querySelector('.nav-icons');
-        if (!navIcons) {
-            // Create nav-icons if it doesn't exist
-            navIcons = document.createElement('div');
-            navIcons.className = 'nav-icons';
-            navbar.appendChild(navIcons);
-        }
-
-        // Remove any existing language switcher to prevent duplicates
-        const existingSwitcher = navIcons.querySelector('.language-switcher');
-        if (existingSwitcher) {
-            existingSwitcher.remove();
-        }
-
-        // Create language switcher
-        const languageSwitcher = document.createElement('div');
-        languageSwitcher.className = 'language-switcher';
-        languageSwitcher.innerHTML = `
-            <button class="language-btn" onclick="i18n.toggleLanguageMenu()">
-                <i class="material-icons">language</i>
-                <span>${this.languageNames[this.currentLanguage]}</span>
-                <i class="material-icons">arrow_drop_down</i>
-            </button>
-            <div class="language-menu" id="language-menu">
-                ${this.supportedLanguages
-                    .map(
-                        (lang) => `
-                    <div class="language-option ${lang === this.currentLanguage ? 'active' : ''}" 
-                         onclick="i18n.changeLanguage('${lang}')">
-                        <span>${this.languageNames[lang]}</span>
-                        ${lang === this.currentLanguage ? '<i class="material-icons">check</i>' : ''}
-                    </div>
-                `
-                    )
-                    .join('')}
-            </div>
-        `;
-        // Insert before the first nav-icon
-        const firstIcon = navIcons.querySelector('.nav-icon');
-        if (firstIcon) {
-            navIcons.insertBefore(languageSwitcher, firstIcon);
-        } else {
-            navIcons.appendChild(languageSwitcher);
-        }
-
-        // Add reload-required message if not dismissed
-        if (!sessionStorage.getItem('reloadMsgDismissed')) {
-            let reloadMsg = document.createElement('span');
-            reloadMsg.className = 'reload-required-msg';
-            reloadMsg.innerHTML = i18n.t('') + ' <span class="reload-msg-dismiss""></span>';
-            reloadMsg.style = '';
-            reloadMsg.querySelector('.reload-msg-dismiss').onclick = function () {};
-            // Insert before the language switcher button
-        }
-
-        // Add CSS for language switcher
-        this.addLanguageSwitcherStyles();
-    }
+    setupLanguageSwitcher() {}
 
     /**
      * Add CSS styles for language switcher
@@ -357,22 +296,25 @@ class I18nManager {
     }
 
     /**
-     * Update language switcher display
+     * Update language switcher display after language change
      */
     updateLanguageSwitcher() {
-        const btn = document.querySelector('.language-btn span');
+        const flags = { en: '🇺🇸', it: '🇮🇹', ru: '🇷🇺' };
+        const btn = document.getElementById('topnav-lang-btn');
         if (btn) {
-            btn.textContent = this.languageNames[this.currentLanguage];
-        }
-
-        // Update active state in menu
-        const options = document.querySelectorAll('.language-option');
-        options.forEach((option) => {
-            option.classList.remove('active');
-            const lang = option.getAttribute('onclick').match(/'([^']+)'/)[1];
-            if (lang === this.currentLanguage) {
-                option.classList.add('active');
+            const codeEl = btn.querySelector('.topnav__lang-code');
+            if (codeEl) codeEl.textContent = ' ' + this.currentLanguage.toUpperCase();
+            const firstNode = btn.firstChild;
+            if (firstNode && firstNode.nodeType === Node.TEXT_NODE) {
+                firstNode.textContent = flags[this.currentLanguage] || '🌐';
+            } else {
+                btn.innerHTML = (flags[this.currentLanguage] || '🌐') +
+                    '<span class="topnav__lang-code"> ' + this.currentLanguage.toUpperCase() + '</span>';
             }
+        }
+        document.querySelectorAll('.topnav__lang-opt').forEach((opt) => {
+            const isActive = opt.getAttribute('data-lang') === this.currentLanguage;
+            opt.classList.toggle('topnav__lang-opt--active', isActive);
         });
     }
 
