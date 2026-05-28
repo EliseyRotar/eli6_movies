@@ -1881,7 +1881,8 @@
                 <div class="video-player">
                     <div class="player-loading" id="playerLoading">Loading video player...</div>
                     <iframe id="videoIframe" class="video-iframe" style="display: none;" allowfullscreen
-                        allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share"></iframe>
+                        allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share"
+                        sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
                     
                     <!-- Mouse Catcher: Transparent overlay to capture mouse events when controls are hidden -->
                     <div id="mouse-catcher" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2147483647; display:none; background: transparent;"></div>
@@ -1969,6 +1970,13 @@
         const VIDSRC_API_URL = 'https://vidsrc.to/embed';
         const VIXSRC_API_URL = 'https://vixsrc.to';
         const AUTH_API_URL = window.API_BASE_URL || '';
+
+        function esc(s) {
+            if (s == null) return '';
+            const d = document.createElement('div');
+            d.textContent = String(s);
+            return d.innerHTML;
+        }
 
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -2148,21 +2156,22 @@
             }
 
             // Update detailed overview with expanded information
+            const trailerEmbedUrl = (trailer && trailer.startsWith('https://')) ? trailer : 'about:blank';
             const detailedOverviewHTML = `
                 <div class="overview-content">
                     <div class="overview-main">
-                        <div><strong>Type:</strong> ${typeStr}</div>
-                        <div><strong>Status:</strong> ${status}</div>
-                        <div><strong>Episodes:</strong> ${episodes}</div>
-                        <div><strong>Year:</strong> ${year}</div>
-                        <div><strong>Studios:</strong> ${studios}</div>
-                        <div><strong>Genres:</strong> ${genres}</div>
-                        <div><strong>Duration:</strong> ${duration}</div>
-                        <div><strong>Rating:</strong> ${rating}</div>
+                        <div><strong>Type:</strong> ${esc(typeStr)}</div>
+                        <div><strong>Status:</strong> ${esc(status)}</div>
+                        <div><strong>Episodes:</strong> ${esc(episodes)}</div>
+                        <div><strong>Year:</strong> ${esc(year)}</div>
+                        <div><strong>Studios:</strong> ${esc(studios)}</div>
+                        <div><strong>Genres:</strong> ${esc(genres)}</div>
+                        <div><strong>Duration:</strong> ${esc(duration)}</div>
+                        <div><strong>Rating:</strong> ${esc(rating)}</div>
                     </div>
                     <div class="overview-extra">
-                        <div><strong>Synopsis:</strong> ${overview}</div>
-                        ${trailer ? `<div style='margin-top:20px;'><iframe width='100%' height='315' src='${trailer}' frameborder='0' allowfullscreen></iframe></div>` : ''}
+                        <div><strong>Synopsis:</strong> ${esc(overview)}</div>
+                        ${trailer ? `<div style='margin-top:20px;'><iframe width='100%' height='315' src='${trailerEmbedUrl}' frameborder='0' allowfullscreen></iframe></div>` : ''}
                     </div>
                 </div>
             `;
@@ -2220,10 +2229,10 @@
                 <div class="overview-content">
                     <div class="overview-main">
                         <h2 class="overview-title" data-i18n="player.synopsis">Synopsis</h2>
-                        <p class="overview-text">${overview}</p>
-                        ${tagline ? `<p class="overview-tagline">"${tagline}"</p>` : ''}
+                        <p class="overview-text">${esc(overview)}</p>
+                        ${tagline ? `<p class="overview-tagline">"${esc(tagline)}"</p>` : ''}
                     </div>
-                    
+
                     <div class="overview-details">
                         <div class="detail-section">
                             <h3 data-i18n="player.details">Details</h3>
@@ -2234,57 +2243,57 @@
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.year">Year:</span>
-                                    <span class="detail-value">${year}</span>
+                                    <span class="detail-value">${esc(year)}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.rating">Rating:</span>
-                                    <span class="detail-value rating-value">${rating}</span>
+                                    <span class="detail-value rating-value">${esc(rating)}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.duration">Duration:</span>
-                                    <span class="detail-value">${duration}</span>
+                                    <span class="detail-value">${esc(duration)}</span>
                                 </div>
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.genres">Genres:</span>
-                                    <span class="detail-value">${genres}</span>
+                                    <span class="detail-value">${esc(genres)}</span>
                                 </div>
                                 ${status ? `
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.status">Status:</span>
-                                    <span class="detail-value">${status}</span>
+                                    <span class="detail-value">${esc(status)}</span>
                                 </div>
                                 ` : ''}
                                 ${originalLanguage ? `
                                 <div class="detail-item">
                                     <span class="detail-label" data-i18n="player.originalLanguage">Original Language:</span>
-                                    <span class="detail-value">${originalLanguage.toUpperCase()}</span>
+                                    <span class="detail-value">${esc(originalLanguage.toUpperCase())}</span>
                                 </div>
                                 ` : ''}
                             </div>
                         </div>
-                        
+
                         ${productionCompanies.length > 0 ? `
                         <div class="detail-section">
                             <h3 data-i18n="player.productionCompanies">Production Companies</h3>
                             <div class="companies-list">
                                 ${productionCompanies.map(company => `
-                                    <span class="company-tag">${company.name}</span>
+                                    <span class="company-tag">${esc(company.name)}</span>
                                 `).join('')}
                             </div>
                         </div>
                         ` : ''}
-                        
+
                         ${spokenLanguages.length > 0 ? `
                         <div class="detail-section">
                             <h3 data-i18n="player.languages">Languages</h3>
                             <div class="languages-list">
                                 ${spokenLanguages.map(lang => `
-                                    <span class="language-tag">${lang.english_name || lang.name}</span>
+                                    <span class="language-tag">${esc(lang.english_name || lang.name)}</span>
                                 `).join('')}
                             </div>
                         </div>
                         ` : ''}
-                        
+
                         ${type === 'movie' && (budget > 0 || revenue > 0) ? `
                         <div class="detail-section">
                             <h3 data-i18n="player.financialInfo">Financial Information</h3>
@@ -2740,10 +2749,10 @@
                         trailerGrid.innerHTML = trailers.map((trailer, index) => `
                             <div class="trailer-item" onclick="playTrailer('${trailer.key}')">
                                 <div class="trailer-thumbnail">
-                                    <img src="https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg" alt="${trailer.name}">
+                                    <img src="https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg" alt="${esc(trailer.name)}">
                                     <div class="trailer-play-overlay">▶</div>
                                 </div>
-                                <div class="trailer-title">${trailer.name}</div>
+                                <div class="trailer-title">${esc(trailer.name)}</div>
                             </div>
                         `).join('');
 
@@ -2813,12 +2822,12 @@
                     if (cast.length > 0) {
                         castGrid.innerHTML = cast.map(person => `
                             <div class="cast-item">
-                                <img class="cast-photo" 
-                                     src="${person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}" 
-                                     alt="${person.name}">
+                                <img class="cast-photo"
+                                     src="${person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}"
+                                     alt="${esc(person.name)}">
                                 <div class="cast-info">
-                                    <div class="cast-name">${person.name}</div>
-                                    <div class="cast-character">${person.character}</div>
+                                    <div class="cast-name">${esc(person.name)}</div>
+                                    <div class="cast-character">${esc(person.character)}</div>
                                 </div>
                             </div>
                         `).join('');
@@ -2849,11 +2858,11 @@
                     if (similar.length > 0) {
                         similarGrid.innerHTML = similar.map(item => `
                             <div class="similar-item" onclick="navigateToContent(${item.id})">
-                                <img class="similar-poster" 
-                                     src="${item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}" 
-                                     alt="${type === 'tv' ? item.name : item.title}">
+                                <img class="similar-poster"
+                                     src="${item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}"
+                                     alt="${esc(type === 'tv' ? item.name : item.title)}">
                                 <div class="similar-info">
-                                    <div class="similar-title">${type === 'tv' ? item.name : item.title}</div>
+                                    <div class="similar-title">${esc(type === 'tv' ? item.name : item.title)}</div>
                                     <div class="similar-meta">${type === 'tv' ? (item.first_air_date ? item.first_air_date.split('-')[0] : 'N/A') : (item.release_date ? item.release_date.split('-')[0] : 'N/A')}</div>
                                 </div>
                             </div>
@@ -2911,17 +2920,17 @@
                     if (episodes && episodes.length > 0) {
                         episodesGrid.innerHTML = episodes.map(episode => `
                             <div class="episode-item" onclick="playEpisode(${episode.episode_number}, ${seasonNumber})">
-                                <img class="episode-still" 
-                                     src="${episode.still_path ? `https://image.tmdb.org/t/p/w500${episode.still_path}` : 'https://via.placeholder.com/500x281/2a2a2a/ffffff?text=No+Image'}" 
-                                     alt="${episode.name}">
+                                <img class="episode-still"
+                                     src="${episode.still_path ? `https://image.tmdb.org/t/p/w500${episode.still_path}` : 'https://via.placeholder.com/500x281/2a2a2a/ffffff?text=No+Image'}"
+                                     alt="${esc(episode.name)}">
                                 <div class="episode-info">
                                     <div class="episode-number">Episode ${episode.episode_number}</div>
-                                    <div class="episode-title">${episode.name}</div>
+                                    <div class="episode-title">${esc(episode.name)}</div>
                                     <div class="episode-meta">
                                         <span>${episode.runtime || 45}m</span>
                                         <span>${episode.air_date ? episode.air_date.split('-')[0] : 'N/A'}</span>
                                     </div>
-                                    <div class="episode-overview">${episode.overview || 'No description available.'}</div>
+                                    <div class="episode-overview">${esc(episode.overview) || 'No description available.'}</div>
                                 </div>
                             </div>
                         `).join('');
