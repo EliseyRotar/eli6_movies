@@ -183,7 +183,11 @@
         "unableToLoad": "Impossibile caricare le informazioni.",
         "studiosLabel": "Studios:",
         "episodeCount": "Episodi:",
-        "thankYouReport": "Grazie per la segnalazione. Esamineremo questo stream."
+        "thankYouReport": "Grazie per la segnalazione. Esamineremo questo stream.",
+        "noTrailers": "Nessun trailer ufficiale disponibile",
+        "noCast": "Nessuna informazione sul cast disponibile",
+        "noSimilar": "Nessun contenuto simile disponibile",
+        "noEpisodes": "Nessun episodio disponibile"
     },
     "account": {
         "title": "Account",
@@ -250,7 +254,8 @@
         "signInFailed": "Accesso fallito",
         "deleteConfirm": "Eliminare l'account? Questa azione non può essere annullata.",
         "accountDeleted": "Account eliminato",
-        "failedDelete": "Impossibile eliminare l'account"
+        "failedDelete": "Impossibile eliminare l'account",
+        "signedOut": "Disconnesso"
     },
     "settings": {
         "title": "Impostazioni",
