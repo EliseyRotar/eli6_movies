@@ -1,5 +1,7 @@
 const express = require('express');
+const crypto = require('crypto');
 const { createToken } = require('../utils/jwt');
+const { verifyToken } = require('../utils/jwt');
 const logger = require('../utils/logger');
 const {
     validateEmail,
@@ -44,7 +46,11 @@ router.post('/register', async (req, res, next) => {
             password,
         });
 
-        const token = createToken({ userId: user._id });
+        const jti = crypto.randomUUID();
+        const token = createToken({ userId: user._id, jti });
+        user.sessions.push({ jti, ua: req.headers['user-agent'] || '', ip: req.ip || '' });
+        if (user.sessions.length > 10) user.sessions = user.sessions.slice(-10);
+        await user.save();
         res.cookie('token', token, cookieBase)
             .status(201)
             .json({ token, user: sanitizeUser(user) });
@@ -71,7 +77,11 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
         }
 
-        const token = createToken({ userId: user._id });
+        const jti = crypto.randomUUID();
+        const token = createToken({ userId: user._id, jti });
+        user.sessions.push({ jti, ua: req.headers['user-agent'] || '', ip: req.ip || '' });
+        if (user.sessions.length > 10) user.sessions = user.sessions.slice(-10);
+        await user.save();
         res.cookie('token', token, cookieBase).json({ token, user: sanitizeUser(user) });
     } catch (error) {
         logger.error('Login failed', { error: error.message });
@@ -79,7 +89,25 @@ router.post('/login', async (req, res, next) => {
     }
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', async (req, res) => {
+    try {
+        const cookieToken = req.cookies && req.cookies.token;
+        const headerToken = req.header('Authorization') ? req.header('Authorization').replace('Bearer ', '') : null;
+        const token = cookieToken || headerToken;
+        if (token) {
+            try {
+                const decoded = verifyToken(token);
+                if (decoded.jti && decoded.userId) {
+                    const userService = require('../services/userService');
+                    const user = await userService.findById(decoded.userId);
+                    if (user) {
+                        user.sessions = user.sessions.filter(s => s.jti !== decoded.jti);
+                        await user.save();
+                    }
+                }
+            } catch (_) { /* token already invalid — just clear the cookie */ }
+        }
+    } catch (_) {}
     res.clearCookie('token', { ...cookieBase, maxAge: 0 }).json({ message: 'LOGGED_OUT' });
 });
 
