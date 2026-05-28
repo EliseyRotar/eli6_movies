@@ -91,16 +91,21 @@
     loginForm.appendChild(loginBtn);
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+      var emailVal = document.getElementById('login-email').value.trim();
+      var pwdVal = document.getElementById('login-pwd').value;
+      if (!emailVal || !pwdVal) { showToast(tr('account.errorInvalidInput', 'Enter your email and password'), 'error'); return; }
       loginBtn.textContent = tr('account.signingIn', 'Signing in…'); loginBtn.disabled = true;
       try {
-        var d = await apiPost('/login', { email: document.getElementById('login-email').value, password: document.getElementById('login-pwd').value });
+        var d = await apiPost('/login', { email: emailVal, password: pwdVal });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.signedIn', 'Signed in!'));
         renderPage();
         window.renderTopNav('account');
       } catch (err) {
-        showToast(err.message || tr('account.signInFailed', 'Sign in failed'), 'error');
+        var msg = err.message;
+        if (msg === 'INVALID_CREDENTIALS' || msg === 'INVALID_INPUT') msg = tr('account.errorInvalidCredentials', 'Incorrect email or password');
+        showToast(msg || tr('account.signInFailed', 'Sign in failed'), 'error');
       } finally { loginBtn.textContent = tr('account.signIn', 'Sign in'); loginBtn.disabled = false; }
     });
     wrap.appendChild(loginForm);
@@ -118,16 +123,25 @@
     regForm.appendChild(regBtn);
     regForm.addEventListener('submit', async function (e) {
       e.preventDefault();
+      var usernameVal = document.getElementById('reg-username').value.trim();
+      var emailVal = document.getElementById('reg-email').value.trim();
+      var pwdVal = document.getElementById('reg-pwd').value;
+      if (usernameVal.length < 3) { showToast(tr('account.errorUsernameTooShort', 'Username must be at least 3 characters'), 'error'); return; }
+      if (!emailVal.includes('@')) { showToast(tr('account.errorInvalidEmail', 'Enter a valid email address'), 'error'); return; }
+      if (pwdVal.length < 8) { showToast(tr('account.minChars', 'Minimum 8 characters'), 'error'); return; }
       regBtn.textContent = tr('account.creating', 'Creating…'); regBtn.disabled = true;
       try {
-        var d = await apiPost('/register', { username: document.getElementById('reg-username').value, email: document.getElementById('reg-email').value, password: document.getElementById('reg-pwd').value });
+        var d = await apiPost('/register', { username: usernameVal, email: emailVal, password: pwdVal });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.accountCreated', 'Account created!'));
         renderPage();
         window.renderTopNav('account');
       } catch (err) {
-        showToast(err.message || tr('account.registrationFailed', 'Registration failed'), 'error');
+        var msg = err.message;
+        if (msg === 'INVALID_INPUT') msg = tr('account.errorInvalidInput', 'Check: username (3+ chars), valid email, password (8+ chars)');
+        else if (msg === 'USER_EXISTS') msg = tr('account.errorUserExists', 'An account with this email already exists');
+        showToast(msg || tr('account.registrationFailed', 'Registration failed'), 'error');
       } finally { regBtn.textContent = tr('account.createAccountTab', 'Create account'); regBtn.disabled = false; }
     });
     wrap.appendChild(regForm);

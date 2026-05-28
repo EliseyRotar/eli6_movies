@@ -216,12 +216,10 @@
         "usernameEmailPlaceholder": "Имя пользователя или email",
         "passwordLabel": "Пароль*",
         "passwordPlaceholder": "Пароль",
-        "signIn": "Войти",
         "usernameLabel": "Имя пользователя*",
         "usernamePlaceholder": "Имя пользователя",
         "emailLabel": "Адрес электронной почты*",
         "emailPlaceholder": "Email",
-        "signUp": "Зарегистрироваться",
         "forgotPassword": "Забыли пароль?",
         "changePasswordBtn": "Сменить пароль",
         "welcomeBack": "С возвращением",
@@ -255,7 +253,12 @@
         "deleteConfirm": "Удалить аккаунт? Это действие нельзя отменить.",
         "accountDeleted": "Аккаунт удалён",
         "failedDelete": "Не удалось удалить аккаунт",
-        "signedOut": "Выполнен выход"
+        "signedOut": "Выполнен выход",
+        "errorInvalidInput": "Проверьте: имя (от 3 символов), верный email, пароль (от 8 символов)",
+        "errorUserExists": "Аккаунт с этим email уже существует",
+        "errorInvalidCredentials": "Неверный email или пароль",
+        "errorUsernameTooShort": "Имя пользователя должно содержать не менее 3 символов",
+        "errorInvalidEmail": "Введите корректный адрес электронной почты"
     },
     "settings": {
         "title": "Настройки",

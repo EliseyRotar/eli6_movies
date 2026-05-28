@@ -253,7 +253,12 @@
         "deleteConfirm": "Delete your account? This cannot be undone.",
         "accountDeleted": "Account deleted",
         "failedDelete": "Failed to delete account",
-        "signedOut": "Signed out"
+        "signedOut": "Signed out",
+        "errorInvalidInput": "Check: username (3+ chars), valid email, password (8+ chars)",
+        "errorUserExists": "An account with this email already exists",
+        "errorInvalidCredentials": "Incorrect email or password",
+        "errorUsernameTooShort": "Username must be at least 3 characters",
+        "errorInvalidEmail": "Enter a valid email address"
     },
     "settings": {
         "title": "Settings",

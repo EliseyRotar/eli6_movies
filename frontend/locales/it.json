@@ -216,12 +216,10 @@
         "usernameEmailPlaceholder": "Nome utente o email",
         "passwordLabel": "Password*",
         "passwordPlaceholder": "Password",
-        "signIn": "Accedi",
         "usernameLabel": "Nome utente*",
         "usernamePlaceholder": "Nome utente",
         "emailLabel": "Indirizzo email*",
         "emailPlaceholder": "Email",
-        "signUp": "Registrati",
         "forgotPassword": "Password dimenticata?",
         "changePasswordBtn": "Cambia Password",
         "welcomeBack": "Bentornato",
@@ -255,7 +253,12 @@
         "deleteConfirm": "Eliminare l'account? Questa azione non può essere annullata.",
         "accountDeleted": "Account eliminato",
         "failedDelete": "Impossibile eliminare l'account",
-        "signedOut": "Disconnesso"
+        "signedOut": "Disconnesso",
+        "errorInvalidInput": "Controlla: nome utente (3+ caratteri), email valida, password (8+ caratteri)",
+        "errorUserExists": "Un account con questa email esiste già",
+        "errorInvalidCredentials": "Email o password errati",
+        "errorUsernameTooShort": "Il nome utente deve contenere almeno 3 caratteri",
+        "errorInvalidEmail": "Inserisci un indirizzo email valido"
     },
     "settings": {
         "title": "Impostazioni",
