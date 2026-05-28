@@ -36,6 +36,7 @@
     },
     "movies": {
         "title": "Film",
+        "subtitle": "Tendenze, popolari e selezioni da ogni genere.",
         "sections": {
             "trending": "Film di Tendenza",
             "popular": "Film Popolari",
@@ -64,6 +65,7 @@
     },
     "tvshows": {
         "title": "Serie TV",
+        "subtitle": "Serie, miniserie e documentari — tutto in un posto.",
         "sections": {
             "trending": "Serie TV di Tendenza",
             "popular": "Serie TV Popolari",
@@ -81,7 +83,8 @@
             "mystery": "Serie TV Mistero",
             "reality": "Reality TV",
             "warpolitics": "Serie TV Guerra e Politica",
-            "western": "Western TV"
+            "western": "Western TV",
+            "onTheAir": "In Onda"
         }
     },
     "search": {
@@ -170,7 +173,17 @@
         "financialInfo": "Informazioni Finanziarie",
         "budget": "Budget:",
         "revenue": "Ricavi:",
-        "retry": "Riprova"
+        "retry": "Riprova",
+        "moreInfo": "Più info",
+        "loadingTrailers": "Caricamento trailer...",
+        "loadingCast": "Caricamento cast...",
+        "loadingEpisodes": "Caricamento episodi...",
+        "loadingSimilar": "Caricamento contenuti simili...",
+        "noOverview": "Nessuna trama disponibile.",
+        "unableToLoad": "Impossibile caricare le informazioni.",
+        "studiosLabel": "Studios:",
+        "episodeCount": "Episodi:",
+        "thankYouReport": "Grazie per la segnalazione. Esamineremo questo stream."
     },
     "account": {
         "title": "Account",
@@ -206,7 +219,38 @@
         "emailPlaceholder": "Email",
         "signUp": "Registrati",
         "forgotPassword": "Password dimenticata?",
-        "changePasswordBtn": "Cambia Password"
+        "changePasswordBtn": "Cambia Password",
+        "welcomeBack": "Bentornato",
+        "createAccountTab": "Crea account",
+        "signingIn": "Accesso in corso…",
+        "creating": "Creazione in corso…",
+        "signedIn": "Accesso effettuato!",
+        "accountCreated": "Account creato!",
+        "appearance": "Aspetto e tema",
+        "customizeLink": "Personalizza ›",
+        "plan": "Piano",
+        "planFree": "Gratuito · Per sempre",
+        "playbackQuality": "Qualità di riproduzione",
+        "playbackAuto": "Auto (fino a 4K)",
+        "autoplayNext": "Riproduzione automatica prossimo episodio",
+        "on": "Attivo",
+        "wifiOnly": "Download solo tramite Wi-Fi",
+        "changePassword": "Cambia password",
+        "currentPassword": "Password attuale",
+        "newPassword": "Nuova password",
+        "confirmNewPassword": "Conferma nuova password",
+        "updatePassword": "Aggiorna password",
+        "customizeAppearance": "Personalizza aspetto",
+        "editProfile": "Modifica profilo",
+        "deleteAccount": "Elimina account",
+        "passwordsDoNotMatch": "Le password non corrispondono",
+        "minChars": "Minimo 8 caratteri",
+        "passwordUpdated": "Password aggiornata!",
+        "failedUpdatePassword": "Impossibile aggiornare la password",
+        "signInFailed": "Accesso fallito",
+        "deleteConfirm": "Eliminare l'account? Questa azione non può essere annullata.",
+        "accountDeleted": "Account eliminato",
+        "failedDelete": "Impossibile eliminare l'account"
     },
     "settings": {
         "title": "Impostazioni",
@@ -260,7 +304,10 @@
         "terms": "Termini di Servizio",
         "privacy": "Informativa Privacy",
         "cookies": "Informativa Cookie",
-        "reloadRequired": "Ricarica richiesta per cambiare lingua."
+        "reloadRequired": "Ricarica richiesta per cambiare lingua.",
+        "browse": "Sfoglia",
+        "all": "Tutto",
+        "tryDifferentGenre": "Prova un genere diverso."
     },
     "languages": {
         "en": "English",
@@ -291,7 +338,8 @@
             "drama": "Anime Drammatici",
             "fantasy": "Anime Fantasy",
             "romance": "Anime Romantici",
-            "thisSeason": "Questa Stagione"
+            "thisSeason": "Questa Stagione",
+            "popularOnTMDB": "Popolari su TMDB"
         }
     },
     "animeSearch": {
