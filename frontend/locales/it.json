@@ -1,5 +1,6 @@
 {
     "nav": {
+        "logo": "ELI6 Movies",
         "home": "Home",
         "movies": "Film",
         "tvshows": "Serie TV",
@@ -13,6 +14,15 @@
         "hero": {
             "watchNow": "Guarda Ora",
             "moreInfo": "Maggiori Informazioni"
+        },
+        "rows": {
+            "keepWatching": "Continua a guardare",
+            "trendingNow": "Tendenze",
+            "newReleases": "Nuove Uscite",
+            "criticallyAcclaimed": "Acclamati dalla critica",
+            "animeSpotlight": "In evidenza: Anime",
+            "becauseYouWatched": "Perché hai guardato",
+            "continueWatching": "Continua a guardare"
         },
         "sections": {
             "trending": "Tendenze",
@@ -135,6 +145,9 @@
         "server": "Server:",
         "seasonShort": "S:",
         "episodeShort": "E:",
+        "season": "Stagione:",
+        "episode": "Episodio:",
+        "server_notice": "Prova un altro server se il video non si carica",
         "skipToNextEpisode": "Salta al prossimo episodio",
         "trailersVideos": "Trailer e Video",
         "castCrew": "Cast e Crew",
@@ -186,6 +199,12 @@
         "usernameEmailPlaceholder": "Nome utente o email",
         "passwordLabel": "Password*",
         "passwordPlaceholder": "Password",
+        "signIn": "Accedi",
+        "usernameLabel": "Nome utente*",
+        "usernamePlaceholder": "Nome utente",
+        "emailLabel": "Indirizzo email*",
+        "emailPlaceholder": "Email",
+        "signUp": "Registrati",
         "forgotPassword": "Password dimenticata?",
         "changePasswordBtn": "Cambia Password"
     },
