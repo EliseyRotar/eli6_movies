@@ -110,6 +110,18 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'admin'],
             default: 'user',
         },
+        sessions: {
+            type: [
+                {
+                    jti:       { type: String, required: true },
+                    ua:        { type: String, default: '' },
+                    ip:        { type: String, default: '' },
+                    createdAt: { type: Date,   default: Date.now },
+                    lastSeen:  { type: Date,   default: Date.now },
+                },
+            ],
+            default: [],
+        },
     },
     {
         timestamps: true,
