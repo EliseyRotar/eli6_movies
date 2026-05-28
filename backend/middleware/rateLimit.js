@@ -25,9 +25,11 @@ function rateLimit(req, res, next) {
     const bucketKey = pickBucket(req.path);
     const bucket = BUCKETS[bucketKey] || BUCKETS.api;
     const now = Date.now();
+    // Trust only cf-connecting-ip (set by Cloudflare, cannot be spoofed by client).
+    // Fall back to socket remote address. Never read x-forwarded-for directly.
     const clientIP =
         req.headers['cf-connecting-ip'] ||
-        (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+        req.socket.remoteAddress ||
         req.ip;
     const key = `${clientIP}:${bucketKey}`;
 
