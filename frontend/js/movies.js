@@ -4,6 +4,10 @@
   var API_URL  = window.API_BASE_URL  || '';
   var TMDB_URL = window.TMDB_PROXY_URL || (API_URL ? API_URL + '/tmdb' : '');
 
+  function tr(key, fallback) {
+    return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
+  }
+
   var GENRES = [
     { id: 28,  name: "Action" },
     { id: 35,  name: "Comedy" },
@@ -18,6 +22,21 @@
     { id: 80,  name: "Crime" },
     { id: 14,  name: "Fantasy" },
   ];
+
+  var GENRE_KEYS = {
+    28:    'movies.sections.action',
+    35:    'movies.sections.comedy',
+    18:    'movies.sections.drama',
+    27:    'movies.sections.horror',
+    878:   'movies.sections.scifi',
+    53:    'movies.sections.thriller',
+    10749: 'movies.sections.romance',
+    16:    'movies.sections.animation',
+    99:    'movies.sections.documentary',
+    12:    'movies.sections.adventure',
+    80:    'movies.sections.crime',
+    14:    'movies.sections.fantasy',
+  };
 
   var activeGenre = null;
 
@@ -48,14 +67,14 @@
 
     var allPill = document.createElement('button');
     allPill.className = 'pill' + (!activeGenre ? ' pill--active' : '');
-    allPill.textContent = 'All';
+    allPill.textContent = tr('common.all', 'All');
     allPill.addEventListener('click', function () { activeGenre = null; renderPage(); });
     wrap.appendChild(allPill);
 
     GENRES.forEach(function (g) {
       var pill = document.createElement('button');
       pill.className = 'pill' + (activeGenre === g.id ? ' pill--active' : '');
-      pill.textContent = g.name;
+      pill.textContent = tr(GENRE_KEYS[g.id] || '', g.name);
       pill.addEventListener('click', function () { activeGenre = g.id; renderPage(); });
       wrap.appendChild(pill);
     });
@@ -70,7 +89,7 @@
     var mount = document.getElementById('rows-mount');
     if (!mount) return;
 
-    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>Loading…</span></div>';
+    mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>' + tr('common.loading', 'Loading…') + '</span></div>';
 
     var lang = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
 
@@ -79,7 +98,7 @@
       var items = await fetchMovies('/discover/movie?with_genres=' + activeGenre + '&sort_by=popularity.desc', lang);
       mount.innerHTML = '';
       if (!items.length) {
-        mount.innerHTML = '<div class="empty"><div class="empty__icon">◻</div><div class="empty__title">No results</div><div class="empty__sub">Try a different genre.</div></div>';
+        mount.innerHTML = '<div class="empty"><div class="empty__icon">◻</div><div class="empty__title">' + tr('common.noResults', 'No results') + '</div><div class="empty__sub">' + tr('common.tryDifferentGenre', 'Try a different genre.') + '</div></div>';
         return;
       }
       var gridWrap = document.createElement('div');
@@ -105,11 +124,11 @@
 
       mount.innerHTML = '';
       var rows = [
-        { title: 'Trending Now',   items: results[0] },
-        { title: 'Popular',        items: results[1] },
-        { title: 'Top Rated',      items: results[2], numbered: true },
-        { title: 'Now Playing',    items: results[3] },
-        { title: 'Coming Soon',    items: results[4] },
+        { title: tr('movies.sections.trending',  'Trending Now'),   items: results[0] },
+        { title: tr('movies.sections.popular',   'Popular'),        items: results[1] },
+        { title: tr('movies.sections.topRated',  'Top Rated'),      items: results[2], numbered: true },
+        { title: tr('movies.sections.nowPlaying','Now Playing'),    items: results[3] },
+        { title: tr('movies.sections.upcoming',  'Coming Soon'),    items: results[4] },
       ];
       rows.forEach(function (r) {
         if (!r.items || !r.items.length) return;
