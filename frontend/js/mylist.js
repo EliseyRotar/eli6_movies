@@ -210,6 +210,40 @@ window.removeFromMyList = removeFromMyList;
 window.showMyListToast = showMyListToast;
 window.syncMyListStorage = syncMyListStorage;
 
+// Used by components.js hero carousel and detail modal buttons
+window.toggleMyList = async function (item) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        showMyListToast('Please sign in to use My List', 'error');
+        setTimeout(function () { window.location.href = 'account.html'; }, 1800);
+        return;
+    }
+    const id = parseInt(item.id || item.tmdb_id || item.mal_id);
+    const type = item.kind || item.type || 'movie';
+    const title = item.title || item.name || '';
+    const posterPath = item.poster_path || item.poster_url || '';
+    const overview = (item.overview || item.synopsis || item.description || '').substring(0, 500);
+
+    if (!id || !title || !posterPath) {
+        showMyListToast('Unable to add this item — missing data', 'error');
+        return;
+    }
+    const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
+    const alreadyIn = myListArr.some(function (i) { return i.id === id && i.type === type; });
+    try {
+        if (alreadyIn) {
+            await removeFromMyList(id, type);
+            showMyListToast('Removed from My List', 'info');
+        } else {
+            await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
+            showMyListToast('Added to My List', 'success');
+        }
+        syncMyListStorage();
+    } catch (e) {
+        showMyListToast(e.message || 'Failed to update My List', 'error');
+    }
+};
+
 function createCard(item) {
     const card = document.createElement('div');
     card.className = 'movie-card';
