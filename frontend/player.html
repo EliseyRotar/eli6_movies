@@ -2721,8 +2721,9 @@
         async function loadTrailers() {
             try {
                 const endpoint = type === 'tv' ? 'tv' : 'movie';
+                const lang = getTMDBLang();
                 console.log('Loading trailers for:', { endpoint, id, type });
-                const response = await fetch(`${TMDB_BASE_URL}/${endpoint}/${id}/videos`);
+                const response = await fetch(`${TMDB_BASE_URL}/${endpoint}/${id}/videos?language=${lang}`);
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Videos API response:', data);
@@ -2813,7 +2814,8 @@
         // Load cast
         async function loadCast() {
             try {
-                const response = await fetch(`${TMDB_BASE_URL}/${type}/${id}/credits`);
+                const lang = getTMDBLang();
+                const response = await fetch(`${TMDB_BASE_URL}/${type}/${id}/credits?language=${lang}`);
                 if (response.ok) {
                     const data = await response.json();
                     const cast = data.cast.slice(0, 12); // Show first 12 cast members
@@ -2849,7 +2851,8 @@
         // Load similar content
         async function loadSimilar() {
             try {
-                const response = await fetch(`${TMDB_BASE_URL}/${type}/${id}/similar`);
+                const lang = getTMDBLang();
+                const response = await fetch(`${TMDB_BASE_URL}/${type}/${id}/similar?language=${lang}`);
                 if (response.ok) {
                     const data = await response.json();
                     const similar = data.results.slice(0, 12); // Show first 12 similar items
@@ -2879,7 +2882,8 @@
         // Load episodes (TV shows only)
         async function loadEpisodes() {
             try {
-                const response = await fetch(`${TMDB_BASE_URL}/tv/${id}`);
+                const lang = getTMDBLang();
+                const response = await fetch(`${TMDB_BASE_URL}/tv/${id}?language=${lang}`);
                 if (response.ok) {
                     const showData = await response.json();
                     const totalSeasons = showData.number_of_seasons;
@@ -2911,7 +2915,8 @@
                 document.querySelectorAll('.season-button').forEach(btn => btn.classList.remove('active'));
                 event.target.classList.add('active');
 
-                const response = await fetch(`${TMDB_BASE_URL}/tv/${id}/season/${seasonNumber}`);
+                const lang = getTMDBLang();
+                const response = await fetch(`${TMDB_BASE_URL}/tv/${id}/season/${seasonNumber}?language=${lang}`);
                 if (response.ok) {
                     const seasonData = await response.json();
                     const episodes = seasonData.episodes;
@@ -3960,14 +3965,10 @@
             hideMetaLoading();
 
         }
-        // Listen for language changes and only update metadata
-        if (window.i18n) {
-            const origChangeLanguage = window.i18n.changeLanguage.bind(window.i18n);
-            window.i18n.changeLanguage = async function(lang) {
-                await origChangeLanguage(lang);
-                await updateMetadataOnly();
-            };
-        }
+        // Listen for language changes and reload content metadata
+        window.addEventListener('eli6.langChanged', async function () {
+            await loadContentDetails();
+        });
 
         // Google Cast Framework Initialization
         window['__onGCastApiAvailable'] = function(isAvailable) {
