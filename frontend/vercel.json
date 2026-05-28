@@ -2,6 +2,10 @@
   "version": 2,
   "cleanUrls": false,
   "trailingSlash": false,
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/404.html", "status": 404 }
+  ],
   "headers": [
     {
       "source": "/(.*)",
