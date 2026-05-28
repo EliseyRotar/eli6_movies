@@ -5,6 +5,10 @@
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
+  function tr(key, fallback) {
+    return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
+  }
+
   function el(tag, cls) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -61,9 +65,9 @@
     var tabs = div();
     tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border-radius:var(--r-pill);padding:4px;border:1px solid var(--border)';
     var tabLogin = el('button', 'settings__seg-btn is-active');
-    tabLogin.id = 'tab-login'; tabLogin.textContent = 'Sign in';
+    tabLogin.id = 'tab-login'; tabLogin.textContent = tr('account.signIn', 'Sign in');
     var tabReg = el('button', 'settings__seg-btn');
-    tabReg.id = 'tab-reg'; tabReg.textContent = 'Create account';
+    tabReg.id = 'tab-reg'; tabReg.textContent = tr('account.createAccountTab', 'Create account');
     tabs.appendChild(tabLogin); tabs.appendChild(tabReg);
     wrap.appendChild(tabs);
 
@@ -78,53 +82,53 @@
 
     // Login form
     var loginForm = el('form');
-    loginForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">Welcome back</h2>';
-    loginForm.appendChild(field('Email', 'login-email', 'email', 'you@example.com'));
-    loginForm.appendChild(field('Password', 'login-pwd', 'password', '••••••••'));
+    loginForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">' + tr('account.welcomeBack', 'Welcome back') + '</h2>';
+    loginForm.appendChild(field(tr('account.email', 'Email'), 'login-email', 'email', 'you@example.com'));
+    loginForm.appendChild(field(tr('account.password', 'Password'), 'login-pwd', 'password', '••••••••'));
     var loginBtn = el('button', 'btn btn--primary');
-    loginBtn.type = 'submit'; loginBtn.textContent = 'Sign in';
+    loginBtn.type = 'submit'; loginBtn.textContent = tr('account.signIn', 'Sign in');
     loginBtn.style.width = '100%'; loginBtn.style.marginTop = '8px';
     loginForm.appendChild(loginBtn);
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      loginBtn.textContent = 'Signing in…'; loginBtn.disabled = true;
+      loginBtn.textContent = tr('account.signingIn', 'Signing in…'); loginBtn.disabled = true;
       try {
         var d = await apiPost('/auth/login', { email: document.getElementById('login-email').value, password: document.getElementById('login-pwd').value });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
-        showToast('Signed in!');
+        showToast(tr('account.signedIn', 'Signed in!'));
         renderPage();
         window.renderTopNav('account');
       } catch (err) {
-        showToast(err.message || 'Sign in failed', 'error');
-      } finally { loginBtn.textContent = 'Sign in'; loginBtn.disabled = false; }
+        showToast(err.message || tr('account.signInFailed', 'Sign in failed'), 'error');
+      } finally { loginBtn.textContent = tr('account.signIn', 'Sign in'); loginBtn.disabled = false; }
     });
     wrap.appendChild(loginForm);
 
     // Register form
     var regForm = el('form');
     regForm.style.display = 'none';
-    regForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">Create account</h2>';
-    regForm.appendChild(field('Username', 'reg-username', 'text', 'CoolViewer'));
-    regForm.appendChild(field('Email', 'reg-email', 'email', 'you@example.com'));
-    regForm.appendChild(field('Password', 'reg-pwd', 'password', 'Min 8 characters'));
+    regForm.innerHTML = '<h2 style="font-family:var(--font-head);font-weight:var(--head-weight);font-size:24px;margin:0 0 24px;color:var(--fg)">' + tr('account.createAccountTab', 'Create account') + '</h2>';
+    regForm.appendChild(field(tr('account.username', 'Username'), 'reg-username', 'text', 'CoolViewer'));
+    regForm.appendChild(field(tr('account.email', 'Email'), 'reg-email', 'email', 'you@example.com'));
+    regForm.appendChild(field(tr('account.password', 'Password'), 'reg-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
     var regBtn = el('button', 'btn btn--primary');
-    regBtn.type = 'submit'; regBtn.textContent = 'Create account';
+    regBtn.type = 'submit'; regBtn.textContent = tr('account.createAccountTab', 'Create account');
     regBtn.style.width = '100%'; regBtn.style.marginTop = '8px';
     regForm.appendChild(regBtn);
     regForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      regBtn.textContent = 'Creating…'; regBtn.disabled = true;
+      regBtn.textContent = tr('account.creating', 'Creating…'); regBtn.disabled = true;
       try {
         var d = await apiPost('/auth/register', { username: document.getElementById('reg-username').value, email: document.getElementById('reg-email').value, password: document.getElementById('reg-pwd').value });
         localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
-        showToast('Account created!');
+        showToast(tr('account.accountCreated', 'Account created!'));
         renderPage();
         window.renderTopNav('account');
       } catch (err) {
-        showToast(err.message || 'Registration failed', 'error');
-      } finally { regBtn.textContent = 'Create account'; regBtn.disabled = false; }
+        showToast(err.message || tr('account.registrationFailed', 'Registration failed'), 'error');
+      } finally { regBtn.textContent = tr('account.createAccountTab', 'Create account'); regBtn.disabled = false; }
     });
     wrap.appendChild(regForm);
 
@@ -168,14 +172,16 @@
     card.appendChild(profileRow);
 
     // Rows
+    var currentLangCode = (window.i18n && window.i18n.currentLanguage) || 'en';
+    var currentLangName = tr('languages.' + currentLangCode, currentLangCode.toUpperCase());
     var rows = [
-      { k: 'Appearance & theme', v: 'Customize ›', link: 'settings.html' },
-      { k: 'Plan',               v: 'Free · Forever', link: null },
-      { k: 'Language',           v: 'English', link: null },
-      { k: 'Playback quality',   v: 'Auto (up to 4K)', link: null },
-      { k: 'Autoplay next episode', v: 'On', link: null },
-      { k: 'Downloads over Wi-Fi only', v: 'On', link: null },
-      { k: 'My List',            v: '→', link: 'mylist.html' },
+      { k: tr('account.appearance', 'Appearance & theme'), v: tr('account.customizeLink', 'Customize ›'), link: 'settings.html' },
+      { k: tr('account.plan', 'Plan'),                     v: tr('account.planFree', 'Free · Forever'), link: null },
+      { k: tr('settings.language', 'Language'),            v: currentLangName, link: null },
+      { k: tr('account.playbackQuality', 'Playback quality'), v: tr('account.playbackAuto', 'Auto (up to 4K)'), link: null },
+      { k: tr('account.autoplayNext', 'Autoplay next episode'), v: tr('account.on', 'On'), link: null },
+      { k: tr('account.wifiOnly', 'Downloads over Wi-Fi only'), v: tr('account.on', 'On'), link: null },
+      { k: tr('nav.mylist', 'My List'),                    v: '→', link: 'mylist.html' },
     ];
     rows.forEach(function (r) {
       var row = div('account__row' + (r.link ? ' account__row--link' : ''));
@@ -193,26 +199,26 @@
     pwCard.style.marginTop = '20px';
     var pwTitle = el('h3');
     pwTitle.style.cssText = 'font-family:var(--font-head);font-weight:var(--head-weight);font-size:18px;color:var(--fg);margin:0 0 20px';
-    pwTitle.textContent = 'Change password';
+    pwTitle.textContent = tr('account.changePassword', 'Change password');
     pwCard.appendChild(pwTitle);
-    pwCard.appendChild(field('Current password', 'curr-pwd', 'password', '••••••••'));
-    pwCard.appendChild(field('New password', 'new-pwd', 'password', 'Min 8 characters'));
-    pwCard.appendChild(field('Confirm new password', 'confirm-pwd', 'password', '••••••••'));
+    pwCard.appendChild(field(tr('account.currentPassword', 'Current password'), 'curr-pwd', 'password', '••••••••'));
+    pwCard.appendChild(field(tr('account.newPassword', 'New password'), 'new-pwd', 'password', tr('account.minChars', 'Min 8 characters')));
+    pwCard.appendChild(field(tr('account.confirmNewPassword', 'Confirm new password'), 'confirm-pwd', 'password', '••••••••'));
     var pwBtn = el('button', 'btn btn--outline');
-    pwBtn.textContent = 'Update password';
+    pwBtn.textContent = tr('account.updatePassword', 'Update password');
     pwBtn.addEventListener('click', async function () {
       var curr = document.getElementById('curr-pwd').value;
       var nw   = document.getElementById('new-pwd').value;
       var conf = document.getElementById('confirm-pwd').value;
-      if (nw !== conf) { showToast('Passwords do not match', 'error'); return; }
-      if (nw.length < 8) { showToast('Minimum 8 characters', 'error'); return; }
+      if (nw !== conf) { showToast(tr('account.passwordsDoNotMatch', 'Passwords do not match'), 'error'); return; }
+      if (nw.length < 8) { showToast(tr('account.minChars', 'Minimum 8 characters'), 'error'); return; }
       try {
         await apiPut('/user/password', { currentPassword: curr, newPassword: nw });
-        showToast('Password updated!');
+        showToast(tr('account.passwordUpdated', 'Password updated!'));
         document.getElementById('curr-pwd').value = '';
         document.getElementById('new-pwd').value = '';
         document.getElementById('confirm-pwd').value = '';
-      } catch (err) { showToast(err.message || 'Failed to update password', 'error'); }
+      } catch (err) { showToast(err.message || tr('account.failedUpdatePassword', 'Failed to update password'), 'error'); }
     });
     pwCard.appendChild(pwBtn);
     wrap.appendChild(pwCard);
@@ -220,15 +226,15 @@
     // Primary actions
     var actions = div('account__actions');
     var customizeBtn = el('button', 'btn btn--primary');
-    customizeBtn.textContent = 'Customize appearance';
+    customizeBtn.textContent = tr('account.customizeAppearance', 'Customize appearance');
     customizeBtn.addEventListener('click', function () { window.location.href = 'settings.html'; });
     var editBtn = el('button', 'btn btn--outline');
-    editBtn.textContent = 'Edit profile';
+    editBtn.textContent = tr('account.editProfile', 'Edit profile');
     var logoutBtn = el('button', 'btn btn--outline');
-    logoutBtn.textContent = 'Sign out';
+    logoutBtn.textContent = tr('account.signOut', 'Sign out');
     logoutBtn.addEventListener('click', function () {
       ['user','token','myList','keepWatching','watchHistory','currentContent'].forEach(function (k) { localStorage.removeItem(k); });
-      showToast('Signed out');
+      showToast(tr('account.signedOut', 'Signed out'));
       renderPage();
       window.renderTopNav('account');
     });
@@ -241,16 +247,16 @@
     var dangerZone = div();
     dangerZone.style.cssText = 'padding:8px var(--pad-x) 4px;';
     var deleteBtn = el('button', 'btn btn--outline');
-    deleteBtn.textContent = 'Delete account';
+    deleteBtn.textContent = tr('account.deleteAccount', 'Delete account');
     deleteBtn.style.color = 'var(--fg-muted)';
     deleteBtn.addEventListener('click', async function () {
-      if (!confirm('Delete your account? This cannot be undone.')) return;
+      if (!confirm(tr('account.deleteConfirm', 'Delete your account? This cannot be undone.'))) return;
       try {
         await apiDelete('/user/delete');
         ['user','token','myList','keepWatching','watchHistory','currentContent'].forEach(function (k) { localStorage.removeItem(k); });
-        showToast('Account deleted');
+        showToast(tr('account.accountDeleted', 'Account deleted'));
         renderPage();
-      } catch (err) { showToast(err.message || 'Failed to delete account', 'error'); }
+      } catch (err) { showToast(err.message || tr('account.failedDelete', 'Failed to delete account'), 'error'); }
     });
     dangerZone.appendChild(deleteBtn);
     wrap.appendChild(dangerZone);
@@ -264,7 +270,7 @@
     var mount = document.getElementById('account-mount');
     if (!mount) return;
     var pagehd = div();
-    pagehd.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">Settings</div><h1 class="pagehead__title">Account</h1></div>';
+    pagehd.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">' + tr('account.settings', 'Settings') + '</div><h1 class="pagehead__title">' + tr('account.title', 'Account') + '</h1></div>';
     mount.innerHTML = '';
     mount.appendChild(pagehd);
 
@@ -286,6 +292,9 @@
     document.addEventListener('eli6.themeChanged', function () {
       window.renderTopNav('account');
       window.renderBottomNav('account');
+    });
+    window.addEventListener('eli6.langChanged', function () {
+      renderPage();
     });
   });
 
