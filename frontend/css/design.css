@@ -262,6 +262,37 @@ html[data-theme="marquee"] .hero__title { letter-spacing: 0.02em; text-transform
 }
 .hero__dot--active { background: var(--accent); }
 
+/* trailer iframe — full-bleed cover, no pointer events so parent keeps mouse tracking */
+.hero__trailer {
+  position: absolute;
+  top: 50%; left: 50%;
+  /* cover the art area at 16:9 regardless of container shape */
+  width: 100vw;
+  height: 56.25vw;
+  min-height: 100%;
+  min-width: 177.78vh;
+  transform: translate(-50%, -50%);
+  border: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 600ms ease;
+}
+.hero__trailer-mute {
+  position: absolute;
+  bottom: 18px; right: 18px;
+  z-index: 3;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 200ms;
+  backdrop-filter: blur(4px);
+}
+.hero__trailer-mute:hover { background: rgba(255,255,255,0.2); }
+
 /* ============ BUTTONS ============ */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;
