@@ -150,6 +150,18 @@ router.put('/user/update', auth, async (req, res) => {
     try {
         const { username, email } = req.body || {};
 
+        // Require current password for sensitive field changes
+        if (username || email) {
+            const { currentPassword } = req.body || {};
+            if (!currentPassword) {
+                return res.status(400).json({ error: 'CURRENT_PASSWORD_REQUIRED' });
+            }
+            const valid = await userService.verifyPassword(req.user, currentPassword);
+            if (!valid) {
+                return res.status(401).json({ error: 'INVALID_PASSWORD' });
+            }
+        }
+
         if (username && !validateUsername(username)) {
             return res.status(400).json({ error: 'INVALID_USERNAME' });
         }
