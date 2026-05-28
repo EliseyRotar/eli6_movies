@@ -28,14 +28,19 @@ class I18nManager {
         await this.loadTranslations();
         console.log('Loaded language:', this.currentLanguage, this.translations); // DEBUG LOG
 
-        // Apply translations to static content
-        this.translateStaticContent();
+        // Apply translations once DOM is ready (translations may load before body is parsed)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                this.translateStaticContent();
+                this.setupDynamicTranslationObserver();
+            }, { once: true });
+        } else {
+            this.translateStaticContent();
+            this.setupDynamicTranslationObserver();
+        }
 
         // Set up language switcher
         this.setupLanguageSwitcher();
-
-        // Set up dynamic content translation observer
-        this.setupDynamicTranslationObserver();
     }
 
     /**
