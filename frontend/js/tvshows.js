@@ -116,5 +116,8 @@
       window.renderTopNav('tvshows');
       window.renderBottomNav('tvshows');
     });
+    window.addEventListener('eli6.langChanged', function () {
+      renderPage();
+    });
   });
 })();
