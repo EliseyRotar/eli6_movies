@@ -156,19 +156,23 @@ function showWaking(attempt) {
     </div>`;
 }
 
+function fetchWithTimeout(url, opts, ms) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(tid));
+}
+
 async function checkAuth() {
   for (let attempt = 1; attempt <= 8; attempt++) {
+    if (attempt > 1) showWaking(attempt);
     try {
-      const r = await fetch(API + '/user/profile', { credentials: 'include' });
+      const r = await fetchWithTimeout(API + '/user/profile', { credentials: 'include' }, 8000);
       if (!r.ok) { location.href = 'account.html'; return false; }
       const u = await r.json();
       if (u.role !== 'admin') { location.href = 'index.html'; return false; }
       return true;
     } catch {
-      if (attempt < 8) {
-        showWaking(attempt);
-        await new Promise(res => setTimeout(res, 5000));
-      }
+      if (attempt < 8) await new Promise(res => setTimeout(res, 4000));
     }
   }
   location.href = 'account.html';
@@ -179,7 +183,7 @@ function goHome() { location.href = 'index.html'; }
 
 // ── Fetch helpers ──────────────────────────────────────────
 async function api(path) {
-  const r = await fetch(API + path, { credentials: 'include' });
+  const r = await fetchWithTimeout(API + path, { credentials: 'include' }, 12000);
   if (!r.ok) throw new Error('API error ' + r.status);
   return r.json();
 }
@@ -498,6 +502,7 @@ document.getElementById('rangeTabs').addEventListener('click', async e => {
 
 // ── Boot ─────────────────────────────────────────────────────
 (async () => {
+  showWaking(1);
   const ok = await checkAuth();
   if (!ok) return;
 
