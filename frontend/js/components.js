@@ -6,6 +6,10 @@
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
+  function safeCssPath(path) {
+    return String(path || '').replace(/[^a-zA-Z0-9/_.\-]/g, '');
+  }
+
   function el(tag, cls, attrs) {
     const e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -386,7 +390,7 @@
 
       if (item.backdrop_path) {
         const img = el("div", "hero__art-img");
-        img.style.backgroundImage = "url(https://image.tmdb.org/t/p/original" + item.backdrop_path + ")";
+        img.style.backgroundImage = "url(https://image.tmdb.org/t/p/original" + safeCssPath(item.backdrop_path) + ")";
         art.appendChild(img);
       } else {
         art.style.background = "linear-gradient(135deg, " + g[0] + ", " + g[1] + " 55%, " + g[2] + ")";
@@ -579,7 +583,7 @@
     // Art
     const art = el("div", "detail__art");
     if (item.backdrop_path) {
-      art.style.backgroundImage = "url(" + TMDB_IMG + "w780" + item.backdrop_path + ")";
+      art.style.backgroundImage = "url(" + TMDB_IMG + "w780" + safeCssPath(item.backdrop_path) + ")";
       art.style.backgroundSize = "cover";
       art.style.backgroundPosition = "center";
     } else {
