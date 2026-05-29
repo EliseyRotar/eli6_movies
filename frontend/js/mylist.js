@@ -3,11 +3,17 @@
 
 const MYLIST_API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
 
+function _mlEscape(str) {
+    return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+}
+
 // Utility: Show toast notification
 function showMyListToast(message, type = 'success', undoCallback = null) {
     const toast = document.createElement('div');
     toast.className = `mylist-toast ${type}`;
-    toast.innerHTML = `<span>${message}</span>`;
+    const span = document.createElement('span');
+    span.textContent = message;
+    toast.appendChild(span);
     if (undoCallback) {
         const undoBtn = document.createElement('button');
         undoBtn.className = 'mylist-undo-btn';
@@ -50,7 +56,7 @@ function showMyListEmpty(container) {
     }
 }
 
-// Utility: Handle API errors (token expiry, etc.)
+// Utility: Handle API errors
 function handleMyListApiError(error) {
     if (
         error &&
@@ -58,7 +64,6 @@ function handleMyListApiError(error) {
             error.message === 'Please authenticate.' ||
             error.status === 401)
     ) {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = 'account.html';
     }
@@ -66,14 +71,10 @@ function handleMyListApiError(error) {
 
 // Add to My List
 async function addToMyList(item) {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('Please log in to use this feature');
     const response = await fetch(`${MYLIST_API_URL}/user/mylist`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(item),
     });
     if (!response.ok) {
@@ -85,13 +86,9 @@ async function addToMyList(item) {
 
 // Remove from My List
 async function removeFromMyList(id, type) {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error('Please log in to use this feature');
     const response = await fetch(`${MYLIST_API_URL}/user/mylist/${id}/${type}`, {
         method: 'DELETE',
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
+        credentials: 'include',
     });
     if (!response.ok) {
         const error = await response.json();
@@ -170,10 +167,8 @@ async function toggleMyListButton(btn, item) {
 
 // Sync localStorage with backend
 async function syncMyListStorage() {
-    const token = localStorage.getItem('token');
-    if (!token) return;
     const response = await fetch(`${MYLIST_API_URL}/user/profile`, {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include',
     });
     if (response.ok) {
         const data = await response.json();
@@ -212,8 +207,7 @@ window.syncMyListStorage = syncMyListStorage;
 
 // Used by components.js hero carousel and detail modal buttons
 window.toggleMyList = async function (item) {
-    const token = localStorage.getItem('token');
-    if (!token) {
+    if (!localStorage.getItem('user')) {
         showMyListToast('Please sign in to use My List', 'error');
         setTimeout(function () { window.location.href = 'account.html'; }, 1800);
         return;
@@ -297,8 +291,8 @@ function createCard(item) {
     const isWatched = (item.progress || 0) >= 90;
 
     card.innerHTML = `
-        <img src="${posterPath}" 
-             alt="${title}" 
+        <img src="${_mlEscape(posterPath)}"
+             alt="${_mlEscape(title)}"
              loading="lazy"
              onerror="this.src='https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'; this.classList.add('error');">
         <div class="movie-info">
@@ -310,15 +304,15 @@ function createCard(item) {
                     <i class="material-icons">delete</i>
                 </button>
             </div>
-            <div class="movie-title">${title}</div>
+            <div class="movie-title">${_mlEscape(title)}</div>
             <div class="card-meta">
-                <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${ratingDisplay}</span>
+                <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${_mlEscape(ratingDisplay)}</span>
                 <span>|</span>
-                <span>${year}</span>
+                <span>${_mlEscape(year)}</span>
                 <span>|</span>
-                <span class="duration">${duration}</span>
+                <span class="duration">${_mlEscape(duration)}</span>
             </div>
-            <p class="movie-overview">${overview}</p>
+            <p class="movie-overview">${_mlEscape(overview)}</p>
             ${isWatched ? '<span class="watched-badge">Watched</span>' : ''}
         </div>
     `;
