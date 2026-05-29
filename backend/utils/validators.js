@@ -9,7 +9,7 @@ function validateEmail(email) {
 }
 
 function validatePassword(password = '') {
-    return typeof password === 'string' && password.length >= 8;
+    return typeof password === 'string' && password.length >= 8 && password.length <= 128;
 }
 
 function validateUsername(username = '') {
