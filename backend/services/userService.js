@@ -49,7 +49,7 @@ async function listUsersSafe() {
 }
 
 async function findByUsername(username) {
-    return User.findOne({ username });
+    return User.findOne({ username: String(username) });
 }
 
 function resetStore() {
