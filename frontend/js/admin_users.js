@@ -1,5 +1,14 @@
 /* Admin Users Panel - externalized to satisfy CSP (no inline scripts) */
 
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 let allUsers = [];
 let filteredUsers = [];
 let currentPage = 1;
@@ -135,28 +144,28 @@ function displayUsers(users) {
                     .map(
                         (user) => `
                     <tr>
-                        <td><input type="checkbox" value="${user._id}" class="user-checkbox"></td>
+                        <td><input type="checkbox" value="${escapeHtml(user._id)}" class="user-checkbox"></td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="user-avatar">${user.username ? user.username.charAt(0).toUpperCase() : 'U'}</div>
+                                <div class="user-avatar">${user.username ? escapeHtml(user.username.charAt(0).toUpperCase()) : 'U'}</div>
                                 <div class="user-info">
-                                    <h4>${user.username || 'N/A'}</h4>
-                                    <p>ID: ${user._id}</p>
+                                    <h4>${escapeHtml(user.username || 'N/A')}</h4>
+                                    <p>ID: ${escapeHtml(user._id)}</p>
                                 </div>
                             </div>
                         </td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td><span class="stat-badge ${user.role === 'admin' ? 'admin-badge' : ''}">${user.role || 'user'}</span></td>
+                        <td>${escapeHtml(user.email || 'N/A')}</td>
+                        <td><span class="stat-badge ${user.role === 'admin' ? 'admin-badge' : ''}">${escapeHtml(user.role || 'user')}</span></td>
                         <td><span class="stat-badge">${user.myList ? user.myList.length : 0} items</span></td>
                         <td><span class="stat-badge">${user.keepWatching ? user.keepWatching.length : 0} items</span></td>
                         <td><span class="stat-badge">${user.watchHistory ? user.watchHistory.length : 0} items</span></td>
-                        <td>${formatDate(user.createdAt)}</td>
+                        <td>${escapeHtml(formatDate(user.createdAt))}</td>
                         <td>
-                            <button class="btn btn-secondary" onclick="viewUser('${user._id}')">View</button>
-                            <button class="btn btn-primary" onclick="editUser('${user._id}')">Edit</button>
-                            <button class="btn btn-secondary" onclick="resetPassword('${user._id}')">Reset PW</button>
-                            <button class="btn btn-secondary" onclick="changeRole('${user._id}')">Role</button>
-                            <button class="btn btn-secondary" style="background:#e74c3c;" onclick="deleteUser('${user._id}')">Delete</button>
+                            <button class="btn btn-secondary" onclick="viewUser('${escapeHtml(user._id)}')">View</button>
+                            <button class="btn btn-primary" onclick="editUser('${escapeHtml(user._id)}')">Edit</button>
+                            <button class="btn btn-secondary" onclick="resetPassword('${escapeHtml(user._id)}')">Reset PW</button>
+                            <button class="btn btn-secondary" onclick="changeRole('${escapeHtml(user._id)}')">Role</button>
+                            <button class="btn btn-secondary" style="background:#e74c3c;" onclick="deleteUser('${escapeHtml(user._id)}')">Delete</button>
                         </td>
                     </tr>
                 `
@@ -233,7 +242,11 @@ function formatDate(dateString) {
 function showMessage(message, type) {
     const messageDiv = document.getElementById('message');
     if (!messageDiv) return;
-    messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
+    messageDiv.innerHTML = '';
+    const inner = document.createElement('div');
+    inner.className = String(type);
+    inner.textContent = message;
+    messageDiv.appendChild(inner);
     if (type !== 'info')
         setTimeout(() => {
             messageDiv.innerHTML = '';
@@ -303,14 +316,14 @@ function viewUser(id) {
     if (!user) return;
     openModal(`
         <h2>User Details</h2>
-        <div><b>ID:</b> ${user._id}</div>
-        <div><b>Username:</b> ${user.username}</div>
-        <div><b>Email:</b> ${user.email}</div>
-        <div><b>Role:</b> ${user.role || 'user'}</div>
+        <div><b>ID:</b> ${escapeHtml(user._id)}</div>
+        <div><b>Username:</b> ${escapeHtml(user.username)}</div>
+        <div><b>Email:</b> ${escapeHtml(user.email)}</div>
+        <div><b>Role:</b> ${escapeHtml(user.role || 'user')}</div>
         <div><b>My List:</b> ${user.myList ? user.myList.length : 0} items</div>
         <div><b>Keep Watching:</b> ${user.keepWatching ? user.keepWatching.length : 0} items</div>
         <div><b>Watch History:</b> ${user.watchHistory ? user.watchHistory.length : 0} items</div>
-        <div><b>Joined:</b> ${formatDate(user.createdAt)}</div>
+        <div><b>Joined:</b> ${escapeHtml(formatDate(user.createdAt))}</div>
         <div style="margin-top:20px;"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div>
     `);
 }
@@ -322,8 +335,8 @@ function editUser(id) {
     openModal(`
         <h2>Edit User</h2>
         <form id="editUserForm">
-            <label>Username:<br><input type="text" id="editUsername" value="${user.username || ''}" required></label><br><br>
-            <label>Email:<br><input type="email" id="editEmail" value="${user.email || ''}" required></label><br><br>
+            <label>Username:<br><input type="text" id="editUsername" value="${escapeHtml(user.username || '')}" required></label><br><br>
+            <label>Email:<br><input type="email" id="editEmail" value="${escapeHtml(user.email || '')}" required></label><br><br>
             <button type="submit" class="btn btn-primary">Save</button>
             <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
         </form>
