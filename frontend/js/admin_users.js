@@ -535,7 +535,7 @@ async function bulkDeleteConfirmed() {
     const selectedUserIds = Array.from(document.querySelectorAll('.users-table tbody tr'))
         .map((row) => {
             const checkbox = row.querySelector('input[type="checkbox"]');
-            return checkbox ? checkbox.value : null;
+            return (checkbox && checkbox.checked) ? checkbox.value : null;
         })
         .filter((id) => id);
 
