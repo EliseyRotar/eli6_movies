@@ -2392,15 +2392,9 @@
             { key: 'vidsrcrip',   label: 'VidSrc.rip' },
             { key: 'vidfast',     label: 'VidFast' },
             { key: '2anime',      label: '2Anime' },
-            // Russian CDN servers (require backend tokens — see INFRASTRUCTURE.md)
-            { key: 'kodik',       label: 'Kodik 🇷🇺',    ru: true },
-            { key: 'bazon',       label: 'Bazon 🇷🇺',    ru: true },
-            { key: 'collaps',     label: 'Collaps 🇷🇺',  ru: true },
-            { key: 'alloha',      label: 'Alloha 🇷🇺',   ru: true },
-            { key: 'hdvb',        label: 'HDVB 🇷🇺',     ru: true },
-            { key: 'videocdn',    label: 'VideoCDN 🇷🇺', ru: true },
+            { key: 'apiplayer',   label: 'ApiPlayer 🇷🇺' },
+            { key: 'vaplayer',    label: 'VaPlayer 🇷🇺' },
         ];
-        const RU_SERVERS = new Set(['kodik', 'bazon', 'collaps', 'alloha', 'hdvb', 'videocdn']);
         let currentServerIndex = 0;
 
         // --- Refactored error handling ---
@@ -2464,40 +2458,6 @@
 
             let videoUrl = '';
             const currentServer = SERVER_LIST[currentServerIndex].key;
-
-            // ── Russian CDN servers (async backend proxy) ─────────────────
-            if (RU_SERVERS.has(currentServer)) {
-                const imdbId = contentData?.external_ids?.imdb_id;
-                if (!imdbId) {
-                    playerLoading.style.display = 'block';
-                    playerLoading.innerHTML = 'Russian servers require an IMDB ID.<br>This title has none in TMDB.';
-                    videoIframe.style.display = 'none';
-                    return;
-                }
-                const params = new URLSearchParams({ server: currentServer, imdb: imdbId });
-                if (type === 'tv') { params.set('season', currentSeasonValue); params.set('episode', currentEpisodeValue); }
-                playerLoading.style.display = 'block';
-                playerLoading.innerHTML = `Connecting to ${SERVER_LIST[currentServerIndex].label}…`;
-                videoIframe.style.display = 'none';
-                try {
-                    const resp = await fetch(`${AUTH_API_URL}/api/embed/ru?${params}`);
-                    const data = await resp.json();
-                    if (!data.url) throw new Error(data.error || 'No URL returned');
-                    videoUrl = data.url;
-                } catch (err) {
-                    playerLoading.innerHTML = `${SERVER_LIST[currentServerIndex].label} unavailable: ${err.message}`;
-                    return;
-                }
-                playerLoading.style.display = 'none';
-                videoIframe.style.display = 'block';
-                const ruIframe = videoIframe.cloneNode(true);
-                ruIframe.removeAttribute('sandbox');
-                ruIframe.src = videoUrl;
-                videoIframe.parentNode.replaceChild(ruIframe, videoIframe);
-                watchStartTime = Date.now();
-                watchTimer = setInterval(function() { sendWatchProgress(); savePlayState(); }, 15000);
-                return;
-            }
 
             if (currentServer === 'vidsrcfyi') {
                 if (type === 'movie') {
@@ -2642,6 +2602,38 @@
                     videoUrl = `https://player.smashy.stream/movie/${id}`;
                 } else if (type === 'tv') {
                     videoUrl = `https://player.smashy.stream/tv/${id}?s=${currentSeasonValue}&e=${currentEpisodeValue}`;
+                }
+            } else if (currentServer === 'apiplayer') {
+                if (type === 'movie') {
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://apiplayer.ru/embed/movie/${contentData.external_ids.imdb_id}`;
+                    } else {
+                        videoUrl = `https://apiplayer.ru/embed/movie/${id}`;
+                    }
+                } else if (type === 'tv') {
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://apiplayer.ru/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    } else {
+                        videoUrl = `https://apiplayer.ru/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    }
+                } else {
+                    videoUrl = `https://apiplayer.ru/embed/movie/${id}`;
+                }
+            } else if (currentServer === 'vaplayer') {
+                if (type === 'movie') {
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://vaplayer.ru/embed/movie/${contentData.external_ids.imdb_id}`;
+                    } else {
+                        videoUrl = `https://vaplayer.ru/embed/movie/${id}`;
+                    }
+                } else if (type === 'tv') {
+                    if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                        videoUrl = `https://vaplayer.ru/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    } else {
+                        videoUrl = `https://vaplayer.ru/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                    }
+                } else {
+                    videoUrl = `https://vaplayer.ru/embed/movie/${id}`;
                 }
             }
 
@@ -3541,20 +3533,18 @@
                 videoUrl = `https://vidfast.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}?autoPlay=true`;
             } else if (currentServer === '2anime') {
                 videoUrl = `https://vidsrc.rip/embed/anime/${id}/${currentEpisodeValue}`;
-            } else if (RU_SERVERS.has(currentServer)) {
-                const imdbId = contentData?.external_ids?.imdb_id;
-                if (imdbId) {
-                    const params = new URLSearchParams({ server: currentServer, imdb: imdbId, season: currentSeasonValue, episode: currentEpisodeValue });
-                    try {
-                        const resp = await fetch(`${AUTH_API_URL}/api/embed/ru?${params}`);
-                        const data = await resp.json();
-                        if (data.url) {
-                            videoIframe.removeAttribute('sandbox');
-                            videoIframe.src = data.url;
-                        }
-                    } catch {}
+            } else if (currentServer === 'apiplayer') {
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                    videoUrl = `https://apiplayer.ru/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                } else {
+                    videoUrl = `https://apiplayer.ru/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
                 }
-                return;
+            } else if (currentServer === 'vaplayer') {
+                if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
+                    videoUrl = `https://vaplayer.ru/embed/tv/${contentData.external_ids.imdb_id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                } else {
+                    videoUrl = `https://vaplayer.ru/embed/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}`;
+                }
             }
             videoIframe.src = videoUrl;
             if (currentServer === 'vixsrc') {
