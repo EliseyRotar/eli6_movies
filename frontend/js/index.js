@@ -51,11 +51,10 @@ async function fetchTMDBWithFallback(type, category, lang) {
 }
 
 async function fetchKeepWatching() {
-  const token = localStorage.getItem('token');
-  if (!token) return [];
+  if (!localStorage.getItem('user')) return [];
   try {
     const r = await fetch(AUTH_API_URL + '/user/keep-watching', {
-      headers: { Authorization: 'Bearer ' + token },
+      credentials: 'include',
     });
     return r.ok ? await r.json() : [];
   } catch (e) { return []; }
@@ -101,11 +100,10 @@ async function fetchAnimeContent() {
 // ─── My List sync ─────────────────────────────────────────────────────────────
 
 async function syncMyList() {
-  const token = localStorage.getItem('token');
-  if (!token) return;
+  if (!localStorage.getItem('user')) return;
   try {
     const r = await fetch(AUTH_API_URL + '/user/profile', {
-      headers: { Authorization: 'Bearer ' + token },
+      credentials: 'include',
     });
     const data = r.ok ? await r.json() : {};
     localStorage.setItem('myList', JSON.stringify(data.myList || []));
@@ -138,14 +136,12 @@ function normalise(item, type) {
 // ─── Remove from Keep Watching ───────────────────────────────────────────────
 
 async function removeFromKeepWatching(id, type) {
-  const token = localStorage.getItem('token');
-  if (!token) return;
   try {
     await fetch(AUTH_API_URL + '/user/keep-watching/' + id + '/' + type, {
       method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + token },
+      credentials: 'include',
     });
-    showToast('Removed from Keep Watching');
+    showToast('Removed from Continue Watching');
     initPage();
   } catch (e) {
     showToast('Failed to remove', 'error');
@@ -198,26 +194,38 @@ async function initPage() {
     });
   }
 
-  // Keep Watching row (only if logged in and has items)
+  // Continue Watching row (only if logged in and has items)
   if (keepWatching.length) {
-    const kwItems = await Promise.all(
-      keepWatching.map(function (kw) {
-        return fetchTMDBItemWithFallback(kw.id, kw.type, lang)
-          .then(function (d) {
-            return normalise(Object.assign({ progress: kw.progress || 50, season: kw.season, episode: kw.episode }, d), kw.type);
-          });
-      })
-    );
-    const kwRow = makeRow(tr('home.rows.keepWatching', 'Keep Watching'), kwItems, {
+    const kwItems = keepWatching.map(function (kw) {
+      const item = normalise({
+        id:          kw.id,
+        title:       kw.title,
+        type:        kw.type,
+        kind:        kw.type,
+        poster_path: kw.poster_path,
+        overview:    kw.overview || '',
+        progress:    kw.progress ?? 0,
+        season:      kw.season,
+        episode:     kw.episode,
+      }, kw.type);
+      if (kw.type === 'tv' && kw.season) {
+        item.episodeLabel = 'S' + kw.season + ' E' + (kw.episode || 1);
+      }
+      return item;
+    });
+    const kwRow = makeRow(tr('home.rows.keepWatching', 'Continue Watching'), kwItems, {
       onPick: function (item) {
-        if ((item.kind === 'tv' || item.type === 'tv') && item.season) {
+        if (item.type === 'tv' && item.season) {
           window.location.href = 'player.html?type=tv&id=' + item.id + '&season=' + item.season + '&episode=' + (item.episode || 1);
         } else {
           playContent(item.id, item.kind || 'movie');
         }
       },
+      onRemove: function (item) {
+        removeFromKeepWatching(item.id, item.type);
+      },
     });
-    rowsMnt.appendChild(kwRow);
+    rowsMnt.insertBefore(kwRow, rowsMnt.firstChild);
   }
 
   // Trending Now (numbered, 10 items)
