@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analytics — eli6movies</title>
+<script src="js/config.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0d0f;
+  --surface: #16161a;
+  --surface2: #1e1e24;
+  --border: #2a2a35;
+  --accent: #6c5ce7;
+  --accent2: #00cec9;
+  --green: #00b894;
+  --red: #e17055;
+  --yellow: #fdcb6e;
+  --text: #e8e8f0;
+  --muted: #7c7c99;
+  --radius: 12px;
+}
+
+body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh; }
+
+/* ── Nav ── */
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 28px; border-bottom: 1px solid var(--border); background: var(--surface); position: sticky; top: 0; z-index: 100; }
+.nav-brand { font-size: 1rem; font-weight: 700; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.nav-brand span { opacity: 0.4; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.range-tabs { display: flex; background: var(--surface2); border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+.range-tabs button { background: none; border: none; color: var(--muted); padding: 6px 14px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all .15s; }
+.range-tabs button.active { background: var(--accent); color: #fff; }
+.logout-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; }
+.logout-btn:hover { color: var(--text); border-color: var(--muted); }
+
+/* ── Layout ── */
+.main { max-width: 1440px; margin: 0 auto; padding: 28px; display: flex; flex-direction: column; gap: 24px; }
+
+/* ── Live Bar ── */
+.live-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.live-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(0,184,148,.6); animation: pulse 1.8s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(0,184,148,.6)} 50%{box-shadow:0 0 0 8px rgba(0,184,148,0)} }
+.live-text { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.live-text em { color: var(--green); font-style: normal; }
+.live-sessions { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.live-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.live-chip.user { border-color: var(--accent); color: var(--accent); }
+.live-chip svg { width: 12px; height: 12px; }
+.live-updated { font-size: 0.72rem; color: var(--muted); margin-left: 8px; }
+
+/* ── Stats Grid ── */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 6px; }
+.stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+.stat-value { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--text); }
+.stat-sub { font-size: 0.75rem; color: var(--muted); }
+.stat-card.accent .stat-value { color: var(--accent); }
+.stat-card.green  .stat-value { color: var(--green); }
+
+/* ── Chart ── */
+.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+.card-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-bottom: 18px; }
+.chart-wrap { position: relative; height: 200px; }
+
+/* ── Bottom Grid ── */
+.bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+@media (max-width: 1100px) { .bottom-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px)  { .bottom-grid { grid-template-columns: 1fr; } }
+.list-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+.list-card .rows { display: flex; flex-direction: column; gap: 2px; margin-top: 12px; }
+.list-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 7px; font-size: 0.82rem; }
+.list-row:hover { background: var(--surface2); }
+.list-row-key { color: var(--text); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
+.list-row-bar { flex: 1; margin: 0 12px; height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden; }
+.list-row-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+.list-row-val { color: var(--muted); font-weight: 600; flex-shrink: 0; }
+.flag { margin-right: 6px; font-size: 1rem; }
+
+/* ── Activity Table ── */
+.table-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; overflow: hidden; }
+.table-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.refresh-chip { font-size: 0.72rem; color: var(--green); background: rgba(0,184,148,.1); border: 1px solid rgba(0,184,148,.3); padding: 4px 10px; border-radius: 20px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); }
+td { padding: 10px 12px; border-bottom: 1px solid rgba(42,42,53,.6); color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--surface2); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+.badge.login    { background: rgba(108,92,231,.15); color: var(--accent); }
+.badge.register { background: rgba(0,184,148,.15); color: var(--green); }
+.badge.mobile   { background: rgba(253,203,110,.1);  color: var(--yellow); }
+.badge.desktop  { background: rgba(0,206,201,.1);    color: var(--accent2); }
+.badge.tablet   { background: rgba(225,112,85,.1);   color: var(--red); }
+.badge.user-row { background: rgba(108,92,231,.1);   color: var(--accent); border: 1px solid rgba(108,92,231,.3); }
+.path-cell { font-family: monospace; color: var(--accent2); }
+.ip-cell   { font-family: monospace; color: var(--muted); font-size: 0.75rem; }
+.time-cell { color: var(--muted); white-space: nowrap; }
+
+/* ── Loading / Error ── */
+.loader { display: flex; align-items: center; justify-content: center; padding: 80px; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-msg { padding: 80px; text-align: center; color: var(--red); }
+
+/* ── Tabs ── */
+.tab-bar { display: flex; gap: 2px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.tab { background: none; border: none; color: var(--muted); padding: 8px 16px; cursor: pointer; font-size: 0.82rem; font-weight: 600; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; }
+.tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <a class="nav-brand" href="index.html">
+    ← <span>eli6movies</span> / Analytics
+  </a>
+  <div class="nav-right">
+    <div class="range-tabs" id="rangeTabs">
+      <button data-range="1d">24h</button>
+      <button data-range="7d" class="active">7d</button>
+      <button data-range="30d">30d</button>
+      <button data-range="all">All</button>
+    </div>
+    <button class="logout-btn" onclick="goHome()">← Back</button>
+  </div>
+</nav>
+
+<div class="main" id="app">
+  <div class="loader"><div class="spinner"></div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<script>
+'use strict';
+
+const API = (window.API_BASE_URL || 'https://eli6movies.onrender.com/api').replace(/\/+$/, '');
+let currentRange = '7d';
+let liveInterval, refreshInterval;
+let chart = null;
+
+// ── Auth Guard ──────────────────────────────────────────────
+async function checkAuth() {
+  try {
+    const r = await fetch(API + '/user/profile', { credentials: 'include' });
+    if (!r.ok) { location.href = 'account.html'; return false; }
+    const u = await r.json();
+    if (u.role !== 'admin') { location.href = 'index.html'; return false; }
+    return true;
+  } catch { location.href = 'account.html'; return false; }
+}
+
+function goHome() { location.href = 'index.html'; }
+
+// ── Fetch helpers ──────────────────────────────────────────
+async function api(path) {
+  const r = await fetch(API + path, { credentials: 'include' });
+  if (!r.ok) throw new Error('API error ' + r.status);
+  return r.json();
+}
+
+// ── Formatters ─────────────────────────────────────────────
+function fmt(n) { return Number(n || 0).toLocaleString(); }
+function timeAgo(iso) {
+  const s = Math.round((Date.now() - new Date(iso)) / 1000);
+  if (s < 60)  return s + 's ago';
+  if (s < 3600) return Math.round(s/60) + 'm ago';
+  if (s < 86400) return Math.round(s/3600) + 'h ago';
+  return new Date(iso).toLocaleDateString();
+}
+function fmtDate(iso) { return new Date(iso).toLocaleString(); }
+function esc(s) {
+  if (!s) return '—';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function countryFlag(code) {
+  if (!code || code === 'LO') return '🖥️';
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))) ;
+}
+
+// ── Live Bar ───────────────────────────────────────────────
+async function refreshLive() {
+  try {
+    const d = await api('/admin/analytics/live');
+    const bar = document.getElementById('liveBar');
+    if (!bar) return;
+    const chips = d.sessions.slice(0, 5).map(s => {
+      const who = s.username
+        ? `<span class="live-chip user"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>${esc(s.username)}</span>`
+        : `<span class="live-chip"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93s3.06-7.44 7-7.93v15.86zm2 0V4.07c3.94.49 7 3.85 7 7.93s-3.06 7.44-7 7.93z"/></svg>anon</span>`;
+      return `${who} <span style="color:var(--muted);font-size:.7rem">${esc(s.path)}</span>`;
+    }).join(' ');
+    bar.innerHTML = `
+      <div class="live-dot"></div>
+      <div class="live-text">
+        <em>${d.total}</em> visitor${d.total !== 1 ? 's' : ''} right now —
+        <em style="color:var(--accent)">${d.loggedIn}</em> logged in,
+        <em style="color:var(--muted)">${d.anon}</em> anonymous
+      </div>
+      <div class="live-sessions">${chips}</div>
+      <span class="live-updated">updated ${new Date().toLocaleTimeString()}</span>`;
+  } catch (_) {}
+}
+
+// ── Overview Cards ──────────────────────────────────────────
+async function loadOverview() {
+  const d = await api('/admin/analytics/overview?range=' + currentRange);
+  document.getElementById('statTotal').textContent  = fmt(d.total);
+  document.getElementById('statPeriod').textContent = fmt(d.period);
+  document.getElementById('statToday').textContent  = fmt(d.today);
+  document.getElementById('statUniq').textContent   = fmt(d.uniqueSessions);
+  document.getElementById('statUsers').textContent  = fmt(d.uniqueUsers);
+}
+
+// ── Daily Chart ─────────────────────────────────────────────
+async function loadChart() {
+  const data = await api('/admin/analytics/daily?range=' + currentRange);
+  const labels = data.map(d => {
+    const dt = new Date(d._id + 'T00:00:00');
+    return dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  });
+  const views = data.map(d => d.views);
+  const uniq  = data.map(d => d.uniq);
+
+  const ctx = document.getElementById('visitChart');
+  if (!ctx) return;
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Page Views', data: views, borderColor: '#6c5ce7', backgroundColor: 'rgba(108,92,231,.12)', tension: .4, fill: true, pointRadius: 3 },
+        { label: 'Unique Sessions', data: uniq, borderColor: '#00cec9', backgroundColor: 'rgba(0,206,201,.08)', tension: .4, fill: false, pointRadius: 3 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#7c7c99', font: { size: 11 } } } },
+      scales: {
+        x: { ticks: { color: '#7c7c99', font: { size: 11 } }, grid: { color: '#2a2a35' } },
+        y: { ticks: { color: '#7c7c99', font: { size: 11 } }, grid: { color: '#2a2a35' }, beginAtZero: true },
+      },
+    },
+  });
+}
+
+// ── Bar-list helper ─────────────────────────────────────────
+function renderList(containerId, rows, keyFn, maxVal) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.8rem;padding:8px 0">No data yet</div>'; return; }
+  el.innerHTML = rows.map(r => {
+    const pct = maxVal ? Math.round((r.count / maxVal) * 100) : 0;
+    return `<div class="list-row">
+      <span class="list-row-key">${keyFn(r)}</span>
+      <div class="list-row-bar"><div class="list-row-fill" style="width:${pct}%"></div></div>
+      <span class="list-row-val">${fmt(r.count)}</span>
+    </div>`;
+  }).join('');
+}
+
+async function loadLists() {
+  const [pages, countries, devices, browsers, refs] = await Promise.all([
+    api('/admin/analytics/pages?range='     + currentRange),
+    api('/admin/analytics/countries?range=' + currentRange),
+    api('/admin/analytics/devices?range='   + currentRange),
+    api('/admin/analytics/browsers?range='  + currentRange),
+    api('/admin/analytics/referrers?range=' + currentRange),
+  ]);
+
+  const maxPages   = pages[0]?.count    || 1;
+  const maxCountry = countries[0]?.count || 1;
+  const maxDevice  = devices[0]?.count  || 1;
+  const maxBrowser = browsers[0]?.count || 1;
+  const maxRef     = refs[0]?.count     || 1;
+
+  renderList('listPages',    pages,     r => `<span class="path-cell">${esc(r._id)}</span>`, maxPages);
+  renderList('listCountry',  countries, r => `<span>${countryFlag(r._id.code)} ${esc(r._id.country)}</span>`, maxCountry);
+  renderList('listDevices',  devices,   r => `<span class="badge ${esc(r._id)}">${esc(r._id)}</span>`, maxDevice);
+  renderList('listBrowsers', browsers,  r => esc(r._id), maxBrowser);
+  renderList('listRefs',     refs,      r => esc(r._id), maxRef);
+}
+
+// ── Recent Activity ─────────────────────────────────────────
+async function loadRecent() {
+  const data = await api('/admin/analytics/recent?limit=60');
+  const tbody = document.getElementById('recentBody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td class="ip-cell">${esc(r.ip) || '—'}</td>
+      <td>${r.username ? `<span class="badge user-row">${esc(r.username)}</span>` : '<span style="color:var(--muted)">anon</span>'}</td>
+      <td class="path-cell">${esc(r.path)}</td>
+      <td>${r.country ? `${countryFlag(r.countryCode)} ${esc(r.country)}` : '—'}</td>
+      <td>${esc(r.browser)} / ${esc(r.os)}</td>
+      <td><span class="badge ${esc(r.device)}">${esc(r.device)}</span></td>
+      <td>${r.referrer ? `<a href="https://${esc(r.referrer)}" target="_blank" style="color:var(--accent2)">${esc(r.referrer)}</a>` : '—'}</td>
+      <td>${r.duration != null ? r.duration + 's' : '—'}</td>
+      <td class="time-cell">${timeAgo(r.createdAt)}</td>
+    </tr>`).join('');
+}
+
+// ── Auth Log ────────────────────────────────────────────────
+async function loadAuthLog() {
+  const data = await api('/admin/analytics/auth-log?limit=100');
+  const tbody = document.getElementById('authBody');
+  if (!tbody) return;
+  tbody.innerHTML = data.map(r => `
+    <tr>
+      <td class="time-cell">${fmtDate(r.createdAt)}</td>
+      <td><span class="badge ${esc(r.event)}">${esc(r.event)}</span></td>
+      <td>${r.username ? `<span class="badge user-row">${esc(r.username)}</span>` : '—'}</td>
+      <td>${esc(r.email) || '—'}</td>
+      <td class="ip-cell">${esc(r.ip) || '—'}</td>
+      <td style="color:var(--muted);font-size:.72rem;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.userAgent) || '—'}</td>
+    </tr>`).join('');
+}
+
+// ── Full Load ────────────────────────────────────────────────
+async function loadAll() {
+  try {
+    await Promise.all([loadOverview(), loadChart(), loadLists(), loadRecent(), loadAuthLog()]);
+  } catch (e) { console.error(e); }
+}
+
+// ── Render Shell ─────────────────────────────────────────────
+function renderShell() {
+  document.getElementById('app').innerHTML = `
+    <!-- Live Bar -->
+    <div class="live-bar" id="liveBar">
+      <div class="live-dot"></div>
+      <div class="live-text">Loading live data…</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <div class="stat-label">Live Now</div>
+        <div class="stat-value" id="statLiveTotal">—</div>
+        <div class="stat-sub">active visitors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Today</div>
+        <div class="stat-value" id="statToday">—</div>
+        <div class="stat-sub">page views</div>
+      </div>
+      <div class="stat-card accent">
+        <div class="stat-label">This Period</div>
+        <div class="stat-value" id="statPeriod">—</div>
+        <div class="stat-sub">page views</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Unique Sessions</div>
+        <div class="stat-value" id="statUniq">—</div>
+        <div class="stat-sub">this period</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Logged-in Users</div>
+        <div class="stat-value" id="statUsers">—</div>
+        <div class="stat-sub">this period</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Views</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub">all time</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-card">
+      <div class="card-title">Visits over time</div>
+      <div class="chart-wrap"><canvas id="visitChart"></canvas></div>
+    </div>
+
+    <!-- Lists -->
+    <div class="bottom-grid">
+      <div class="list-card">
+        <div class="card-title">Top Pages</div>
+        <div class="rows" id="listPages"></div>
+      </div>
+      <div class="list-card">
+        <div class="card-title">Countries</div>
+        <div class="rows" id="listCountry"></div>
+      </div>
+      <div class="list-card">
+        <div class="card-title">Devices</div>
+        <div class="rows" id="listDevices"></div>
+      </div>
+      <div class="list-card">
+        <div class="card-title">Browsers</div>
+        <div class="rows" id="listBrowsers"></div>
+      </div>
+      <div class="list-card">
+        <div class="card-title">Referrers</div>
+        <div class="rows" id="listRefs"></div>
+      </div>
+    </div>
+
+    <!-- Activity Tabs -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="card-title" style="margin-bottom:0">Activity</div>
+        <span class="refresh-chip">● auto-refresh 10s</span>
+      </div>
+      <div class="tab-bar">
+        <button class="tab active" data-tab="pageviews">Page Views</button>
+        <button class="tab" data-tab="authlog">Auth Log</button>
+      </div>
+      <div class="tab-panel active" id="tab-pageviews">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>IP</th><th>User</th><th>Page</th><th>Country</th>
+              <th>Browser / OS</th><th>Device</th><th>Referrer</th><th>Duration</th><th>When</th>
+            </tr></thead>
+            <tbody id="recentBody"><tr><td colspan="9" style="color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="tab-panel" id="tab-authlog">
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Time</th><th>Event</th><th>Username</th><th>Email</th><th>IP</th><th>User Agent</th>
+            </tr></thead>
+            <tbody id="authBody"><tr><td colspan="6" style="color:var(--muted)">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+// ── Live count stat card sync ────────────────────────────────
+async function syncLiveStat() {
+  try {
+    const d = await api('/admin/analytics/live');
+    const el = document.getElementById('statLiveTotal');
+    if (el) el.textContent = d.total;
+    refreshLive();
+  } catch (_) {}
+}
+
+// ── Range tabs ───────────────────────────────────────────────
+document.getElementById('rangeTabs').addEventListener('click', async e => {
+  const btn = e.target.closest('button[data-range]');
+  if (!btn) return;
+  document.querySelectorAll('.range-tabs button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentRange = btn.dataset.range;
+  await loadAll();
+});
+
+// ── Boot ─────────────────────────────────────────────────────
+(async () => {
+  const ok = await checkAuth();
+  if (!ok) return;
+
+  renderShell();
+  await loadAll();
+  await syncLiveStat();
+
+  // Live: every 5 s
+  liveInterval = setInterval(syncLiveStat, 5000);
+  // Full refresh: every 30 s
+  refreshInterval = setInterval(loadAll, 30000);
+})();
+</script>
+</body>
+</html>

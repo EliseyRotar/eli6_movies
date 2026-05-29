@@ -16,6 +16,8 @@ const translationRoutes = require('./routes/translation');
 const tmdbRoutes  = require('./routes/tmdb');
 const animeRoutes = require('./routes/anime');
 const ruembedRoutes = require('./routes/ruembed');
+const { router: trackRoutes } = require('./routes/track');
+const analyticsRoutes = require('./routes/analytics');
 const auth = require('./middleware/auth');
 
 const app = express();
@@ -71,6 +73,8 @@ app.use('/api', translationRoutes);
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/anime', animeRoutes);
 app.use('/api/embed', auth, ruembedRoutes);
+app.use('/api', trackRoutes);
+app.use('/api', analyticsRoutes);
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
