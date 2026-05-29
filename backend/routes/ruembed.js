@@ -35,6 +35,9 @@ router.get('/ru', async (req, res) => {
     if (!server || !imdb) {
         return res.status(400).json({ error: 'server and imdb params required' });
     }
+    if (!/^tt\d{7,8}$/.test(imdb)) {
+        return res.status(400).json({ error: 'Invalid IMDB ID format' });
+    }
 
     const s = parseInt(season) || 1;
     const e = parseInt(episode) || 1;
@@ -121,7 +124,7 @@ router.get('/ru', async (req, res) => {
             url = withHttps(r.data?.data?.[0]?.iframe_src);
 
         } else {
-            return res.status(400).json({ error: `Unknown Russian server: ${server}` });
+            return res.status(400).json({ error: 'Unknown server' });
         }
 
         if (!url) return res.status(404).json({ error: 'No embed URL in API response' });
@@ -129,7 +132,7 @@ router.get('/ru', async (req, res) => {
 
     } catch (err) {
         const status = err.response?.status || 502;
-        res.status(status).json({ error: 'Upstream error', detail: err.message });
+        res.status(status).json({ error: 'Upstream error' });
     }
 });
 
