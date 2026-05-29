@@ -2392,7 +2392,15 @@
             { key: 'vidsrcrip',   label: 'VidSrc.rip' },
             { key: 'vidfast',     label: 'VidFast' },
             { key: '2anime',      label: '2Anime' },
+            // Russian CDN servers (require backend tokens — see INFRASTRUCTURE.md)
+            { key: 'kodik',       label: 'Kodik 🇷🇺',    ru: true },
+            { key: 'bazon',       label: 'Bazon 🇷🇺',    ru: true },
+            { key: 'collaps',     label: 'Collaps 🇷🇺',  ru: true },
+            { key: 'alloha',      label: 'Alloha 🇷🇺',   ru: true },
+            { key: 'hdvb',        label: 'HDVB 🇷🇺',     ru: true },
+            { key: 'videocdn',    label: 'VideoCDN 🇷🇺', ru: true },
         ];
+        const RU_SERVERS = new Set(['kodik', 'bazon', 'collaps', 'alloha', 'hdvb', 'videocdn']);
         let currentServerIndex = 0;
 
         // --- Refactored error handling ---
@@ -2429,7 +2437,7 @@
         }
 
         // Load video player
-        function loadVideoPlayer() {
+        async function loadVideoPlayer() {
             errorHandled = false; // Reset error flag on each load
             // Save progress before switching content
             if (watchStartTime) { savePlayState(); }
@@ -2456,6 +2464,41 @@
 
             let videoUrl = '';
             const currentServer = SERVER_LIST[currentServerIndex].key;
+
+            // ── Russian CDN servers (async backend proxy) ─────────────────
+            if (RU_SERVERS.has(currentServer)) {
+                const imdbId = contentData?.external_ids?.imdb_id;
+                if (!imdbId) {
+                    playerLoading.style.display = 'block';
+                    playerLoading.innerHTML = 'Russian servers require an IMDB ID.<br>This title has none in TMDB.';
+                    videoIframe.style.display = 'none';
+                    return;
+                }
+                const params = new URLSearchParams({ server: currentServer, imdb: imdbId });
+                if (type === 'tv') { params.set('season', currentSeasonValue); params.set('episode', currentEpisodeValue); }
+                playerLoading.style.display = 'block';
+                playerLoading.innerHTML = `Connecting to ${SERVER_LIST[currentServerIndex].label}…`;
+                videoIframe.style.display = 'none';
+                try {
+                    const resp = await fetch(`${AUTH_API_URL}/api/embed/ru?${params}`);
+                    const data = await resp.json();
+                    if (!data.url) throw new Error(data.error || 'No URL returned');
+                    videoUrl = data.url;
+                } catch (err) {
+                    playerLoading.innerHTML = `${SERVER_LIST[currentServerIndex].label} unavailable: ${err.message}`;
+                    return;
+                }
+                playerLoading.style.display = 'none';
+                videoIframe.style.display = 'block';
+                const ruIframe = videoIframe.cloneNode(true);
+                ruIframe.removeAttribute('sandbox');
+                ruIframe.src = videoUrl;
+                videoIframe.parentNode.replaceChild(ruIframe, videoIframe);
+                watchStartTime = Date.now();
+                watchTimer = setInterval(function() { sendWatchProgress(); savePlayState(); }, 15000);
+                return;
+            }
+
             if (currentServer === 'vidsrcfyi') {
                 if (type === 'movie') {
                     if (contentData && contentData.external_ids && contentData.external_ids.imdb_id && contentData.external_ids.imdb_id.startsWith('tt')) {
@@ -3436,7 +3479,7 @@
             return null;
         }
 
-        function updateIframeForCurrentSelection() {
+        async function updateIframeForCurrentSelection() {
             const seasonSelect = document.getElementById('seasonSelect');
             const episodeSelect = document.getElementById('episodeSelect');
             const videoIframe = document.getElementById('videoIframe');
@@ -3498,6 +3541,20 @@
                 videoUrl = `https://vidfast.pro/tv/${id}/${currentSeasonValue}/${currentEpisodeValue}?autoPlay=true`;
             } else if (currentServer === '2anime') {
                 videoUrl = `https://vidsrc.rip/embed/anime/${id}/${currentEpisodeValue}`;
+            } else if (RU_SERVERS.has(currentServer)) {
+                const imdbId = contentData?.external_ids?.imdb_id;
+                if (imdbId) {
+                    const params = new URLSearchParams({ server: currentServer, imdb: imdbId, season: currentSeasonValue, episode: currentEpisodeValue });
+                    try {
+                        const resp = await fetch(`${AUTH_API_URL}/api/embed/ru?${params}`);
+                        const data = await resp.json();
+                        if (data.url) {
+                            videoIframe.removeAttribute('sandbox');
+                            videoIframe.src = data.url;
+                        }
+                    } catch {}
+                }
+                return;
             }
             videoIframe.src = videoUrl;
             if (currentServer === 'vixsrc') {
