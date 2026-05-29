@@ -10,6 +10,7 @@ const {
     normalizeEmail,
 } = require('../utils/validators');
 const userService = require('../services/userService');
+const ActivityLog = require('../models/ActivityLog');
 
 const router = express.Router();
 
@@ -51,6 +52,10 @@ router.post('/register', async (req, res, next) => {
         user.sessions.push({ jti, ua: req.headers['user-agent'] || '', ip: req.ip || '' });
         if (user.sessions.length > 10) user.sessions = user.sessions.slice(-10);
         await user.save();
+        ActivityLog.create({
+            userId: user._id, username: user.username, email: user.email,
+            event: 'register', ip: req.ip || '', userAgent: req.headers['user-agent'] || '',
+        }).catch(() => {});
         res.cookie('token', token, cookieBase)
             .status(201)
             .json({ token, user: sanitizeUser(user) });
@@ -82,6 +87,10 @@ router.post('/login', async (req, res, next) => {
         user.sessions.push({ jti, ua: req.headers['user-agent'] || '', ip: req.ip || '' });
         if (user.sessions.length > 10) user.sessions = user.sessions.slice(-10);
         await user.save();
+        ActivityLog.create({
+            userId: user._id, username: user.username, email: user.email,
+            event: 'login', ip: req.ip || '', userAgent: req.headers['user-agent'] || '',
+        }).catch(() => {});
         res.cookie('token', token, cookieBase).json({ token, user: sanitizeUser(user) });
     } catch (error) {
         logger.error('Login failed', { error: error.message });

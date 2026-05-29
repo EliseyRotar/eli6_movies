@@ -567,11 +567,9 @@
 
             // Sync MyList from backend
             async function syncMyList() {
-                const token = localStorage.getItem('token');
-                if (!token) return;
                 try {
                     const response = await fetch(`${AUTH_API_URL}/user/profile`, {
-                        headers: { Authorization: `Bearer ${token}` },
+                        credentials: 'include',
                     });
                     if (response.ok) {
                         const data = await response.json();
@@ -580,7 +578,6 @@
                     }
                 } catch (e) {
                     myList = [];
-                    localStorage.setItem('myList', '[]');
                 }
             }
 
@@ -703,12 +700,6 @@
                 const isInList = myList.some(
                     (listItem) => listItem.id === id && listItem.type === type
                 );
-                const token = localStorage.getItem('token');
-
-                if (!token) {
-                    window.location.href = 'account.html';
-                    return;
-                }
 
                 try {
                     const item = {
@@ -723,17 +714,20 @@
                     if (isInList) {
                         response = await fetch(`${AUTH_API_URL}/user/mylist/${id}/${type}`, {
                             method: 'DELETE',
-                            headers: { Authorization: `Bearer ${token}` },
+                            credentials: 'include',
                         });
                     } else {
                         response = await fetch(`${AUTH_API_URL}/user/mylist`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
-                            },
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(item),
                         });
+                    }
+
+                    if (response.status === 401) {
+                        window.location.href = 'account.html';
+                        return;
                     }
 
                     if (!response.ok) {

@@ -64,10 +64,16 @@ router.delete('/user/mylist/:id/:type', auth, async (req, res) => {
 
 router.post('/user/watch-history', auth, async (req, res) => {
     try {
-        const { item } = req.body || {};
-        if (!item || !item.id || !item.type) {
+        const raw = (req.body || {}).item || {};
+        const id       = parseInt(raw.id);
+        const type     = ['movie', 'tv', 'anime'].includes(raw.type) ? raw.type : null;
+        const title    = typeof raw.title === 'string' ? raw.title.slice(0, 300) : '';
+        const poster   = typeof raw.poster_path === 'string' ? raw.poster_path.slice(0, 500) : '';
+        const progress = Math.min(100, Math.max(0, parseInt(raw.progress) || 0));
+        if (!id || !type) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
+        const item = { id, type, title, poster_path: poster, progress, last_watched: new Date() };
         const existing = req.user.watchHistory.find((i) => i.id === item.id);
         if (existing) {
             existing.progress = item.progress;

@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const connectDB = require('./db');
 
 const rateLimit = require('./middleware/rateLimit');
+const csrfProtect = require('./middleware/csrf');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
@@ -18,7 +19,7 @@ const ruembedRoutes = require('./routes/ruembed');
 const auth = require('./middleware/auth');
 
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 const allowedOrigins = (
     process.env.FRONTEND_ORIGIN || 'http://localhost:5500,http://localhost:5173'
@@ -56,6 +57,7 @@ app.use((req, res, next) => {
 });
 
 app.use(cors(corsOptions));
+app.use(csrfProtect);
 app.use(rateLimit);
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
@@ -69,14 +71,6 @@ app.use('/api', translationRoutes);
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/anime', animeRoutes);
 app.use('/api/embed', auth, ruembedRoutes);
-
-app.use('/api/v1', authRoutes);
-app.use('/api/v1', userRoutes);
-app.use('/api/v1', adminRoutes);
-app.use('/api/v1', catalogRoutes);
-app.use('/api/v1', translationRoutes);
-app.use('/api/v1/tmdb', tmdbRoutes);
-app.use('/api/v1/anime', animeRoutes);
 
 app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));

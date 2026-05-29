@@ -5,18 +5,15 @@
   var TMDB_URL = window.TMDB_PROXY_URL || (API_URL ? API_URL + '/tmdb' : '');
 
   async function fetchMyList() {
-    var token = localStorage.getItem('token');
-    if (token) {
-      try {
-        var r = await fetch(API_URL + '/user/profile', { headers: { Authorization: 'Bearer ' + token } });
-        if (r.ok) {
-          var d = await r.json();
-          var list = d.myList || [];
-          localStorage.setItem('myList', JSON.stringify(list));
-          return list;
-        }
-      } catch (e) {}
-    }
+    try {
+      var r = await fetch(API_URL + '/user/profile', { credentials: 'include' });
+      if (r.ok) {
+        var d = await r.json();
+        var list = d.myList || [];
+        localStorage.setItem('myList', JSON.stringify(list));
+        return list;
+      }
+    } catch (e) {}
     return JSON.parse(localStorage.getItem('myList') || '[]');
   }
 
@@ -43,15 +40,12 @@
   }
 
   async function removeItem(id, type) {
-    var token = localStorage.getItem('token');
-    if (token) {
-      try {
-        await fetch(API_URL + '/user/mylist/' + id + '/' + type, {
-          method: 'DELETE',
-          headers: { Authorization: 'Bearer ' + token },
-        });
-      } catch (e) {}
-    }
+    try {
+      await fetch(API_URL + '/user/mylist/' + id + '/' + type, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+    } catch (e) {}
     var list = JSON.parse(localStorage.getItem('myList') || '[]');
     list = list.filter(function (i) { return !(i.id === id && i.type === type); });
     localStorage.setItem('myList', JSON.stringify(list));
