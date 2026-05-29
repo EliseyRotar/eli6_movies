@@ -68,7 +68,7 @@ app.use('/api', catalogRoutes);
 app.use('/api', translationRoutes);
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/anime', animeRoutes);
-app.use('/api/embed', ruembedRoutes);
+app.use('/api/embed', auth, ruembedRoutes);
 
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', userRoutes);
