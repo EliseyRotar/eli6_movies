@@ -163,16 +163,18 @@ function fetchWithTimeout(url, opts, ms) {
 }
 
 async function checkAuth() {
-  for (let attempt = 1; attempt <= 8; attempt++) {
-    if (attempt > 1) showWaking(attempt);
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    showWaking(attempt);
     try {
-      const r = await fetchWithTimeout(API + '/user/profile', { credentials: 'include' }, 8000);
-      if (!r.ok) { location.href = 'account.html'; return false; }
+      const r = await fetchWithTimeout(API + '/user/profile', { credentials: 'include' }, 25000);
+      // Only redirect on actual auth failure — not on 503/502 (Render cold start)
+      if (r.status === 401 || r.status === 403) { location.href = 'account.html'; return false; }
+      if (!r.ok) throw new Error('server_error_' + r.status); // 5xx → retry
       const u = await r.json();
       if (u.role !== 'admin') { location.href = 'index.html'; return false; }
       return true;
     } catch {
-      if (attempt < 8) await new Promise(res => setTimeout(res, 4000));
+      if (attempt < 6) await new Promise(res => setTimeout(res, 3000));
     }
   }
   location.href = 'account.html';
