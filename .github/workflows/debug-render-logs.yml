@@ -5,16 +5,16 @@ jobs:
   logs:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch recent Render logs
+      - name: Fetch Render deploy logs
         run: |
-          echo "=== Service Info ==="
-          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -m json.tool | head -40
+          echo "=== Deploy dep-d8d11q5l15qc738usl60 logs ==="
+          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0/deploys/dep-d8d11q5l15qc738usl60" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -m json.tool
           echo ""
-          echo "=== Recent Deploys (raw) ==="
-          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0/deploys?limit=5" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -m json.tool | head -80
+          echo "=== ALL Deploy Logs (v2 endpoint) ==="
+          curl -s "https://api.render.com/v2/services/srv-d8arhovavr4c73dsbeb0/log-streams?resource=srv-d8arhovavr4c73dsbeb0&startTime=2026-05-29T22:15:00Z&endTime=2026-05-29T23:00:00Z&limit=200&text=true" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | head -200 || true
           echo ""
-          echo "=== Log Stream (last 100 lines) ==="
-          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0/log-stream?limit=100" \
-            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | head -100 || true
+          echo "=== Current service logs ==="
+          curl -s "https://api.render.com/v1/logs?serviceId=srv-d8arhovavr4c73dsbeb0&startTime=2026-05-29T22:00:00Z&limit=200" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -m json.tool | head -200 || true
