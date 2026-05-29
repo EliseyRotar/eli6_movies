@@ -1,11 +1,11 @@
 the see all button that is the every page doesnt do nothing, fix it FATTO
 
-in the https://eli6movies.vercel.app/player.html, in whatever movie/tvshow/anime, when i use the server vixsrc it gives me this error in the miniplayer,but the audio of the movies works i can hear the movie but i cannot see it, fix it:Please Disable Sandbox
+in the https://eli6movies.vercel.app/player.html, in whatever movie/tvshow/anime, when i use the server vixsrc it gives me this error in the miniplayer,but the audio of the movies works i can hear the movie but i cannot see it, fix it:Please Disable Sandbox 
 here is the guide if u need smth: https://vixsrc.to/ FATTO
 
-ok so in the movie/tv show carousel in the https://eli6movies.vercel.app/index.html, i want to like after 2 seconds of the cursor being in the carousel area and its  displaying the static image, it should switch to the trailer of that movie, and if the mouse leaves the area of the carousel it should go the next movie
+ok so in the movie/tv show carousel in the https://eli6movies.vercel.app/index.html, i want to like after 2 seconds of the cursor being in the carousel area and its  displaying the static image, it should switch to the trailer of that movie, and if the mouse leaves the area of the carousel it should go the next movie FATTO
 
-the trama or the description that i have previewing the like movie/tvshow/anime (the card that pops up when i click a movie, or even in the carousel in the home page), its too long, choose a shorter one
+the trama or the description that i have previewing the like movie/tvshow/anime (the card that pops up when i click a movie, or even in the carousel in the home page), its too long, choose a shorter one FATTO
 
 when i click add to my list to a movies/tvshow/anime, it says added to my list but its not actually added, plus there is no error popping up if im not logged in
 
@@ -17,9 +17,9 @@ Custom embed domain
 Use your own domain for the embed API, helping bypass ISP blocks and avoid detection
 Step 1: Add your domain
 
-when im watching smth on the https://eli6movies.vercel.app/player.html, when i reload the page or i exit and reenter the movie, i want it to resume from the same server, season/episodes if im watching a tvshow, and same time that i was watching, so it saves the content
+when im watching smth on the https://eli6movies.vercel.app/player.html, when i reload the page or i exit and reenter the movie, i want it to resume from the same server, season/episodes if im watching a tvshow, and same time that i was watching, so it saves the content FATTO???
 
-create a dashboard to see what user logs on, the ip, when, every info about the user that uses this website
+create a dashboard to see what user logs on, the ip, when, every info about the user that uses this website 
 
 
 
