@@ -472,6 +472,24 @@ html[data-theme="marquee"] .poster:hover {
   display: grid; place-items: center; color: #fff; font-size: 18px;
   border: 0;
 }
+.poster__remove {
+  position: absolute; top: 6px; right: 6px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  border: 0; color: #fff; font-size: 13px; cursor: pointer;
+  display: grid; place-items: center; opacity: 0;
+  transition: opacity 150ms, background 150ms;
+  z-index: 10; line-height: 1;
+}
+.poster:hover .poster__remove { opacity: 1; }
+.poster__remove:hover { background: var(--accent); }
+.poster__ep-label {
+  position: absolute; bottom: 20px; left: 0; right: 0;
+  text-align: center; font-size: 11px; color: rgba(255,255,255,0.85);
+  font-weight: 600; letter-spacing: 0.04em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  pointer-events: none;
+}
 
 /* ============ GRID (browse pages) ============ */
 .grid {
