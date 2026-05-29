@@ -11,7 +11,7 @@
     }
 
     function send(payload) {
-        var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
+        var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
         navigator.sendBeacon(API + '/data', blob);
     }
 

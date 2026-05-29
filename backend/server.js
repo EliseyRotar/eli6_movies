@@ -62,7 +62,6 @@ app.use(cors(corsOptions));
 app.use(csrfProtect);
 app.use(rateLimit);
 app.use(express.json({ limit: '200kb' }));
-app.use(express.text({ type: 'text/plain', limit: '10kb' }));
 app.use(cookieParser());
 
 // Mount routers
