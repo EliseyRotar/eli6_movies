@@ -9,6 +9,9 @@
   function tr(key, fallback) {
     return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
   }
+  function safeCssPath(path) {
+    return String(path || '').replace(/[^a-zA-Z0-9/_.\-]/g, '');
+  }
   function el(tag, cls) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -63,12 +66,11 @@
     if (!r.ok) throw new Error(d.message || d.error || 'Request failed');
     return d;
   }
-  async function apiDelete(path) {
-    var r = await fetch(API_URL + path, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
-    if (!r.ok) { var d = await r.json(); throw new Error(d.message || 'Failed'); }
+  async function apiDelete(path, body) {
+    var opts = { method: 'DELETE', credentials: 'include' };
+    if (body) { opts.headers = { 'Content-Type': 'application/json' }; opts.body = JSON.stringify(body); }
+    var r = await fetch(API_URL + path, opts);
+    if (!r.ok) { var d = await r.json(); throw new Error(d.message || d.error || 'Failed'); }
     return true;
   }
 
@@ -494,7 +496,7 @@
       kw.forEach(function (item) {
         var card = div('acc__cont-card');
         if (item.poster_path) {
-          card.style.backgroundImage = 'url(' + TMDB_IMG + item.poster_path + ')';
+          card.style.backgroundImage = 'url(' + TMDB_IMG + safeCssPath(item.poster_path) + ')';
           card.style.backgroundSize  = 'cover';
           card.style.backgroundPosition = 'center';
         } else {
@@ -765,8 +767,10 @@
     deleteBtn.textContent = tr('account.deleteAccount', 'Delete account');
     deleteBtn.addEventListener('click', async function () {
       if (!confirm(tr('account.deleteConfirm', 'Delete your account? This cannot be undone.'))) return;
+      var password = window.prompt('Enter your password to confirm account deletion:');
+      if (!password) return;
       try {
-        await apiDelete('/user/delete');
+        await apiDelete('/user/delete', { password: password });
         ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
         showToast(tr('account.accountDeleted', 'Account deleted'));
         renderPage(); window.renderTopNav('account');
