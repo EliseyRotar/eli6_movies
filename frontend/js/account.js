@@ -18,7 +18,6 @@
   function getUser() {
     try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; }
   }
-  function getToken() { return localStorage.getItem('token'); }
 
   // ─── Prefs ──────────────────────────────────────────────────────────────────
 
@@ -46,6 +45,7 @@
     var r = await fetch(API_URL + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
     var d = await r.json();
@@ -55,7 +55,8 @@
   async function apiPut(path, body) {
     var r = await fetch(API_URL + path, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + getToken() },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify(body),
     });
     var d = await r.json();
@@ -65,7 +66,7 @@
   async function apiDelete(path) {
     var r = await fetch(API_URL + path, {
       method: 'DELETE',
-      headers: { Authorization: 'Bearer ' + getToken() },
+      credentials: 'include',
     });
     if (!r.ok) { var d = await r.json(); throw new Error(d.message || 'Failed'); }
     return true;
@@ -74,14 +75,13 @@
   // ─── Hub data fetching ──────────────────────────────────────────────────────
 
   async function fetchHubData() {
-    var headers = { Authorization: 'Bearer ' + getToken() };
     var keepWatching = [], watchHistory = [], myList = [], sessions = [], currentJti = null;
     try {
       var results = await Promise.all([
-        fetch(API_URL + '/user/keep-watching', { headers }),
-        fetch(API_URL + '/user/watched',       { headers }),
-        fetch(API_URL + '/user/profile',       { headers }),
-        fetch(API_URL + '/user/sessions',      { headers }),
+        fetch(API_URL + '/user/keep-watching', { credentials: 'include' }),
+        fetch(API_URL + '/user/watched',       { credentials: 'include' }),
+        fetch(API_URL + '/user/profile',       { credentials: 'include' }),
+        fetch(API_URL + '/user/sessions',      { credentials: 'include' }),
       ]);
       if (results[0].ok) keepWatching = await results[0].json();
       if (results[1].ok) watchHistory = await results[1].json();
@@ -282,7 +282,6 @@
       loginBtn.textContent = tr('account.signingIn', 'Signing in…'); loginBtn.disabled = true;
       try {
         var d = await apiPost('/login', { email: emailVal, password: pwdVal });
-        localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.signedIn', 'Signed in!'));
         renderPage(); window.renderTopNav('account');
@@ -315,7 +314,6 @@
       regBtn.textContent = tr('account.creating', 'Creating…'); regBtn.disabled = true;
       try {
         var d = await apiPost('/register', { username: usernameVal, email: emailVal, password: pwdVal });
-        localStorage.setItem('token', d.token);
         localStorage.setItem('user', JSON.stringify(d.user));
         showToast(tr('account.accountCreated', 'Account created!'));
         renderPage(); window.renderTopNav('account');
@@ -662,7 +660,7 @@
     var devList = div('acc__devices');
     var otherCount = sessions.filter(function (s) { return s.jti !== currentJti; }).length;
     devSection.appendChild(makeSectionHead('06', 'Signed-in devices', otherCount > 0 ? 'Sign out all others' : null, function () {
-      fetch(API_URL + '/user/sessions/others', { method: 'DELETE', headers: { Authorization: 'Bearer ' + getToken() } })
+      fetch(API_URL + '/user/sessions/others', { method: 'DELETE', credentials: 'include' })
         .then(function () {
           var others = devList.querySelectorAll('.acc__device:not(.acc__device--current)');
           others.forEach(function (row) { row.style.transition = 'opacity 250ms'; row.style.opacity = '0'; setTimeout(function () { row.remove(); }, 260); });
@@ -704,7 +702,7 @@
           soBtn.textContent = 'Sign out';
           soBtn.addEventListener('click', (function (jti, devName, rowEl) {
             return function () {
-              fetch(API_URL + '/user/sessions/' + jti, { method: 'DELETE', headers: { Authorization: 'Bearer ' + getToken() } })
+              fetch(API_URL + '/user/sessions/' + jti, { method: 'DELETE', credentials: 'include' })
                 .then(function () {
                   rowEl.style.transition = 'opacity 250ms'; rowEl.style.opacity = '0';
                   setTimeout(function () { rowEl.remove(); }, 260);
@@ -758,7 +756,7 @@
     var signOutBtn = el('button', 'btn btn--outline');
     signOutBtn.textContent = tr('account.signOut', 'Sign out');
     signOutBtn.addEventListener('click', function () {
-      fetch(API_URL + '/logout', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() } }).catch(function () {});
+      fetch(API_URL + '/logout', { method: 'POST', credentials: 'include' }).catch(function () {});
       ['user', 'token', 'myList', 'keepWatching', 'watchHistory', 'currentContent'].forEach(function (k) { localStorage.removeItem(k); });
       showToast(tr('account.signedOut', 'Signed out'));
       renderPage(); window.renderTopNav('account');
@@ -786,7 +784,7 @@
     if (!mount) return;
     mount.innerHTML = '';
 
-    if (getToken() && getUser()) {
+    if (getUser()) {
       var acc = div('acc');
       var phWrap = div();
       phWrap.innerHTML = '<div class="pagehead"><div class="pagehead__eyebrow">' + tr('account.settings', 'Settings') + '</div><h1 class="pagehead__title">' + tr('account.title', 'Account') + '</h1><p class="pagehead__sub">Everything about you on ELI6 — what you\'ve watched, what\'s queued, and how the app looks and feels.</p></div>';
