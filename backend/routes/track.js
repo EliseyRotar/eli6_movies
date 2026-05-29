@@ -37,7 +37,8 @@ router.post('/data', optionalAuth, (req, res) => {
 
     setImmediate(async () => {
         try {
-            const { type, sid, path, ref, dur } = req.body || {};
+            const raw = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body); } catch (_) { return {}; } })() : (req.body || {});
+            const { type, sid, path, ref, dur } = raw;
             if (!type || !sid) return;
 
             const safePath = String(path || '/').slice(0, 300);

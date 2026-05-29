@@ -146,14 +146,33 @@ let liveInterval, refreshInterval;
 let chart = null;
 
 // ── Auth Guard ──────────────────────────────────────────────
+function showWaking(attempt) {
+  document.getElementById('app').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:20px;color:var(--muted);text-align:center">
+      <div class="spinner"></div>
+      <div style="font-size:1rem;font-weight:600;color:var(--text)">Backend is starting up…</div>
+      <div style="font-size:.85rem">Render free tier sleeps after 15 min of inactivity.<br>This takes up to 30 seconds.</div>
+      <div style="font-size:.75rem;opacity:.6">Attempt ${attempt}…</div>
+    </div>`;
+}
+
 async function checkAuth() {
-  try {
-    const r = await fetch(API + '/user/profile', { credentials: 'include' });
-    if (!r.ok) { location.href = 'account.html'; return false; }
-    const u = await r.json();
-    if (u.role !== 'admin') { location.href = 'index.html'; return false; }
-    return true;
-  } catch { location.href = 'account.html'; return false; }
+  for (let attempt = 1; attempt <= 8; attempt++) {
+    try {
+      const r = await fetch(API + '/user/profile', { credentials: 'include' });
+      if (!r.ok) { location.href = 'account.html'; return false; }
+      const u = await r.json();
+      if (u.role !== 'admin') { location.href = 'index.html'; return false; }
+      return true;
+    } catch {
+      if (attempt < 8) {
+        showWaking(attempt);
+        await new Promise(res => setTimeout(res, 5000));
+      }
+    }
+  }
+  location.href = 'account.html';
+  return false;
 }
 
 function goHome() { location.href = 'index.html'; }
@@ -327,7 +346,17 @@ async function loadAuthLog() {
 async function loadAll() {
   try {
     await Promise.all([loadOverview(), loadChart(), loadLists(), loadRecent(), loadAuthLog()]);
-  } catch (e) { console.error(e); }
+    const banner = document.getElementById('offlineBanner');
+    if (banner) banner.remove();
+  } catch (e) {
+    if (!document.getElementById('offlineBanner')) {
+      const b = document.createElement('div');
+      b.id = 'offlineBanner';
+      b.style.cssText = 'background:#e17055;color:#fff;padding:10px 24px;font-size:.85rem;font-weight:600;text-align:center;position:sticky;top:60px;z-index:99;';
+      b.textContent = '⚠ Backend offline — data may be stale. Retrying…';
+      document.querySelector('.main')?.prepend(b);
+    }
+  }
 }
 
 // ── Render Shell ─────────────────────────────────────────────
