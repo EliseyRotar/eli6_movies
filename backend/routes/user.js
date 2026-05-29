@@ -104,10 +104,22 @@ router.get('/user/keep-watching', auth, async (req, res) => {
 
 router.post('/user/keep-watching', auth, async (req, res) => {
     try {
-        const item = req.body || {};
-        if (!item.id || !item.type) {
+        const body = req.body || {};
+        const id       = parseInt(body.id);
+        const type     = ['movie', 'tv', 'anime'].includes(body.type) ? body.type : null;
+        const title    = typeof body.title === 'string' ? body.title.slice(0, 300) : '';
+        const poster   = typeof body.poster_path === 'string' ? body.poster_path.slice(0, 500) : '';
+        const overview = typeof body.overview === 'string' ? body.overview.slice(0, 1000) : '';
+        const progress = Math.min(100, Math.max(0, parseInt(body.progress) || 0));
+        const season   = body.season != null ? parseInt(body.season) || undefined : undefined;
+        const episode  = body.episode != null ? parseInt(body.episode) || undefined : undefined;
+
+        if (!id || !type || !title || !poster) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
+
+        const item = { id, type, title, poster_path: poster, overview, progress, season, episode };
+
         const kwIndex = req.user.keepWatching.findIndex((i) => i.id === item.id && i.type === item.type);
         if (kwIndex > -1) req.user.keepWatching.splice(kwIndex, 1);
         req.user.keepWatching.unshift(item);
@@ -116,9 +128,9 @@ router.post('/user/keep-watching', auth, async (req, res) => {
         const whIndex = req.user.watchHistory.findIndex((i) => i.id === item.id && i.type === item.type);
         if (whIndex > -1) {
             req.user.watchHistory[whIndex].last_watched = new Date();
-            req.user.watchHistory[whIndex].progress = item.progress || 0;
+            req.user.watchHistory[whIndex].progress = item.progress;
         } else {
-            req.user.watchHistory.unshift({ ...item, last_watched: new Date(), progress: item.progress || 0 });
+            req.user.watchHistory.unshift({ ...item, last_watched: new Date() });
         }
         if (req.user.watchHistory.length > 100) req.user.watchHistory = req.user.watchHistory.slice(0, 100);
 
@@ -246,8 +258,12 @@ router.delete('/user/sessions/:jti', auth, async (req, res) => {
 
 router.delete('/user/delete', auth, async (req, res) => {
     try {
+        const { password } = req.body || {};
+        if (!password) return res.status(400).json({ error: 'PASSWORD_REQUIRED' });
+        const valid = await userService.verifyPassword(req.user, password);
+        if (!valid) return res.status(401).json({ error: 'INVALID_PASSWORD' });
         await userService.deleteUser(req.user._id);
-        res.json({ message: 'ACCOUNT_DELETED' });
+        res.clearCookie('token').json({ message: 'ACCOUNT_DELETED' });
     } catch (error) {
         logger.error('Delete account failed', { error: error.message });
         res.status(500).json({ error: 'DELETE_FAILED' });
