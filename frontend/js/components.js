@@ -278,6 +278,24 @@
       playBtn.textContent = "▶";
       playOverlay.appendChild(playBtn);
       div.appendChild(playOverlay);
+
+      if (item.episodeLabel) {
+        const epLabel = el("div", "poster__ep-label");
+        epLabel.textContent = item.episodeLabel;
+        div.appendChild(epLabel);
+      }
+    }
+
+    if (opts.onRemove) {
+      const removeBtn = el("button", "poster__remove");
+      removeBtn.textContent = "×";
+      removeBtn.title = "Remove";
+      removeBtn.setAttribute("aria-label", "Remove");
+      removeBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        opts.onRemove();
+      });
+      div.appendChild(removeBtn);
     }
 
     if (opts.onClick) div.addEventListener("click", opts.onClick);
@@ -325,6 +343,7 @@
         rank:     opts.numbered ? i : null,
         badge:    opts.badge ? opts.badge(item) : null,
         progress: item.progress != null ? item.progress : null,
+        onRemove: opts.onRemove ? function () { opts.onRemove(item); } : null,
         onClick: function () {
           if (opts.onPick) opts.onPick(item);
           else openDetailModal(item);
