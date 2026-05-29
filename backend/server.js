@@ -14,6 +14,7 @@ const catalogRoutes = require('./routes/catalog');
 const translationRoutes = require('./routes/translation');
 const tmdbRoutes  = require('./routes/tmdb');
 const animeRoutes = require('./routes/anime');
+const ruembedRoutes = require('./routes/ruembed');
 const auth = require('./middleware/auth');
 
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api', catalogRoutes);
 app.use('/api', translationRoutes);
 app.use('/api/tmdb', tmdbRoutes);
 app.use('/api/anime', animeRoutes);
+app.use('/api/embed', ruembedRoutes);
 
 app.use('/api/v1', authRoutes);
 app.use('/api/v1', userRoutes);
