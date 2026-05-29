@@ -1,0 +1,29 @@
+name: Debug Render Logs
+on:
+  workflow_dispatch:
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch recent Render logs
+        run: |
+          echo "=== Recent Deploy ==="
+          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0/deploys?limit=3" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -c "
+          import json,sys
+          data=json.load(sys.stdin)
+          for d in data:
+            print('Deploy:', d.get('id'), '| Status:', d.get('status'), '| Created:', d.get('createdAt'))
+          "
+          echo ""
+          echo "=== Service Events / Logs ==="
+          curl -s "https://api.render.com/v1/services/srv-d8arhovavr4c73dsbeb0/events?limit=20" \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" | python3 -c "
+          import json,sys
+          data=json.load(sys.stdin)
+          if isinstance(data, list):
+            for e in data[:20]:
+              print(e.get('type','?'), '|', e.get('details',''), '|', e.get('createdAt',''))
+          else:
+            print(json.dumps(data, indent=2)[:2000])
+          "
