@@ -31,8 +31,8 @@ router.post('/translation/translate', async (req, res) => {
             { timeout: 8000 }
         );
         res.json({ translation: response.data.translatedText });
-    } catch (error) {
-        res.status(500).json({ error: 'TRANSLATION_FAILED', details: error.message });
+    } catch {
+        res.status(500).json({ error: 'TRANSLATION_FAILED' });
     }
 });
 
@@ -63,8 +63,8 @@ router.post('/translation/translate-batch', async (req, res) => {
             }
         }
         res.json({ translations });
-    } catch (error) {
-        res.status(500).json({ error: 'TRANSLATION_FAILED', details: error.message });
+    } catch {
+        res.status(500).json({ error: 'TRANSLATION_FAILED' });
     }
 });
 
