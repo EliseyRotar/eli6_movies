@@ -2955,11 +2955,10 @@
         // Check if content is in My List
         async function checkMyListStatus() {
             try {
-                const token = localStorage.getItem('token');
-                if (!token) return;
+                if (!localStorage.getItem('user')) return;
 
                 const response = await fetch(`${AUTH_API_URL}/user/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    credentials: 'include'
                 });
 
                 if (response.ok) {
@@ -2997,8 +2996,7 @@
                 addButton.insertAdjacentHTML('beforeend', '<span class="spinner"></span>');
             }
             try {
-                const token = localStorage.getItem('token');
-                if (!token) {
+                if (!localStorage.getItem('user')) {
                     showNotification('Please log in to use this feature', 'error');
                     addButton.disabled = false;
                     addButton.classList.remove('animated');
@@ -3019,8 +3017,8 @@
                     method: isInMyList ? 'DELETE' : 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
                     },
+                    credentials: 'include',
                     body: JSON.stringify(item)
                 });
 
@@ -3032,7 +3030,7 @@
                     updateAddButton();
                     // Sync with localStorage for cross-page consistency
                     const profileRes = await fetch(`${AUTH_API_URL}/user/profile`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
+                        credentials: 'include'
                     });
                     if (profileRes.ok) {
                         const data = await profileRes.json();
@@ -3052,15 +3050,15 @@
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${token}`
                                 },
+                                credentials: 'include',
                                 body: JSON.stringify(lastRemoved)
                             });
                             isInMyList = true;
                             updateAddButton();
                             // Sync localStorage
                             const profileRes = await fetch(`${AUTH_API_URL}/user/profile`, {
-                                headers: { 'Authorization': `Bearer ${token}` }
+                                credentials: 'include'
                             });
                             if (profileRes.ok) {
                                 const data = await profileRes.json();
@@ -3073,8 +3071,7 @@
                         });
                     }
                 } else {
-                    const error = await response.json();
-                    showNotification(error.message || 'Failed to update My List', 'error');
+                    showNotification('Failed to update My List', 'error');
                 }
             } catch (error) {
                 console.error('Error updating My List:', error);
@@ -3828,8 +3825,7 @@
 
         // ── Send progress to backend (keep-watching) ───────────────────────────
         function sendWatchProgress() {
-            const token = localStorage.getItem('token');
-            if (!token || !id || !type || !watchStartTime || !contentData) return;
+            if (!localStorage.getItem('user') || !id || !type || !watchStartTime || !contentData) return;
             const dur = getEstimatedDuration();
             const base = (_savedState && _savedState.time) ? _savedState.time : 0;
             const elapsed = (Date.now() - watchStartTime) / 1000;
@@ -3850,7 +3846,8 @@
             if (type === 'tv') { payload.season = _currentSeason(); payload.episode = _currentEpisode(); }
             fetch(AUTH_API_URL + '/user/keep-watching', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify(payload),
             }).catch(function() {});
         }
@@ -3942,7 +3939,24 @@
         }
 
         // ── postMessage time events from embed players ─────────────────────────
+        const ALLOWED_EMBED_ORIGINS = new Set([
+            'https://vidsrc.fyi',
+            'https://vixsrc.to',
+            'https://embed.su',
+            'https://autoembed.co',
+            'https://multiembed.mov',
+            'https://vidsrcme.ru',
+            'https://vidsrc.cc',
+            'https://www.2embed.stream',
+            'https://player.smashy.stream',
+            'https://vidlink.pro',
+            'https://vidsrc.rip',
+            'https://vidfast.pro',
+            'https://apiplayer.ru',
+            'https://vaplayer.ru',
+        ]);
         window.addEventListener('message', function(ev) {
+            if (!ALLOWED_EMBED_ORIGINS.has(ev.origin)) return;
             try {
                 const d = typeof ev.data === 'string' ? JSON.parse(ev.data) : ev.data;
                 if (!d || typeof d !== 'object') return;
