@@ -302,12 +302,26 @@ async function renderWatchHistory() {
     history.forEach((item) => {
         const div = document.createElement('div');
         div.className = 'watch-history-item';
-        div.innerHTML = `
-      <img src="https://image.tmdb.org/t/p/w92${item.poster_path}" alt="${item.title}" />
-      <span>${item.title} (${item.type})</span>
-      <button onclick="resumePlayback(${item.id}, '${item.type}')">Resume</button>
-      <button onclick="removeFromWatchHistory(${item.id}, '${item.type}')">Remove</button>
-    `;
+
+        const img = document.createElement('img');
+        img.src = `https://image.tmdb.org/t/p/w92${encodeURIComponent(item.poster_path || '')}`;
+        img.alt = item.title || '';
+
+        const span = document.createElement('span');
+        span.textContent = `${item.title} (${item.type})`;
+
+        const resumeBtn = document.createElement('button');
+        resumeBtn.textContent = 'Resume';
+        resumeBtn.addEventListener('click', () => resumePlayback(item.id, item.type));
+
+        const removeBtn = document.createElement('button');
+        removeBtn.textContent = 'Remove';
+        removeBtn.addEventListener('click', () => removeFromWatchHistory(item.id, item.type));
+
+        div.appendChild(img);
+        div.appendChild(span);
+        div.appendChild(resumeBtn);
+        div.appendChild(removeBtn);
         list.appendChild(div);
     });
 }
