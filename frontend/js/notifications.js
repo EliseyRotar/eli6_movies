@@ -85,7 +85,13 @@
         recent.forEach((i) => {
             const div = document.createElement('div');
             div.className = 'item';
-            div.innerHTML = `<div>${i.title || i.text}</div><div class="status">${i.status || 'done'}</div>`;
+            const titleDiv = document.createElement('div');
+            titleDiv.textContent = i.title || i.text || '';
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'status';
+            statusDiv.textContent = i.status || 'done';
+            div.appendChild(titleDiv);
+            div.appendChild(statusDiv);
             content.appendChild(div);
         });
         pop.style.display = 'block';
