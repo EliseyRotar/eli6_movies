@@ -56,7 +56,8 @@ router.get('/ru', async (req, res) => {
             });
             const link = r.data?.results?.[0]?.link;
             if (!link) return res.status(404).json({ error: 'Not found on Kodik' });
-            url = withHttps(link) + `?season=${s}&episode=${e}`;
+            const sep = link.includes('?') ? '&' : '?';
+            url = withHttps(link) + sep + `season=${s}&episode=${e}`;
 
         // ── Bazon ──────────────────────────────────────────────────────────
         } else if (server === 'bazon') {
