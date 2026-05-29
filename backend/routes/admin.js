@@ -2,6 +2,8 @@ const express = require('express');
 const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const userService = require('../services/userService');
+const ActivityLog = require('../models/ActivityLog');
+const User = require('../models/User');
 const {
     validateEmail,
     validateUsername,
@@ -27,11 +29,12 @@ router.post('/admin/users', async (req, res, next) => {
         }
         const existing = await userService.findByEmail(email);
         if (existing) return res.status(400).json({ error: 'USER_EXISTS' });
+        const safeRole = ['user', 'admin'].includes(role) ? role : 'user';
         const user = await userService.createUser({
             username: username.trim(),
             email,
             password,
-            role: role || 'user',
+            role: safeRole,
         });
         res.status(201).json({
             user: { _id: user._id, username: user.username, email: user.email, role: user.role },
