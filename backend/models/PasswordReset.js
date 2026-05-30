@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
     used:      { type: Boolean, default: false },
 }, { timestamps: true });
 
-// MongoDB TTL — auto-delete documents 1 h after expiresAt
-schema.index({ expiresAt: 1 }, { expireAfterSeconds: 3600 });
+// MongoDB TTL — auto-delete documents at expiresAt
+schema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model('PasswordReset', schema);

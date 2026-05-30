@@ -162,7 +162,7 @@ router.post('/auth/resend-verification', async (req, res) => {
 // GET /auth/verify-email?token=...
 router.get('/auth/verify-email', async (req, res) => {
     const { token } = req.query || {};
-    if (!token) return res.status(400).json({ error: 'MISSING_TOKEN' });
+    if (!token || typeof token !== 'string') return res.status(400).json({ error: 'MISSING_TOKEN' });
 
     try {
         const user = await userService.findOne({ verificationToken: token });

@@ -8,6 +8,7 @@ const {
     validateEmail,
     validateUsername,
     validatePassword,
+    validateNewPassword,
 } = require('../utils/validators');
 
 const router = express.Router();
@@ -24,7 +25,7 @@ router.get('/admin/users', async (_req, res, next) => {
 router.post('/admin/users', async (req, res, next) => {
     try {
         const { username, email, password, role } = req.body || {};
-        if (!validateUsername(username) || !validateEmail(email) || !validatePassword(password)) {
+        if (!validateUsername(username) || !validateEmail(email) || !validateNewPassword(password)) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
         const existing = await userService.findByEmail(email);
@@ -95,7 +96,7 @@ router.put('/admin/users/:id/reset-password', async (req, res, next) => {
     try {
         const { id } = req.params;
         const { newPassword } = req.body || {};
-        if (!validatePassword(newPassword)) return res.status(400).json({ error: 'INVALID_PASSWORD' });
+        if (!validateNewPassword(newPassword)) return res.status(400).json({ error: 'INVALID_PASSWORD' });
         const user = await userService.findById(id);
         if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
         user.password = await userService.hashPassword(newPassword);

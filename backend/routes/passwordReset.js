@@ -9,6 +9,14 @@ const router = express.Router();
 
 // Rate-limit: at most 3 reset requests per email per 15 min (in-memory, good enough)
 const resetAttempts = new Map();
+// Evict expired entries every 30 min so the Map doesn't grow unboundedly
+setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of resetAttempts) {
+        if (now >= entry.reset) resetAttempts.delete(key);
+    }
+}, 30 * 60 * 1000).unref();
+
 function checkResetRateLimit(email) {
     const now = Date.now();
     const entry = resetAttempts.get(email);
@@ -60,15 +68,18 @@ router.post('/auth/forgot-password', async (req, res) => {
 // POST /auth/reset-password  { token, newPassword }
 router.post('/auth/reset-password', async (req, res) => {
     const { token, newPassword } = req.body || {};
-    if (!token || !validateNewPassword(newPassword)) {
+    if (!token || typeof token !== 'string' || !validateNewPassword(newPassword)) {
         return res.status(400).json({ error: 'INVALID_INPUT' });
     }
 
     try {
-        const record = await PasswordReset.findOne({ token, used: false });
-        if (!record || record.expiresAt < new Date()) {
-            return res.status(400).json({ error: 'TOKEN_INVALID_OR_EXPIRED' });
-        }
+        // Atomically claim the token to prevent TOCTOU race between concurrent requests
+        const record = await PasswordReset.findOneAndUpdate(
+            { token, used: false, expiresAt: { $gt: new Date() } },
+            { $set: { used: true } },
+            { new: false }
+        );
+        if (!record) return res.status(400).json({ error: 'TOKEN_INVALID_OR_EXPIRED' });
 
         const user = await userService.findById(record.userId);
         if (!user) return res.status(400).json({ error: 'USER_NOT_FOUND' });
@@ -76,9 +87,6 @@ router.post('/auth/reset-password', async (req, res) => {
         user.password  = await userService.hashPassword(newPassword);
         user.sessions  = []; // revoke all sessions
         await user.save();
-
-        record.used = true;
-        await record.save();
 
         res.json({ message: 'PASSWORD_RESET_OK' });
     } catch (err) {

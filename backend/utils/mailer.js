@@ -1,6 +1,6 @@
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const MAIL_FROM     = process.env.MAIL_FROM || 'ELI6 Movies <onboarding@resend.dev>';
-const APP_URL       = process.env.APP_URL   || 'https://eli6movies.vercel.app';
+const APP_URL       = (process.env.APP_URL || 'https://eli6movies.vercel.app').replace(/\/+$/, '');
 
 async function sendEmail({ to, subject, html }) {
     if (!RESEND_API_KEY) {
@@ -8,6 +8,8 @@ async function sendEmail({ to, subject, html }) {
         console.warn('[mailer] RESEND_API_KEY not set — email skipped');
         return null;
     }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
     const r = await fetch('https://api.resend.com/emails', {
         method:  'POST',
         headers: {
@@ -15,7 +17,8 @@ async function sendEmail({ to, subject, html }) {
             'Content-Type':  'application/json',
         },
         body: JSON.stringify({ from: MAIL_FROM, to, subject, html }),
-    });
+        signal: controller.signal,
+    }).finally(() => clearTimeout(timer));
     if (!r.ok) {
         const body = await r.text().catch(() => '');
         throw new Error(`Resend error ${r.status}: ${body}`);
