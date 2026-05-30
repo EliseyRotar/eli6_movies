@@ -52,6 +52,10 @@ async function findByUsername(username) {
     return User.findOne({ username: String(username) });
 }
 
+async function findOne(query) {
+    return User.findOne(query);
+}
+
 function resetStore() {
     // no-op in production; only used in tests
 }
@@ -60,6 +64,7 @@ module.exports = {
     createUser,
     findByEmail,
     findById,
+    findOne,
     verifyPassword,
     updateUser,
     deleteUser,

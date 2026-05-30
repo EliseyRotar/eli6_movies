@@ -123,8 +123,4 @@ router.put('/admin/users/:id/role', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-router.post('/admin/fix-mylist', async (_req, res) => {
-    res.json({ message: 'OK' });
-});
-
 module.exports = router;

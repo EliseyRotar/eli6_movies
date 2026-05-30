@@ -6,6 +6,7 @@ const {
     validateEmail,
     validateUsername,
     validatePassword,
+    validateNewPassword,
 } = require('../utils/validators');
 
 const router = express.Router();
@@ -18,11 +19,12 @@ function sanitizeUser(user) {
 
 router.get('/user/profile', auth, async (req, res) => {
     res.json({
-        username: req.user.username,
-        email: req.user.email,
-        role: req.user.role,
-        myList: req.user.myList || [],
-        createdAt: req.user.createdAt,
+        username:      req.user.username,
+        email:         req.user.email,
+        role:          req.user.role,
+        emailVerified: req.user.emailVerified ?? false,
+        myList:        req.user.myList || [],
+        createdAt:     req.user.createdAt,
     });
 });
 
@@ -215,7 +217,7 @@ router.put('/user/update', auth, async (req, res) => {
 router.put('/user/password', auth, async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body || {};
-        if (!validatePassword(currentPassword) || !validatePassword(newPassword)) {
+        if (!validatePassword(currentPassword) || !validateNewPassword(newPassword)) {
             return res.status(400).json({ error: 'INVALID_PASSWORD' });
         }
         const isMatch = await userService.verifyPassword(req.user, currentPassword);
@@ -254,6 +256,8 @@ router.delete('/user/sessions/others', auth, async (req, res) => {
 router.delete('/user/sessions/:jti', auth, async (req, res) => {
     try {
         const { jti } = req.params;
+        const owned = req.user.sessions.some(s => s.jti === jti);
+        if (!owned) return res.status(404).json({ error: 'SESSION_NOT_FOUND' });
         req.user.sessions = req.user.sessions.filter(s => s.jti !== jti);
         await req.user.save();
         res.json({ message: 'SESSION_REVOKED' });

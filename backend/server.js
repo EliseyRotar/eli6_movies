@@ -17,7 +17,8 @@ const tmdbRoutes  = require('./routes/tmdb');
 const animeRoutes = require('./routes/anime');
 const ruembedRoutes = require('./routes/ruembed');
 const { router: trackRoutes } = require('./routes/track');
-const analyticsRoutes = require('./routes/analytics');
+const analyticsRoutes    = require('./routes/analytics');
+const passwordResetRoutes = require('./routes/passwordReset');
 const auth = require('./middleware/auth');
 
 const app = express();
@@ -79,6 +80,7 @@ app.use('/api/anime', animeRoutes);
 app.use('/api/embed', auth, ruembedRoutes);
 app.use('/api', trackRoutes);
 app.use('/api', analyticsRoutes);
+app.use('/api', passwordResetRoutes);
 
 app.use(errorHandler);
 

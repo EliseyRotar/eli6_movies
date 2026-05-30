@@ -91,10 +91,28 @@
         var prof = await results[2].json();
         myList = prof.myList || [];
         localStorage.setItem('myList', JSON.stringify(myList));
-        if (prof.createdAt) {
-          var u = getUser() || {};
-          u.createdAt = prof.createdAt;
-          localStorage.setItem('user', JSON.stringify(u));
+        var u = getUser() || {};
+        if (prof.createdAt) u.createdAt = prof.createdAt;
+        u.emailVerified = prof.emailVerified;
+        localStorage.setItem('user', JSON.stringify(u));
+        // Show unverified email banner
+        if (!prof.emailVerified) {
+          var banner = document.createElement('div');
+          banner.style.cssText = 'background:rgba(253,203,110,.1);border:1px solid rgba(253,203,110,.3);color:#fdcb6e;padding:10px 16px;border-radius:8px;font-size:13px;margin:0 var(--pad-x,24px) 8px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+          banner.innerHTML = '<span>⚠ Please verify your email address to secure your account.</span>';
+          var resendBtn = document.createElement('button');
+          resendBtn.textContent = 'Resend email';
+          resendBtn.style.cssText = 'background:rgba(253,203,110,.2);border:1px solid rgba(253,203,110,.4);color:#fdcb6e;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap';
+          resendBtn.addEventListener('click', async function() {
+            resendBtn.disabled = true; resendBtn.textContent = 'Sending…';
+            try {
+              await fetch(API_URL + '/auth/resend-verification', { method: 'POST', headers: {'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email: prof.email }) });
+              resendBtn.textContent = 'Sent!';
+            } catch(_) { resendBtn.textContent = 'Failed'; }
+          });
+          banner.appendChild(resendBtn);
+          var mountEl = document.getElementById('account-mount');
+          if (mountEl) mountEl.insertBefore(banner, mountEl.firstChild);
         }
       }
       if (results[3].ok) {
@@ -276,6 +294,11 @@
     loginBtn.type = 'submit'; loginBtn.textContent = tr('account.signIn', 'Sign in');
     loginBtn.style.cssText = 'width:100%;margin-top:8px';
     loginForm.appendChild(loginBtn);
+    var forgotLink = el('a');
+    forgotLink.href = 'forgot-password.html';
+    forgotLink.textContent = 'Forgot password?';
+    forgotLink.style.cssText = 'display:block;text-align:right;font-size:12px;color:var(--fg-muted);margin-top:10px;text-decoration:none';
+    loginForm.appendChild(forgotLink);
     loginForm.addEventListener('submit', async function (e) {
       e.preventDefault();
       var emailVal = document.getElementById('login-email').value.trim();

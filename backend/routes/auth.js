@@ -6,11 +6,13 @@ const logger = require('../utils/logger');
 const {
     validateEmail,
     validatePassword,
+    validateNewPassword,
     validateUsername,
     normalizeEmail,
 } = require('../utils/validators');
 const userService = require('../services/userService');
 const ActivityLog = require('../models/ActivityLog');
+const { sendEmail, verifyEmailTemplate, APP_URL } = require('../utils/mailer');
 
 const router = express.Router();
 
@@ -32,7 +34,7 @@ function sanitizeUser(user) {
 router.post('/register', async (req, res, next) => {
     try {
         const { username, email, password } = req.body || {};
-        if (!validateUsername(username) || !validateEmail(email) || !validatePassword(password)) {
+        if (!validateUsername(username) || !validateEmail(email) || !validateNewPassword(password)) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
 
@@ -56,6 +58,19 @@ router.post('/register', async (req, res, next) => {
             userId: user._id, username: user.username, email: user.email,
             event: 'register', ip: req.ip || '', userAgent: req.headers['user-agent'] || '',
         }).catch(() => {});
+
+        // Send email verification (non-blocking — failure doesn't affect registration)
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        user.verificationToken = verificationToken;
+        user.emailVerified = false;
+        await user.save();
+        const verifyUrl = `${APP_URL}/verify-email.html?token=${verificationToken}`;
+        sendEmail({
+            to:      user.email,
+            subject: 'Verify your ELI6 Movies email',
+            html:    verifyEmailTemplate(user.username, verifyUrl),
+        }).catch(() => {});
+
         res.cookie('token', token, cookieBase)
             .status(201)
             .json({ token, user: sanitizeUser(user) });
@@ -118,6 +133,48 @@ router.post('/logout', async (req, res) => {
         }
     } catch (_) {}
     res.clearCookie('token', { ...cookieBase, maxAge: 0 }).json({ message: 'LOGGED_OUT' });
+});
+
+// POST /auth/resend-verification
+router.post('/auth/resend-verification', async (req, res) => {
+    const { email } = req.body || {};
+    const OK = { message: 'If that account exists and is unverified, a new email has been sent.' };
+    if (!email || typeof email !== 'string') return res.json(OK);
+
+    try {
+        const user = await userService.findByEmail(email.trim().toLowerCase());
+        if (!user || user.emailVerified) return res.json(OK);
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        user.verificationToken = verificationToken;
+        await user.save();
+        const verifyUrl = `${APP_URL}/verify-email.html?token=${verificationToken}`;
+        sendEmail({
+            to:      user.email,
+            subject: 'Verify your ELI6 Movies email',
+            html:    verifyEmailTemplate(user.username, verifyUrl),
+        }).catch(() => {});
+    } catch (_) {}
+
+    res.json(OK);
+});
+
+// GET /auth/verify-email?token=...
+router.get('/auth/verify-email', async (req, res) => {
+    const { token } = req.query || {};
+    if (!token) return res.status(400).json({ error: 'MISSING_TOKEN' });
+
+    try {
+        const user = await userService.findOne({ verificationToken: token });
+        if (!user) return res.status(400).json({ error: 'TOKEN_INVALID' });
+        user.emailVerified     = true;
+        user.verificationToken = null;
+        await user.save();
+        res.json({ message: 'EMAIL_VERIFIED' });
+    } catch (err) {
+        logger.error('Email verification failed', { error: err.message });
+        res.status(500).json({ error: 'VERIFY_FAILED' });
+    }
 });
 
 module.exports = router;

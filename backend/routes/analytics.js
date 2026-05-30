@@ -6,7 +6,7 @@ const ActivityLog = require('../models/ActivityLog');
 const { activeSessions } = require('./track');
 
 const router = express.Router();
-router.use(auth, adminOnly);
+router.use('/admin/analytics', auth, adminOnly);
 
 function getFrom(range) {
     const now = Date.now();

@@ -27,3 +27,9 @@ services:
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: APP_URL
+        value: https://eli6movies.vercel.app

@@ -110,6 +110,8 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'admin'],
             default: 'user',
         },
+        emailVerified:      { type: Boolean, default: false },
+        verificationToken:  { type: String,  default: null },
         sessions: {
             type: [
                 {

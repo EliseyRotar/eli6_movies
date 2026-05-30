@@ -2,7 +2,7 @@ name: Keep Alive
 
 on:
   schedule:
-    - cron: '*/10 * * * *'   # every 10 minutes, 24/7
+    - cron: '*/5 * * * *'    # every 5 minutes, 24/7
   workflow_dispatch:
 
 jobs:

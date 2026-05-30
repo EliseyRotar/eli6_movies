@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verify Email — ELI6 Movies</title>
+  <script>
+    (function(){
+      try { var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}'); document.documentElement.dataset.theme=p.theme||'pulse'; document.documentElement.dataset.mode=p.mode||'dark'; }
+      catch(e){ document.documentElement.dataset.theme='pulse'; document.documentElement.dataset.mode='dark'; }
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+  <style>
+    .auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 420px; text-align: center; }
+    .auth-logo { font-size: 22px; font-weight: 800; color: var(--fg); margin-bottom: 32px; }
+    .auth-logo span { color: var(--accent); }
+    .icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .title { font-size: 20px; font-weight: 700; color: var(--fg); margin: 0 0 8px; }
+    .sub { font-size: 14px; color: var(--fg-muted); margin: 0 0 28px; }
+    .btn { display: inline-block; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 11px 24px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">ELI<span>6</span>.</div>
+      <div id="content">
+        <div class="spinner"></div>
+        <div class="sub">Verifying your email…</div>
+      </div>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script>
+    const API   = (window.API_BASE_URL || 'https://eli6movies.onrender.com/api').replace(/\/+$/, '');
+    const token = new URLSearchParams(window.location.search).get('token');
+    const el    = document.getElementById('content');
+
+    function show(icon, title, sub, btnHref, btnText) {
+      el.innerHTML = `
+        <div class="icon">${icon}</div>
+        <div class="title">${title}</div>
+        <div class="sub">${sub}</div>
+        ${btnHref ? `<a href="${btnHref}" class="btn">${btnText}</a>` : ''}`;
+    }
+
+    (async () => {
+      if (!token) {
+        show('⚠', 'Missing token', 'No verification token found in the URL.', 'account.html', 'Go to account');
+        return;
+      }
+      try {
+        const r = await fetch(API + '/auth/verify-email?token=' + encodeURIComponent(token));
+        const d = await r.json();
+        if (r.ok) {
+          show('✓', 'Email verified!', 'Your email has been confirmed. You can close this tab.', 'account.html', 'Go to account');
+        } else if (d.error === 'TOKEN_INVALID') {
+          show('⚠', 'Link expired or invalid', 'This verification link has already been used or expired.', 'account.html', 'Go to account');
+        } else {
+          show('⚠', 'Verification failed', 'Something went wrong. Please try again.', 'account.html', 'Go to account');
+        }
+      } catch (_) {
+        show('⚠', 'Network error', 'Could not reach the server. Please try again later.', null, '');
+      }
+    })();
+  </script>
+</body>
+</html>
