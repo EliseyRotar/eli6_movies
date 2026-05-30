@@ -14,6 +14,9 @@ const schema = new mongoose.Schema({
     browser:     { type: String, default: null },
     os:          { type: String, default: null },
     device:      { type: String, default: 'desktop' },
+    utmSource:   { type: String, default: null },
+    utmMedium:   { type: String, default: null },
+    utmCampaign: { type: String, default: null },
     createdAt:   { type: Date, default: Date.now, index: true },
 });
 

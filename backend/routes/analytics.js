@@ -144,6 +144,25 @@ router.get('/admin/analytics/referrers', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
+// GET /admin/analytics/campaigns?range=7d
+router.get('/admin/analytics/campaigns', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from }, utmSource: { $nin: [null, ''] } } },
+            { $group: {
+                _id:      { source: '$utmSource', medium: '$utmMedium', campaign: '$utmCampaign' },
+                views:    { $sum: 1 },
+                sessions: { $addToSet: '$sessionId' },
+            }},
+            { $project: { _id: 1, views: 1, sessions: { $size: '$sessions' } } },
+            { $sort:  { views: -1 } },
+            { $limit: 30 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
 // GET /admin/analytics/recent?limit=50
 router.get('/admin/analytics/recent', async (req, res, next) => {
     try {

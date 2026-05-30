@@ -301,12 +301,13 @@ function renderList(containerId, rows, keyFn, maxVal) {
 }
 
 async function loadLists() {
-  const [pages, countries, devices, browsers, refs] = await Promise.all([
+  const [pages, countries, devices, browsers, refs, campaigns] = await Promise.all([
     api('/admin/analytics/pages?range='     + currentRange),
     api('/admin/analytics/countries?range=' + currentRange),
     api('/admin/analytics/devices?range='   + currentRange),
     api('/admin/analytics/browsers?range='  + currentRange),
     api('/admin/analytics/referrers?range=' + currentRange),
+    api('/admin/analytics/campaigns?range=' + currentRange),
   ]);
 
   const maxPages   = pages[0]?.count    || 1;
@@ -320,6 +321,23 @@ async function loadLists() {
   renderList('listDevices',  devices,   r => `<span class="badge ${esc(r._id)}">${esc(r._id)}</span>`, maxDevice);
   renderList('listBrowsers', browsers,  r => esc(r._id), maxBrowser);
   renderList('listRefs',     refs,      r => esc(r._id), maxRef);
+
+  // Campaigns table
+  const campsEl = document.getElementById('campaignsBody');
+  if (campsEl) {
+    if (!campaigns.length) {
+      campsEl.innerHTML = '<tr><td colspan="5" style="color:var(--muted);font-size:.8rem">No campaign traffic yet — share a UTM link to see data here.</td></tr>';
+    } else {
+      campsEl.innerHTML = campaigns.map(r => `
+        <tr>
+          <td><span class="badge">${esc(r._id.source)}</span></td>
+          <td style="color:var(--muted)">${esc(r._id.medium || '—')}</td>
+          <td style="color:var(--muted)">${esc(r._id.campaign || '—')}</td>
+          <td style="font-weight:700;color:var(--accent)">${fmt(r.sessions)}</td>
+          <td>${fmt(r.views)}</td>
+        </tr>`).join('');
+    }
+  }
 }
 
 // ── Recent Activity ─────────────────────────────────────────
@@ -444,6 +462,21 @@ function renderShell() {
       <div class="list-card">
         <div class="card-title">Referrers</div>
         <div class="rows" id="listRefs"></div>
+      </div>
+    </div>
+
+    <!-- Campaigns -->
+    <div class="table-card">
+      <div class="table-header">
+        <div class="card-title" style="margin-bottom:0">📣 Campaign Traffic <span style="font-size:.7rem;font-weight:400;color:var(--muted);margin-left:8px">utm_source / utm_medium / utm_campaign</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Source</th><th>Medium</th><th>Campaign</th><th>Sessions</th><th>Views</th>
+          </tr></thead>
+          <tbody id="campaignsBody"><tr><td colspan="5" style="color:var(--muted)">Loading…</td></tr></tbody>
+        </table>
       </div>
     </div>
 
