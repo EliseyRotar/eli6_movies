@@ -1,5 +1,4 @@
 const express = require('express');
-const { UAParser } = require('ua-parser-js');
 const optionalAuth = require('../middleware/optionalAuth');
 const PageView = require('../models/PageView');
 const { geoLookup } = require('../utils/geoip');
@@ -23,12 +22,21 @@ function extractHost(url) {
 }
 
 function parseUA(ua) {
-    const r = new UAParser(ua || '').getResult();
-    return {
-        browser: r.browser.name || 'Unknown',
-        os:      r.os.name     || 'Unknown',
-        device:  r.device.type || 'desktop',
-    };
+    ua = ua || '';
+    let browser = 'Other', os = 'Other', device = 'desktop';
+    if (/Edg\//.test(ua))          browser = 'Edge';
+    else if (/OPR\//.test(ua))     browser = 'Opera';
+    else if (/Chrome\//.test(ua))  browser = 'Chrome';
+    else if (/Firefox\//.test(ua)) browser = 'Firefox';
+    else if (/Safari\//.test(ua))  browser = 'Safari';
+    if (/Windows NT/.test(ua))     os = 'Windows';
+    else if (/Android/.test(ua))   { os = 'Android'; device = 'mobile'; }
+    else if (/iPhone/.test(ua))    { os = 'iOS';     device = 'mobile'; }
+    else if (/iPad/.test(ua))      { os = 'iOS';     device = 'tablet'; }
+    else if (/Mac OS X/.test(ua))  os = 'macOS';
+    else if (/Linux/.test(ua))     os = 'Linux';
+    if (/Mobi/.test(ua) && device === 'desktop') device = 'mobile';
+    return { browser, os, device };
 }
 
 // POST /api/data  — public, receives pageviews + heartbeats + duration updates
