@@ -4147,6 +4147,71 @@
       })();
     </script>
     <script src="js/spatial-nav.js"></script>
+    <script>
+      (function () {
+        var _hint = null;
+        function _showHint(msg, duration) {
+          if (!_hint) {
+            _hint = document.createElement('div');
+            _hint.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.72);backdrop-filter:blur(8px);color:#fff;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;z-index:99999;pointer-events:none;transition:opacity 350ms;opacity:0';
+            document.body.appendChild(_hint);
+          }
+          _hint.textContent = msg;
+          _hint.style.opacity = '1';
+          clearTimeout(_hint._t);
+          _hint._t = setTimeout(function () { _hint.style.opacity = '0'; }, duration || 1400);
+        }
+
+        document.addEventListener('keydown', function (e) {
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          var k = e.key;
+
+          if (k === 'f' || k === 'F') {
+            e.preventDefault();
+            var c = document.getElementById('videoPlayer') || document.querySelector('.hero-section');
+            if (!c) return;
+            if (!document.fullscreenElement) {
+              c.requestFullscreen && c.requestFullscreen();
+              _showHint('⛶  Fullscreen on');
+            } else {
+              document.exitFullscreen && document.exitFullscreen();
+            }
+          }
+
+          if (k === 'n' || k === 'N') {
+            if (typeof goToNextEpisodeInPlayer === 'function') {
+              e.preventDefault();
+              goToNextEpisodeInPlayer();
+              _showHint('⏭  Next episode');
+            }
+          }
+
+          if (k === ']') {
+            if (typeof SERVER_LIST !== 'undefined' && typeof currentServerIndex !== 'undefined' && typeof switchServer === 'function') {
+              e.preventDefault();
+              var next = (currentServerIndex + 1) % SERVER_LIST.length;
+              switchServer(SERVER_LIST[next].key);
+              _showHint('Server: ' + SERVER_LIST[next].label);
+            }
+          }
+
+          if (k === '[') {
+            if (typeof SERVER_LIST !== 'undefined' && typeof currentServerIndex !== 'undefined' && typeof switchServer === 'function') {
+              e.preventDefault();
+              var prev = (currentServerIndex - 1 + SERVER_LIST.length) % SERVER_LIST.length;
+              switchServer(SERVER_LIST[prev].key);
+              _showHint('Server: ' + SERVER_LIST[prev].label);
+            }
+          }
+
+          if (k === '?' || (k === '/' && !e.shiftKey)) {
+            e.preventDefault();
+            _showHint('F = fullscreen  ·  N = next ep  ·  [ / ] = switch server', 3000);
+          }
+        });
+      })();
+    </script>
 </body>
 
 </html>

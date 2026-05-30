@@ -246,6 +246,13 @@
       title.textContent = item.title || item.name || "";
       div.appendChild(title);
 
+      const _rv = item.rating || (item.vote_average != null ? Number(item.vote_average).toFixed(1) : null);
+      if (_rv && Number(_rv) > 0) {
+        const ratingSpan = el("span", "poster__rating");
+        ratingSpan.textContent = "★ " + _rv;
+        div.appendChild(ratingSpan);
+      }
+
       if (opts.showMeta) {
         const meta = el("div", "poster__meta");
         meta.style.display = "flex";
@@ -652,65 +659,46 @@
     const shareBtn = el("button", "btn btn--ghost btn--icon");
     shareBtn.textContent = "↗";
     shareBtn.title = "Share";
+    shareBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      const _base = (window.location.origin + window.location.pathname).replace(/[^/]*$/, "");
+      const _shareUrl = _base + "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
+      if (navigator.share) {
+        navigator.share({ title: item.title || item.name || "ELI6 Movies", url: _shareUrl }).catch(function () {});
+      } else {
+        navigator.clipboard.writeText(_shareUrl).then(function () {
+          showToast("Link copied!");
+        }).catch(function () { showToast("Couldn't copy link"); });
+      }
+    });
     cta.appendChild(watchBtn);
     cta.appendChild(listBtn);
     cta.appendChild(likeBtn);
     cta.appendChild(shareBtn);
     body.appendChild(cta);
 
-    // About (fact grid)
+    // About (fact grid) — real data fetched async below
     const facts = el("div", "detail__sect");
     const factsHead = el("h3"); factsHead.textContent = "About";
     facts.appendChild(factsHead);
     const factGrid = el("div", "detail__factgrid");
-    const titleStr = item.title || item.name || "";
-    const factData = [
-      { k: "Director", v: "Various" },
-      { k: "Cast",     v: titleStr.split(" ")[0] + " Cast, et al." },
-      { k: "Genre",    v: item.genre },
-      { k: "Year",     v: year },
-      { k: "Runtime",  v: item.runtime },
-      { k: "Rated",    v: "TV-MA" },
-      { k: "Rating",   v: item.rating || (item.vote_average ? item.vote_average.toFixed(1) + " / 10" : null) },
-    ];
-    factData.forEach(function (f) {
-      if (!f.v) return;
-      const cell = el("div");
-      const key = el("div", "detail__fact-k"); key.textContent = f.k;
-      const val = el("div", "detail__fact-v"); val.textContent = f.v;
-      cell.appendChild(key);
-      cell.appendChild(val);
-      factGrid.appendChild(cell);
-    });
+    factGrid.innerHTML = '<div style="color:var(--fg-muted);font-size:12px;padding:4px 0">Loading…</div>';
     facts.appendChild(factGrid);
     body.appendChild(facts);
 
-    // Episodes section (TV only)
-    if (kind === "tv") {
-      const epSect = el("div", "detail__sect");
+    // Episodes section (TV only) — populated async below
+    const epSect    = kind === "tv" ? el("div", "detail__sect")    : null;
+    const epList    = kind === "tv" ? el("div", "detail__episodes") : null;
+    const seasonSel = kind === "tv" ? el("select")                  : null;
+    if (kind === "tv" && epSect && epList && seasonSel) {
       const epHead = el("h3"); epHead.textContent = "Episodes";
       epSect.appendChild(epHead);
-      const epList = el("div", "detail__episodes");
-      for (let ep = 1; ep <= 6; ep++) {
-        const epEl = el("div", "detail__ep");
-        epEl.addEventListener("click", (function (n) {
-          return function () {
-            window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=tv&season=1&episode=" + n;
-          };
-        })(ep));
-        const thumb = el("div", "detail__ep-thumb");
-        thumb.style.background = "linear-gradient(135deg," + g[0] + "," + g[1] + ")";
-        thumb.textContent = "▶";
-        const epInfo = el("div");
-        epInfo.style.flex = "1";
-        const epSub = el("div", "detail__ep-sub"); epSub.textContent = "S1 · E" + ep;
-        const epTitle = el("div", "detail__ep-title"); epTitle.textContent = "Episode " + ep;
-        epInfo.appendChild(epSub);
-        epInfo.appendChild(epTitle);
-        epEl.appendChild(thumb);
-        epEl.appendChild(epInfo);
-        epList.appendChild(epEl);
-      }
+      const seasonWrap = el("div");
+      seasonWrap.style.cssText = "display:none;margin-bottom:12px";
+      seasonSel.style.cssText = "background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:13px;cursor:pointer;outline:none";
+      seasonWrap.appendChild(seasonSel);
+      epSect.appendChild(seasonWrap);
+      epList.innerHTML = '<div style="color:var(--fg-muted);font-size:13px;padding:8px 0">Loading…</div>';
       epSect.appendChild(epList);
       body.appendChild(epSect);
     }
@@ -745,7 +733,132 @@
     function onKey(e) { if (e.key === "Escape") closeModal(); }
     document.addEventListener("keydown", onKey);
 
+    // ── Async: real credits + episodes ─────────────────────────────────────────
+    const _closedRef = { v: false };
+    const _detailId  = item.tmdb_id || item.id;
+
+    function _renderFactRow(k, v) {
+      if (!v) return;
+      const cell = el("div");
+      const key = el("div", "detail__fact-k"); key.textContent = k;
+      const val = el("div", "detail__fact-v"); val.textContent = v;
+      cell.appendChild(key); cell.appendChild(val); factGrid.appendChild(cell);
+    }
+    function _fillFallback() {
+      factGrid.innerHTML = "";
+      _renderFactRow("Genre",  item.genre || null);
+      _renderFactRow("Year",   year);
+      _renderFactRow("Rating", item.rating || (item.vote_average ? item.vote_average.toFixed(1) + " / 10" : null));
+    }
+    function _renderEps(eps, sNum) {
+      if (!epList) return;
+      epList.innerHTML = "";
+      if (!eps.length) {
+        epList.innerHTML = '<div style="color:var(--fg-muted);font-size:13px;padding:8px 0">No episodes found.</div>';
+        return;
+      }
+      eps.slice(0, 20).forEach(function (ep) {
+        const epNum  = ep.episode_number || ep;
+        const epName = ep.name || ("Episode " + epNum);
+        const epEl   = el("div", "detail__ep");
+        epEl.addEventListener("click", function () {
+          window.location.href = "player.html?id=" + _detailId + "&type=tv&season=" + sNum + "&episode=" + epNum;
+        });
+        const thumb = el("div", "detail__ep-thumb");
+        if (ep.still_path) {
+          thumb.style.backgroundImage = "url(https://image.tmdb.org/t/p/w300" + ep.still_path + ")";
+          thumb.style.backgroundSize = "cover"; thumb.style.backgroundPosition = "center";
+        } else {
+          thumb.style.background = "linear-gradient(135deg," + g[0] + "," + g[1] + ")";
+          thumb.textContent = "▶";
+        }
+        const epInfo = el("div"); epInfo.style.flex = "1";
+        const epSub2 = el("div", "detail__ep-sub");
+        epSub2.textContent = "S" + sNum + " · E" + epNum + (ep.runtime ? "  " + ep.runtime + "m" : "");
+        const epT = el("div", "detail__ep-title"); epT.textContent = epName;
+        epInfo.appendChild(epSub2); epInfo.appendChild(epT);
+        if (ep.overview) {
+          const epOv = el("div");
+          epOv.style.cssText = "font-size:11px;color:var(--fg-muted);margin-top:2px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical";
+          epOv.textContent = ep.overview;
+          epInfo.appendChild(epOv);
+        }
+        epEl.appendChild(thumb); epEl.appendChild(epInfo);
+        epList.appendChild(epEl);
+      });
+    }
+    function _loadSeason(sNum) {
+      if (!epList || _closedRef.v) return;
+      epList.innerHTML = '<div style="color:var(--fg-muted);font-size:13px;padding:8px 0">Loading…</div>';
+      if (!TMDB_PROXY || isNaN(parseInt(_detailId, 10))) {
+        _renderEps(Array.from({ length: 6 }, function (_, i) {
+          return { episode_number: i + 1, name: "Episode " + (i + 1), still_path: null, overview: "" };
+        }), sNum);
+        return;
+      }
+      fetch(TMDB_PROXY + "/tv/" + _detailId + "/season/" + sNum)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (_closedRef.v || !epList) return;
+          _renderEps((data && data.episodes) || [], sNum);
+        })
+        .catch(function () {
+          if (!_closedRef.v && epList)
+            epList.innerHTML = '<div style="color:var(--fg-muted);font-size:13px">Could not load episodes.</div>';
+        });
+    }
+
+    if (TMDB_PROXY && _detailId && !isNaN(parseInt(_detailId, 10))) {
+      fetch(TMDB_PROXY + "/" + kind + "/" + _detailId + "?append_to_response=credits")
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (data) {
+          if (_closedRef.v) return;
+          if (!data) { _fillFallback(); if (kind === "tv") _loadSeason(1); return; }
+          const _rt = kind === "movie"
+            ? (data.runtime ? data.runtime + " min" : null)
+            : (data.episode_run_time && data.episode_run_time[0] ? data.episode_run_time[0] + " min/ep" : null);
+          let _dir = null;
+          if (kind === "movie" && data.credits && data.credits.crew) {
+            const _d = data.credits.crew.find(function (c) { return c.job === "Director"; });
+            if (_d) _dir = _d.name;
+          } else if (kind === "tv" && data.created_by && data.created_by.length) {
+            _dir = data.created_by.map(function (c) { return c.name; }).join(", ");
+          }
+          const _castStr = (data.credits && data.credits.cast && data.credits.cast.length)
+            ? data.credits.cast.slice(0, 4).map(function (c) { return c.name; }).join(", ") : null;
+          const _genreStr = (data.genres && data.genres.length)
+            ? data.genres.slice(0, 3).map(function (gg) { return gg.name; }).join(", ") : (item.genre || null);
+          factGrid.innerHTML = "";
+          _renderFactRow(kind === "tv" ? "Created by" : "Director", _dir);
+          _renderFactRow("Cast",    _castStr);
+          _renderFactRow("Genre",   _genreStr);
+          _renderFactRow("Year",    year);
+          _renderFactRow("Runtime", _rt || item.runtime || null);
+          _renderFactRow("Rating",  data.vote_average ? data.vote_average.toFixed(1) + " / 10" : (item.rating || null));
+          if (kind === "tv" && seasonSel && data.number_of_seasons) {
+            for (let s = 1; s <= data.number_of_seasons; s++) {
+              const opt = document.createElement("option"); opt.value = s; opt.textContent = "Season " + s;
+              seasonSel.appendChild(opt);
+            }
+            if (data.number_of_seasons > 1) {
+              const sw = seasonSel.parentElement; if (sw) sw.style.display = "";
+            }
+            seasonSel.addEventListener("change", function () {
+              if (!_closedRef.v) _loadSeason(parseInt(seasonSel.value, 10));
+            });
+          }
+          if (kind === "tv") _loadSeason(1);
+        })
+        .catch(function () {
+          if (!_closedRef.v) { _fillFallback(); if (kind === "tv") _loadSeason(1); }
+        });
+    } else {
+      _fillFallback();
+      if (kind === "tv") _loadSeason(1);
+    }
+
     function closeModal() {
+      _closedRef.v = true;
       document.removeEventListener("keydown", onKey);
       backdrop.style.opacity = "0";
       backdrop.style.transition = "opacity 150ms ease";
@@ -763,7 +876,7 @@
 
     const top = el("div", "footer__top");
     const copy = el("span");
-    copy.textContent = "© 2025 ELI6 Movies";
+    copy.textContent = "© 2026 ELI6 Movies";
     const disc = el("span");
     disc.textContent = "This site does not host any files. All content is provided by non-affiliated third parties.";
     top.appendChild(copy);

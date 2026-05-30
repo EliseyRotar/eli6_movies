@@ -483,6 +483,17 @@ html[data-theme="marquee"] .poster:hover {
 }
 .poster:hover .poster__remove { opacity: 1; }
 .poster__remove:hover { background: var(--accent); }
+.poster__rating {
+  position: absolute; top: 8px; right: 8px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  color: #e8c46a;
+  font-size: 9px; font-weight: 700;
+  padding: 2px 6px; border-radius: 4px;
+  letter-spacing: 0.05em;
+  pointer-events: none; z-index: 3;
+}
+html[data-theme="marquee"] .poster__rating { display: none; }
 .poster__ep-label {
   position: absolute; bottom: 20px; left: 0; right: 0;
   text-align: center; font-size: 11px; color: rgba(255,255,255,0.85);

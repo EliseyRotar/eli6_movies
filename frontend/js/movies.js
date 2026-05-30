@@ -39,6 +39,20 @@
   };
 
   var activeGenre = null;
+  var _moviePage = 1;
+  var _movieLang = 'en-US';
+
+  async function loadMoreMovies() {
+    _moviePage++;
+    var items = await fetchMovies('/discover/movie?with_genres=' + activeGenre + '&sort_by=popularity.desc&page=' + _moviePage, _movieLang);
+    if (!items.length) return;
+    var grid = document.getElementById('movies-genre-grid');
+    if (!grid) return;
+    items.forEach(function (item) {
+      var n = normalise(item);
+      grid.appendChild(window.makePoster(n, { onClick: function () { window.openDetailModal(n); } }));
+    });
+  }
 
   async function fetchMovies(endpoint, lang) {
     lang = lang || 'en-US';
@@ -92,10 +106,12 @@
     mount.innerHTML = '<div class="e6-loading"><div class="e6-spinner"></div><span>' + tr('common.loading', 'Loading…') + '</span></div>';
 
     var lang = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
+    _movieLang = lang;
 
     var sections;
     if (activeGenre) {
-      var items = await fetchMovies('/discover/movie?with_genres=' + activeGenre + '&sort_by=popularity.desc', lang);
+      _moviePage = 1;
+      var items = await fetchMovies('/discover/movie?with_genres=' + activeGenre + '&sort_by=popularity.desc&page=1', lang);
       mount.innerHTML = '';
       if (!items.length) {
         mount.innerHTML = '<div class="empty"><div class="empty__icon">◻</div><div class="empty__title">' + tr('common.noResults', 'No results') + '</div><div class="empty__sub">' + tr('common.tryDifferentGenre', 'Try a different genre.') + '</div></div>';
@@ -105,14 +121,29 @@
       gridWrap.style.padding = '20px var(--pad-x) 0';
       var grid = document.createElement('div');
       grid.className = 'grid';
+      grid.id = 'movies-genre-grid';
       items.forEach(function (item) {
-        var poster = window.makePoster(normalise(item), {
-          onClick: function () { window.openDetailModal(normalise(item)); },
-        });
-        grid.appendChild(poster);
+        var n = normalise(item);
+        grid.appendChild(window.makePoster(n, { onClick: function () { window.openDetailModal(n); } }));
       });
       gridWrap.appendChild(grid);
       mount.appendChild(gridWrap);
+      var loadMoreWrap = document.createElement('div');
+      loadMoreWrap.style.cssText = 'text-align:center;padding:28px 0 48px';
+      var loadMoreBtn = document.createElement('button');
+      loadMoreBtn.className = 'btn btn--ghost';
+      loadMoreBtn.textContent = 'Load more';
+      loadMoreBtn.style.cssText = 'padding:10px 32px;font-size:14px';
+      loadMoreBtn.addEventListener('click', function () {
+        loadMoreBtn.textContent = 'Loading…';
+        loadMoreBtn.disabled = true;
+        loadMoreMovies().then(function () {
+          loadMoreBtn.textContent = 'Load more';
+          loadMoreBtn.disabled = false;
+        });
+      });
+      loadMoreWrap.appendChild(loadMoreBtn);
+      mount.appendChild(loadMoreWrap);
     } else {
       var results = await Promise.all([
         fetchMovies('/trending/movie/week', lang),
