@@ -64,6 +64,10 @@ app.use(rateLimit);
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());
 
+// Health check — must be registered before any auth-protected routers
+app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+
 // Mount routers
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
@@ -75,9 +79,6 @@ app.use('/api/anime', animeRoutes);
 app.use('/api/embed', auth, ruembedRoutes);
 app.use('/api', trackRoutes);
 app.use('/api', analyticsRoutes);
-
-app.get('/', (req, res) => res.json({ status: 'ok', service: 'ELI6 Movies API', version: '1.0' }));
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
 
