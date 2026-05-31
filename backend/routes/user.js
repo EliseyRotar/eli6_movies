@@ -92,6 +92,16 @@ router.post('/user/watch-history', auth, async (req, res) => {
     }
 });
 
+router.delete('/user/watch-history/all', auth, async (req, res) => {
+    try {
+        req.user.watchHistory = [];
+        await req.user.save();
+        res.json([]);
+    } catch (error) {
+        res.status(500).json({ error: 'WATCH_HISTORY_ERROR' });
+    }
+});
+
 router.delete('/user/watch-history', auth, async (req, res) => {
     try {
         const { id, type } = req.body || {};

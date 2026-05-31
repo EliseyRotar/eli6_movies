@@ -22,8 +22,56 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/design.css" />
+
+  <style>
+    /* ── Account modals ── */
+    .acm { position:fixed; inset:0; z-index:400; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .acm__bd { position:absolute; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(5px); cursor:pointer; }
+    .acm__dialog { position:relative; z-index:1; background:var(--bg-alt); border:1px solid var(--border); border-radius:var(--r-lg); width:100%; max-width:460px; overflow:hidden; animation:acm-in 220ms ease; }
+    @keyframes acm-in  { from{opacity:0;transform:scale(0.95) translateY(10px)} to{opacity:1;transform:none} }
+    @keyframes acm-out { from{opacity:1;transform:none} to{opacity:0;transform:scale(0.95) translateY(6px)} }
+    .acm__hd { padding:20px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .acm__title { font-size:17px; font-weight:700; }
+    .acm__close { background:none; border:none; color:var(--fg-muted); font-size:22px; cursor:pointer; padding:2px 6px; border-radius:6px; line-height:1; transition:color 150ms, background 150ms; }
+    .acm__close:hover { color:var(--fg); background:var(--surface); }
+    .acm__body { padding:24px; overflow-y:auto; max-height:calc(100vh - 240px); }
+    .acm__foot { padding:0 24px 20px; display:flex; gap:10px; justify-content:flex-end; }
+    .acm__field { margin-bottom:16px; }
+    .acm__label { display:block; font-size:13px; font-weight:600; color:var(--fg-muted); margin-bottom:6px; }
+    .acm__input { width:100%; padding:11px 14px; background:var(--surface); color:var(--fg); border:1px solid var(--border); border-radius:var(--r-md); font:inherit; font-size:15px; outline:none; box-sizing:border-box; transition:border-color 150ms; }
+    .acm__input:focus { border-color:var(--accent); }
+    .acm__hint { font-size:12px; color:var(--fg-muted); margin-top:14px; line-height:1.5; }
+    .acm__hint strong { color:var(--fg); }
+    /* Watch history */
+    .acm__wh-empty { text-align:center; padding:32px 0; color:var(--fg-muted); font-size:14px; }
+    .acm__wh-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .acm__wh-item:last-child { border-bottom:none; }
+    .acm__wh-thumb { width:38px; height:56px; border-radius:6px; object-fit:cover; background:var(--surface-hi); flex-shrink:0; display:block; }
+    .acm__wh-info { flex:1; min-width:0; }
+    .acm__wh-title { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:3px; }
+    .acm__wh-meta { font-size:11px; color:var(--fg-muted); }
+    .acm__wh-prog { height:2px; background:var(--border); border-radius:1px; margin-top:5px; overflow:hidden; }
+    .acm__wh-prog-fill { height:100%; background:var(--accent); }
+    .acm__wh-rm { background:none; border:none; color:var(--fg-faint); font-size:18px; line-height:1; cursor:pointer; padding:6px; border-radius:4px; transition:color 150ms, background 150ms; flex-shrink:0; }
+    .acm__wh-rm:hover { color:#ff6b6b; background:rgba(255,60,60,0.1); }
+    /* Avatar color picker */
+    .acm__colors { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-top:4px; }
+    .acm__swatch { aspect-ratio:1; border-radius:50%; border:3px solid transparent; cursor:pointer; transition:transform 150ms, border-color 150ms; }
+    .acm__swatch:hover { transform:scale(1.15); }
+    .acm__swatch.active { border-color:var(--fg); }
+    /* Cookie rows */
+    .acm__cookie-row { display:flex; align-items:flex-start; gap:16px; padding:14px 0; border-bottom:1px solid var(--border); }
+    .acm__cookie-row:last-child { border-bottom:none; }
+    .acm__cookie-info { flex:1; }
+    .acm__cookie-name { font-size:14px; font-weight:600; margin-bottom:3px; }
+    .acm__cookie-desc { font-size:12px; color:var(--fg-muted); line-height:1.4; }
+    /* Danger modal */
+    .acm__warn { background:rgba(255,60,60,0.08); border:1px solid rgba(255,60,60,0.2); border-radius:var(--r-md); padding:12px 16px; font-size:13px; color:var(--fg-muted); line-height:1.5; margin-bottom:20px; }
+    .acm__warn strong { color:#ff6b6b; }
+  </style>
 </head>
 <body>
   <div class="app">
