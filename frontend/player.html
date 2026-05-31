@@ -1864,6 +1864,9 @@
                 <button id="addButton" class="btn btn--ghost mylist-btn" data-i18n="player.addToMyList">
                     + <span data-i18n="player.addToMyList">My List</span>
                 </button>
+                <button class="btn btn--ghost" id="shareBtn" onclick="shareContent()" title="Share">
+                    ↗ Share
+                </button>
                 <!-- Google Cast Button -->
                 <span id="castButtonContainer" style="display:inline-block; vertical-align:middle; margin-left:12px;">
                   <google-cast-launcher id="castLauncher" style="--discovery-color:var(--accent); --connected-color:#46d369; width:40px; height:40px;"></google-cast-launcher>
@@ -1942,7 +1945,7 @@
             <button class="tab-button" data-i18n="player.trailers" data-tab="trailers">Trailers</button>
             <button class="tab-button" data-i18n="player.cast" data-tab="cast">Cast</button>
             <button class="tab-button" data-i18n="player.similar" data-tab="similar">More Like This</button>
-            <button class="tab-button" id="episodesTab" data-i18n="player.episodes" data-tab="episodes"
+            <button class="tab-button" data-i18n="player.episodes" data-tab="episodes"
                 style="display: none;">Episodes</button>
         </div>
         <!-- Overview Tab -->
@@ -2019,8 +2022,6 @@
         let isVideoPlaying = false;
         let currentContent = null;
 
-        console.log('Player Parameters:', { type, id, episode, season });
-
         // Initialize page
         document.addEventListener('DOMContentLoaded', async () => {
             window.renderTopNav('player');
@@ -2061,7 +2062,15 @@
                 `;
                 videoPlayerDiv.parentNode.insertBefore(manualControls, videoPlayerDiv.nextSibling);
                 document.getElementById('reportBrokenBtn').onclick = () => {
-                    alert('Thank you for reporting. We will investigate this stream.');
+                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
+                    if (next !== currentServerIndex) {
+                        currentServerIndex = next;
+                        loadVideoPlayer();
+                        updateOverlayDropdowns();
+                        showNotification('Trying next server: ' + SERVER_LIST[next].label, 'success');
+                    } else {
+                        showNotification('All servers tried. Please try again later.', 'error');
+                    }
                 };
                 document.getElementById('reloadPlayerBtn').onclick = () => loadVideoPlayer();
             }
@@ -2075,14 +2084,28 @@
             }
         });
 
+        const _tabLoaded = {};
+
         function setupEventListeners() {
-            // Tab switching
+            // Tab switching with lazy loading
             document.querySelectorAll('.tab-button').forEach(button => {
                 button.addEventListener('click', () => {
                     const tab = button.getAttribute('data-tab');
                     switchTab(tab);
+                    if (!_tabLoaded[tab]) {
+                        _tabLoaded[tab] = true;
+                        if (tab === 'cast') loadCast();
+                        else if (tab === 'trailers') loadTrailers();
+                        else if (tab === 'similar') loadSimilar();
+                        else if (tab === 'episodes' && type === 'tv') loadEpisodes();
+                    }
                 });
             });
+            // Show episodes tab for TV
+            if (type === 'tv') {
+                const epBtn = document.querySelector('.tab-button[data-tab="episodes"]');
+                if (epBtn) epBtn.style.display = '';
+            }
         }
 
         // Function to switch tabs
@@ -2098,7 +2121,7 @@
             });
 
             // Activate selected tab
-            document.getElementById(tab).classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
             document.querySelector(`.tab-button[data-tab="${tab}"]`).classList.add('active');
         }
 
@@ -2168,6 +2191,7 @@
             const heroDescription = document.getElementById('heroDescription');
             heroTitle.textContent = title;
             heroDescription.textContent = overview;
+            document.title = title + ' — ELI6 Movies';
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = episodes;
@@ -2246,6 +2270,7 @@
 
             heroTitle.textContent = title;
             heroDescription.textContent = overview;
+            document.title = title + ' — ELI6 Movies';
 
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
@@ -2640,14 +2665,6 @@
             playerLoading.style.display = 'none';
             videoIframe.style.display = 'block';
 
-            console.log(`[Player] Loading video from server: ${SERVER_LIST[currentServerIndex].label}`);
-            console.log(`[Player] Video URL: ${videoUrl}`);
-            console.log(`[Player] Content type: ${type}, ID: ${id}`);
-            console.log(`[Player] Content data:`, contentData);
-            console.log(`[Player] External IDs:`, contentData?.external_ids);
-
-
-
             videoIframe.src = videoUrl;
             videoIframe.allowFullscreen = true;
             videoIframe.allow = 'fullscreen; autoplay; encrypted-media; picture-in-picture; web-share';
@@ -2671,10 +2688,14 @@
 
             // Attach error and load handlers
             newIframe.onerror = () => {
-                console.log(`[Player] Iframe error for server: ${SERVER_LIST[currentServerIndex].label}`);
+                if (!errorHandled) {
+                    errorHandled = true;
+                    if (failoverTimeout) clearTimeout(failoverTimeout);
+                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
+                    if (next !== currentServerIndex) { currentServerIndex = next; loadVideoPlayer(); }
+                }
             };
             newIframe.onload = () => {
-                console.log(`[Player] Iframe loaded successfully for server: ${SERVER_LIST[currentServerIndex].label}`);
                 errorHandled = false;
                 if (failoverTimeout) clearTimeout(failoverTimeout);
                 // Start progress tracking from actual iframe load time
@@ -2683,12 +2704,17 @@
                 watchTimer = setInterval(function() { sendWatchProgress(); savePlayState(); }, 15000);
             };
             
-            // Set a timeout for iframe loading
+            // Auto-failover: if the iframe doesn't signal a successful load within 12s, try the next server
             failoverTimeout = setTimeout(() => {
                 if (!errorHandled) {
-                    console.log('[Player] Timeout waiting for iframe to load');
+                    errorHandled = true;
+                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
+                    if (next !== currentServerIndex) {
+                        currentServerIndex = next;
+                        loadVideoPlayer();
+                    }
                 }
-            }, 8000);
+            }, 12000);
             // At the end of loadVideoPlayer, always update overlay dropdowns
             updateOverlayDropdowns();
         }
@@ -2725,12 +2751,9 @@
             try {
                 const endpoint = type === 'tv' ? 'tv' : 'movie';
                 const lang = getTMDBLang();
-                console.log('Loading trailers for:', { endpoint, id, type });
                 const response = await fetch(`${TMDB_BASE_URL}/${endpoint}/${id}/videos?language=${lang}`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Videos API response:', data);
-
                     // Filter for videos - be more inclusive
                     const trailers = data.results.filter(video => {
                         // Must be from YouTube
@@ -2745,8 +2768,6 @@
 
                         return false;
                     }).slice(0, 10); // Limit to 10 trailers
-
-                    console.log('Filtered trailers:', trailers);
 
                     const trailerGrid = document.getElementById('trailerGrid');
                     if (trailerGrid && trailers.length > 0) {
@@ -2828,7 +2849,7 @@
                         castGrid.innerHTML = cast.map(person => `
                             <div class="cast-item">
                                 <img class="cast-photo"
-                                     src="${person.profile_path ? `https://image.tmdb.org/t/p/w500${person.profile_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}"
+                                     src="${person.profile_path ? `https://image.tmdb.org/t/p/w185${person.profile_path}` : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22185%22 height=%22278%22%3E%3Crect width=%22185%22 height=%22278%22 fill=%22%232a2a2a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23666%22 font-size=%2214%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22sans-serif%22%3ENo Image%3C/text%3E%3C/svg%3E'}"
                                      alt="${esc(person.name)}">
                                 <div class="cast-info">
                                     <div class="cast-name">${esc(person.name)}</div>
@@ -2865,7 +2886,7 @@
                         similarGrid.innerHTML = similar.map(item => `
                             <div class="similar-item" onclick="navigateToContent(${item.id})">
                                 <img class="similar-poster"
-                                     src="${item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'}"
+                                     src="${item.poster_path ? `https://image.tmdb.org/t/p/w342${item.poster_path}` : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22342%22 height=%22513%22%3E%3Crect width=%22342%22 height=%22513%22 fill=%22%232a2a2a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23666%22 font-size=%2216%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22sans-serif%22%3ENo Image%3C/text%3E%3C/svg%3E'}"
                                      alt="${esc(type === 'tv' ? item.name : item.title)}">
                                 <div class="similar-info">
                                     <div class="similar-title">${esc(type === 'tv' ? item.name : item.title)}</div>
@@ -2899,7 +2920,7 @@
                         const button = document.createElement('button');
                         button.className = `season-button ${i === 1 ? 'active' : ''}`;
                         button.textContent = `Season ${i}`;
-                        button.onclick = () => loadSeasonEpisodes(i);
+                        button.onclick = function() { loadSeasonEpisodes(i, this); };
                         seasonSelector.appendChild(button);
                     }
 
@@ -2912,11 +2933,11 @@
         }
 
         // Load season episodes
-        async function loadSeasonEpisodes(seasonNumber) {
+        async function loadSeasonEpisodes(seasonNumber, clickedBtn) {
             try {
                 // Update active season button
                 document.querySelectorAll('.season-button').forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
+                if (clickedBtn) clickedBtn.classList.add('active');
 
                 const lang = getTMDBLang();
                 const response = await fetch(`${TMDB_BASE_URL}/tv/${id}/season/${seasonNumber}?language=${lang}`);
@@ -2926,22 +2947,40 @@
 
                     const episodesGrid = document.getElementById('episodesGrid');
                     if (episodes && episodes.length > 0) {
-                        episodesGrid.innerHTML = episodes.map(episode => `
-                            <div class="episode-item" onclick="playEpisode(${episode.episode_number}, ${seasonNumber})">
-                                <img class="episode-still"
-                                     src="${episode.still_path ? `https://image.tmdb.org/t/p/w500${episode.still_path}` : 'https://via.placeholder.com/500x281/2a2a2a/ffffff?text=No+Image'}"
-                                     alt="${esc(episode.name)}">
-                                <div class="episode-info">
-                                    <div class="episode-number">Episode ${episode.episode_number}</div>
-                                    <div class="episode-title">${esc(episode.name)}</div>
-                                    <div class="episode-meta">
-                                        <span>${episode.runtime || 45}m</span>
-                                        <span>${episode.air_date ? episode.air_date.split('-')[0] : 'N/A'}</span>
-                                    </div>
-                                    <div class="episode-overview">${esc(episode.overview) || 'No description available.'}</div>
+                        const psKey = 'eli6.ps.tv.' + id;
+                        let epProgress = {};
+                        try {
+                            const ps = JSON.parse(localStorage.getItem(psKey) || 'null');
+                            if (ps && ps.v === 1 && ps.season === seasonNumber && ps.progress > 0) {
+                                epProgress[ps.episode] = ps.progress;
+                            }
+                        } catch(e) {}
+                        const _curSeason = _currentSeason();
+                        const _curEpisode = _currentEpisode();
+                        episodesGrid.innerHTML = episodes.map(ep => {
+                            const prog = epProgress[ep.episode_number];
+                            const progressBar = prog ? `<div style="height:3px;background:rgba(255,255,255,0.15);border-radius:2px;margin-top:6px;"><div style="height:3px;background:var(--accent,#e50914);border-radius:2px;width:${prog}%"></div></div>` : '';
+                            const isPlaying = _curSeason === seasonNumber && _curEpisode === ep.episode_number;
+                            return `
+                            <div class="episode-item${isPlaying ? ' playing' : ''}" onclick="playEpisode(${ep.episode_number}, ${seasonNumber})">
+                                <div style="position:relative;">
+                                    <img class="episode-still"
+                                         src="${ep.still_path ? `https://image.tmdb.org/t/p/w300${ep.still_path}` : 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22169%22%3E%3Crect width=%22300%22 height=%22169%22 fill=%22%232a2a2a%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23666%22 font-size=%2214%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22 font-family=%22sans-serif%22%3ENo Image%3C/text%3E%3C/svg%3E'}"
+                                         alt="${esc(ep.name)}">
+                                    ${isPlaying ? '<div style="position:absolute;top:6px;left:6px;background:var(--accent,#e50914);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;">PLAYING</div>' : ''}
                                 </div>
-                            </div>
-                        `).join('');
+                                <div class="episode-info">
+                                    <div class="episode-number">Episode ${ep.episode_number}</div>
+                                    <div class="episode-title">${esc(ep.name)}</div>
+                                    <div class="episode-meta">
+                                        <span>${ep.runtime || 45}m</span>
+                                        <span>${ep.air_date ? ep.air_date.split('-')[0] : 'N/A'}</span>
+                                    </div>
+                                    <div class="episode-overview">${esc(ep.overview) || 'No description available.'}</div>
+                                    ${progressBar}
+                                </div>
+                            </div>`;
+                        }).join('');
 
                     } else {
                         episodesGrid.innerHTML = '<div class="loading-text">' + tr('player.noEpisodes', 'No episodes available') + '</div>';
@@ -3144,8 +3183,45 @@
             window.location.href = `player.html?type=${type}&id=${contentId}`;
         }
 
+        function shareContent() {
+            const title = (contentData && (contentData.title || contentData.name)) || document.title;
+            const url = window.location.href;
+            if (navigator.share) {
+                navigator.share({ title, url }).catch(() => {});
+            } else {
+                navigator.clipboard.writeText(url).then(() => {
+                    showNotification('Link copied to clipboard!', 'success');
+                }).catch(() => {
+                    showNotification('Share: ' + url, 'success');
+                });
+            }
+        }
+
         function playEpisode(episodeNumber, seasonNumber) {
-            window.location.href = `player.html?type=tv&id=${id}&season=${seasonNumber}&episode=${episodeNumber}`;
+            // Update URL without full page reload
+            const url = new URL(window.location.href);
+            url.searchParams.set('season', seasonNumber);
+            url.searchParams.set('episode', episodeNumber);
+            history.replaceState(null, '', url.toString());
+
+            // Sync dropdowns
+            ['seasonSelect', 'overlaySeasonSelectMini'].forEach(function(sid) {
+                const el = document.getElementById(sid); if (el) el.value = seasonNumber;
+            });
+            ['episodeSelect', 'overlayEpisodeSelectMini'].forEach(function(sid) {
+                const el = document.getElementById(sid); if (el) el.value = episodeNumber;
+            });
+
+            // Reload the iframe in place
+            loadVideoPlayer();
+            if (typeof updateOverlayDropdowns === 'function') updateOverlayDropdowns();
+            if (typeof updateNextEpisodeBtnOverlay === 'function') updateNextEpisodeBtnOverlay();
+
+            // Refresh episode list to update PLAYING badge and progress
+            const tab = document.getElementById('episodesTab');
+            if (tab && tab.classList.contains('active')) {
+                loadSeasonEpisodes(seasonNumber);
+            }
         }
 
         function showError(message) {
@@ -4207,7 +4283,52 @@
 
           if (k === '?' || (k === '/' && !e.shiftKey)) {
             e.preventDefault();
-            _showHint('F = fullscreen  ·  N = next ep  ·  [ / ] = switch server', 3000);
+            _showHint('F = fullscreen  ·  N = next ep  ·  [ / ] = server  ·  1-9 = server #', 3000);
+          }
+
+          // 1-9: jump directly to server by number
+          var num = parseInt(k);
+          if (!isNaN(num) && num >= 1 && num <= 9) {
+            if (typeof SERVER_LIST !== 'undefined' && typeof switchServer === 'function') {
+              var filteredServers = SERVER_LIST.filter(function(srv) { return srv.key !== '2anime' || type === 'anime'; });
+              var idx = num - 1;
+              if (idx < filteredServers.length) {
+                e.preventDefault();
+                var srv = filteredServers[idx];
+                switchServer(srv.key);
+                _showHint('Server ' + num + ': ' + srv.label);
+              }
+            }
+          }
+        });
+      })();
+    </script>
+
+    <!-- Sticky mini-bar: appears when scrolled past the player -->
+    <div id="stickyMiniBar" style="position:fixed;bottom:0;left:0;right:0;z-index:9998;background:rgba(0,0,0,0.9);backdrop-filter:blur(8px);border-top:1px solid rgba(255,255,255,0.1);padding:8px 16px;display:flex;align-items:center;gap:12px;transform:translateY(100%);transition:transform 0.25s ease;">
+        <span id="stickyTitle" style="flex:1;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff;"></span>
+        <button onclick="document.getElementById('videoPlayer').scrollIntoView({behavior:'smooth'})" style="background:var(--accent,#e50914);color:#fff;border:none;padding:6px 14px;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;">▶ Watch</button>
+        <button onclick="if(typeof switchServer==='function'){var next=(currentServerIndex+1)%SERVER_LIST.length;switchServer(SERVER_LIST[next].key);}" style="background:rgba(255,255,255,0.12);color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:13px;cursor:pointer;white-space:nowrap;">Next Server</button>
+        <button onclick="shareContent()" style="background:rgba(255,255,255,0.12);color:#fff;border:none;padding:6px 12px;border-radius:4px;font-size:13px;cursor:pointer;">↗</button>
+    </div>
+    <script>
+      (function() {
+        var bar = document.getElementById('stickyMiniBar');
+        var player = document.getElementById('videoPlayer');
+        if (!bar || !player) return;
+        var obs = new IntersectionObserver(function(entries) {
+          var visible = entries[0].isIntersecting;
+          bar.style.transform = visible ? 'translateY(100%)' : 'translateY(0)';
+        }, { threshold: 0.1 });
+        obs.observe(player);
+        // Populate title lazily
+        document.addEventListener('DOMContentLoaded', function() {
+          var titleEl = document.getElementById('heroTitle');
+          var stickyT = document.getElementById('stickyTitle');
+          if (titleEl && stickyT) {
+            var mo = new MutationObserver(function() { stickyT.textContent = titleEl.textContent; });
+            mo.observe(titleEl, { childList: true, subtree: true, characterData: true });
+            stickyT.textContent = titleEl.textContent;
           }
         });
       })();
