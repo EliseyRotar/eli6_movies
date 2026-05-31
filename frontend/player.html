@@ -1900,7 +1900,7 @@
                 <div class="video-player">
                     <div class="player-loading" id="playerLoading">Loading video player...</div>
                     <iframe id="videoIframe" class="video-iframe" style="display: none;" allowfullscreen
-                        allow="fullscreen; autoplay; encrypted-media; picture-in-picture; web-share"
+                        allow="fullscreen; autoplay; picture-in-picture; web-share"
                         sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox allow-forms"></iframe>
                     
                     <!-- Resume Banner -->
@@ -2667,7 +2667,7 @@
 
             videoIframe.src = videoUrl;
             videoIframe.allowFullscreen = true;
-            videoIframe.allow = 'fullscreen; autoplay; encrypted-media; picture-in-picture; web-share';
+            videoIframe.allow = 'fullscreen; autoplay; picture-in-picture; web-share';
             videoIframe.setAttribute('allowfullscreen', 'true');
             videoIframe.setAttribute('webkitallowfullscreen', 'true');
             videoIframe.setAttribute('mozallowfullscreen', 'true');
@@ -2817,7 +2817,7 @@
                             src="https://www.youtube.com/embed/${youtubeId}?autoplay=1" 
                             frameborder="0" 
                             allowfullscreen
-                            allow="autoplay; encrypted-media">
+                            allow="autoplay; picture-in-picture; fullscreen">
                     </iframe>
                     <div class="trailer-info">
                         <div class="trailer-title">${trailerName}</div>

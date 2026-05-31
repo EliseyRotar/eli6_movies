@@ -11,7 +11,8 @@
     }
 
     function send(payload) {
-        var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+        // text/plain avoids CORS preflight — simple request works even during cold starts
+        var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
         navigator.sendBeacon(API + '/data', blob);
     }
 

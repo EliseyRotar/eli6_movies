@@ -66,7 +66,7 @@ const userSchema = new mongoose.Schema(
                     },
                     poster_path: {
                         type: String,
-                        required: true,
+                        default: '',
                     },
                     overview: {
                         type: String,
@@ -97,9 +97,11 @@ const userSchema = new mongoose.Schema(
                     id: { type: Number, required: true },
                     title: { type: String, required: true },
                     type: { type: String, required: true, enum: ['movie', 'tv', 'anime'] },
-                    poster_path: { type: String, required: true },
+                    poster_path: { type: String, default: '' },
                     overview: { type: String, default: '' },
                     progress: { type: Number, default: 0 },
+                    season: { type: Number },
+                    episode: { type: Number },
                     last_watched: { type: Date, default: Date.now },
                 },
             ],

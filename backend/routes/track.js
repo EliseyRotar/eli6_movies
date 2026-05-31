@@ -40,12 +40,18 @@ function parseUA(ua) {
 }
 
 // POST /api/data  — public, receives pageviews + heartbeats + duration updates
+// Accepts both application/json and text/plain (sendBeacon uses text/plain to avoid CORS preflight)
 router.post('/data', optionalAuth, (req, res) => {
     res.sendStatus(204); // respond immediately; process in background
 
     setImmediate(async () => {
         try {
-            const { type, sid, path, ref, dur } = req.body || {};
+            let body = req.body;
+            if (typeof body === 'string') {
+                try { body = JSON.parse(body); } catch (_) { return; }
+            }
+            body = body || {};
+            const { type, sid, path, ref, dur } = body;
             if (!type || !sid) return;
 
             const safePath = String(path || '/').slice(0, 300);
@@ -55,9 +61,9 @@ router.post('/data', optionalAuth, (req, res) => {
             if (type === 'pv') {
                 const ip  = req.ip || '';
                 const ua  = req.headers['user-agent'] || '';
-                const utmSource   = typeof req.body.utm_source   === 'string' ? req.body.utm_source.slice(0, 100)   : null;
-                const utmMedium   = typeof req.body.utm_medium   === 'string' ? req.body.utm_medium.slice(0, 100)   : null;
-                const utmCampaign = typeof req.body.utm_campaign === 'string' ? req.body.utm_campaign.slice(0, 100) : null;
+                const utmSource   = typeof body.utm_source   === 'string' ? body.utm_source.slice(0, 100)   : null;
+                const utmMedium   = typeof body.utm_medium   === 'string' ? body.utm_medium.slice(0, 100)   : null;
+                const utmCampaign = typeof body.utm_campaign === 'string' ? body.utm_campaign.slice(0, 100) : null;
                 const [geo, parsed] = await Promise.all([geoLookup(ip), Promise.resolve(parseUA(ua))]);
                 await PageView.create({
                     sessionId:   sid,

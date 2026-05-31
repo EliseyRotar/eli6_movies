@@ -63,6 +63,7 @@ app.use(cors(corsOptions));
 app.use(csrfProtect);
 app.use(rateLimit);
 app.use(express.json({ limit: '200kb' }));
+app.use(express.text({ limit: '20kb', type: 'text/plain' }));
 app.use(cookieParser());
 
 // Health check — must be registered before any auth-protected routers
