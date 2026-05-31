@@ -274,6 +274,10 @@ function fetchWithTimeout(url,opts,ms){
 }
 async function api(path){
   const r=await fetchWithTimeout(API+path,{credentials:'include'},15000);
+  if(r.status===429){
+    const retryAfter=parseInt(r.headers.get('Retry-After')||'60',10);
+    const e=new Error('RATE_LIMITED');e.retryAfter=retryAfter;throw e;
+  }
   if(!r.ok) throw new Error('API error '+r.status);
   return r.json();
 }
@@ -621,13 +625,32 @@ async function loadAll(){
     const b=document.getElementById('offlineBanner');
     if(b) b.remove();
   }catch(e){
-    if(!document.getElementById('offlineBanner')){
-      const b=document.createElement('div');
+    let msg,color;
+    if(e.message==='RATE_LIMITED'){
+      const secs=e.retryAfter||60;
+      msg=`⏱ Rate limited — too many requests. Retry in ${secs}s.`;
+      color='var(--yellow)';
+      // pause auto-refresh until window resets
+      if(autoRefresh){
+        clearInterval(refreshTimer);
+        refreshSecs=secs;
+        setTimeout(()=>{if(autoRefresh)startRefreshTimer();},secs*1000);
+        const el=document.getElementById('refreshCountdown');
+        if(el) el.textContent='⏱ '+secs+'s';
+      }
+    } else {
+      msg='⚠ Backend offline — data may be stale. Retrying…';
+      color='var(--red)';
+    }
+    let b=document.getElementById('offlineBanner');
+    if(!b){
+      b=document.createElement('div');
       b.id='offlineBanner';
       b.className='offline-banner';
-      b.textContent='⚠ Backend offline — data may be stale. Retrying…';
       document.querySelector('.main')?.prepend(b);
     }
+    b.style.background=color;
+    b.textContent=msg;
   }
 }
 

@@ -8,7 +8,7 @@ const BUCKETS = {
         window: Number(process.env.RL_API_WINDOW_MS || 15 * 60 * 1000),
     },
     admin: {
-        max: Number(process.env.RL_ADMIN_MAX || 50),
+        max: Number(process.env.RL_ADMIN_MAX || 500),
         window: Number(process.env.RL_ADMIN_WINDOW_MS || 15 * 60 * 1000),
     },
 };
