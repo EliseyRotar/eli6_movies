@@ -435,6 +435,29 @@ html[data-theme="pulse"] .poster__kind { display: none; }
   letter-spacing: 0.08em; text-transform: uppercase;
   border-radius: var(--r-sm); z-index: 2;
 }
+.poster__coming-soon {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(79, 70, 229, 0.88);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 9px; font-weight: 700;
+  padding: 5px 8px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  text-align: center;
+  z-index: 3; pointer-events: none;
+}
+.detail__coming-badge {
+  background: rgba(79, 70, 229, 0.25);
+  color: #a5b4fc;
+  padding: 2px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+.detail__watch-coming {
+  opacity: 0.65; cursor: default !important;
+  font-size: 13px; pointer-events: none;
+}
+.detail__watch-coming:hover { opacity: 0.65 !important; transform: none !important; }
 .poster__scanlines {
   position: absolute; inset: 0;
   background: repeating-linear-gradient(0deg, rgba(255,255,255,0.05) 0, rgba(255,255,255,0.05) 1px, transparent 1px, transparent 3px);
