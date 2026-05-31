@@ -35,9 +35,13 @@
         class="search-input"
         id="search-input"
         type="search"
-        placeholder="Search films, shows, anime…"
+        placeholder="Search films, shows, people, anime…"
         autofocus
+        autocomplete="off"
+        spellcheck="false"
       />
+      <button class="search-clear" id="search-clear" aria-label="Clear search">×</button>
+      <div class="search-typeahead" id="search-typeahead" role="listbox"></div>
     </div>
 
     <div class="search-count" id="search-count"></div>
