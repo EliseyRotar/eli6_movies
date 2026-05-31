@@ -34,26 +34,50 @@ router.get('/admin/analytics/live', (req, res) => {
 });
 
 // GET /admin/analytics/overview?range=7d
+// Returns current + previous period for trend arrows, plus bounce rate and avg duration
 router.get('/admin/analytics/overview', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
-        const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const periodLen = req.query.range === 'all' ? 0 : (Date.now() - from.getTime());
+        const prevFrom  = periodLen ? new Date(from.getTime() - periodLen) : null;
+        const dayAgo    = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        const [total, period, today, uniqueSessions, uniqueUsers, topHour] = await Promise.all([
+        const queries = [
             PageView.countDocuments(),
             PageView.countDocuments({ createdAt: { $gte: from } }),
+            prevFrom ? PageView.countDocuments({ createdAt: { $gte: prevFrom, $lt: from } }) : Promise.resolve(null),
             PageView.countDocuments({ createdAt: { $gte: dayAgo } }),
             PageView.distinct('sessionId', { createdAt: { $gte: from } }).then(r => r.length),
-            PageView.distinct('userId',    { createdAt: { $gte: from }, userId: { $ne: null } }).then(r => r.length),
+            prevFrom ? PageView.distinct('sessionId', { createdAt: { $gte: prevFrom, $lt: from } }).then(r => r.length) : Promise.resolve(null),
+            PageView.distinct('userId', { createdAt: { $gte: from }, userId: { $ne: null } }).then(r => r.length),
+            // avg duration
+            PageView.aggregate([
+                { $match: { createdAt: { $gte: from }, duration: { $gt: 0, $lt: 7200 } } },
+                { $group: { _id: null, avg: { $avg: '$duration' } } },
+            ]),
+            // bounce rate: sessions with only 1 pageview
             PageView.aggregate([
                 { $match: { createdAt: { $gte: from } } },
-                { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
-                { $sort:  { count: -1 } },
-                { $limit: 1 },
+                { $group: { _id: '$sessionId', count: { $sum: 1 } } },
+                { $group: { _id: null, total: { $sum: 1 }, bounced: { $sum: { $cond: [{ $eq: ['$count', 1] }, 1, 0] } } } },
             ]),
-        ]);
+            // new registrations this period
+            ActivityLog.countDocuments({ event: 'register', createdAt: { $gte: from } }),
+            // new registrations prev period
+            prevFrom ? ActivityLog.countDocuments({ event: 'register', createdAt: { $gte: prevFrom, $lt: from } }) : Promise.resolve(null),
+        ];
 
-        res.json({ total, period, today, uniqueSessions, uniqueUsers, topHour: topHour[0] || null });
+        const [total, period, prevPeriod, today, uniqueSessions, prevUnique, uniqueUsers, avgDurAgg, bounceAgg, newUsers, prevNewUsers] = await Promise.all(queries);
+
+        const avgDuration = avgDurAgg[0] ? Math.round(avgDurAgg[0].avg) : null;
+        const b = bounceAgg[0] || {};
+        const bounceRate = b.total > 0 ? Math.round((b.bounced / b.total) * 100) : null;
+
+        res.json({
+            total, period, prevPeriod, today,
+            uniqueSessions, prevUnique, uniqueUsers,
+            avgDuration, bounceRate, newUsers, prevNewUsers,
+        });
     } catch (err) { next(err); }
 });
 
@@ -64,11 +88,12 @@ router.get('/admin/analytics/daily', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from } } },
             { $group: {
-                _id:   { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
-                views: { $sum: 1 },
-                uniq:  { $addToSet: '$sessionId' },
+                _id:      { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                views:    { $sum: 1 },
+                uniq:     { $addToSet: '$sessionId' },
+                avgDur:   { $avg: { $cond: [{ $gt: ['$duration', 0] }, '$duration', null] } },
             }},
-            { $project: { _id: 1, views: 1, uniq: { $size: '$uniq' } } },
+            { $project: { _id: 1, views: 1, uniq: { $size: '$uniq' }, avgDur: { $ifNull: ['$avgDur', 0] } } },
             { $sort: { _id: 1 } },
         ]);
         res.json(data);
@@ -81,8 +106,14 @@ router.get('/admin/analytics/pages', async (req, res, next) => {
         const from = getFrom(req.query.range);
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from } } },
-            { $group: { _id: '$path', count: { $sum: 1 } } },
-            { $sort:  { count: -1 } },
+            { $group: {
+                _id:    '$path',
+                count:  { $sum: 1 },
+                uniq:   { $addToSet: '$sessionId' },
+                avgDur: { $avg: { $cond: [{ $gt: ['$duration', 0] }, '$duration', null] } },
+            }},
+            { $project: { _id: 1, count: 1, uniq: { $size: '$uniq' }, avgDur: { $ifNull: ['$avgDur', 0] } } },
+            { $sort: { count: -1 } },
             { $limit: 15 },
         ]);
         res.json(data);
@@ -96,7 +127,21 @@ router.get('/admin/analytics/countries', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from }, country: { $nin: [null, ''] } } },
             { $group: { _id: { country: '$country', code: '$countryCode' }, count: { $sum: 1 } } },
-            { $sort:  { count: -1 } },
+            { $sort: { count: -1 } },
+            { $limit: 15 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// GET /admin/analytics/cities?range=7d
+router.get('/admin/analytics/cities', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from }, city: { $nin: [null, ''] } } },
+            { $group: { _id: { city: '$city', country: '$country', code: '$countryCode' }, count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
             { $limit: 15 },
         ]);
         res.json(data);
@@ -110,7 +155,7 @@ router.get('/admin/analytics/devices', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from } } },
             { $group: { _id: '$device', count: { $sum: 1 } } },
-            { $sort:  { count: -1 } },
+            { $sort: { count: -1 } },
         ]);
         res.json(data);
     } catch (err) { next(err); }
@@ -123,7 +168,21 @@ router.get('/admin/analytics/browsers', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from }, browser: { $nin: [null, 'Unknown'] } } },
             { $group: { _id: '$browser', count: { $sum: 1 } } },
-            { $sort:  { count: -1 } },
+            { $sort: { count: -1 } },
+            { $limit: 10 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// GET /admin/analytics/os?range=7d
+router.get('/admin/analytics/os', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from }, os: { $nin: [null, 'Unknown', ''] } } },
+            { $group: { _id: '$os', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
             { $limit: 10 },
         ]);
         res.json(data);
@@ -137,7 +196,7 @@ router.get('/admin/analytics/referrers', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from }, referrer: { $nin: [null, ''] } } },
             { $group: { _id: '$referrer', count: { $sum: 1 } } },
-            { $sort:  { count: -1 } },
+            { $sort: { count: -1 } },
             { $limit: 10 },
         ]);
         res.json(data);
@@ -158,6 +217,39 @@ router.get('/admin/analytics/campaigns', async (req, res, next) => {
             { $project: { _id: 1, views: 1, sessions: { $size: '$sessions' } } },
             { $sort:  { views: -1 } },
             { $limit: 30 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// GET /admin/analytics/hourly?range=7d  — 24-slot traffic distribution
+router.get('/admin/analytics/hourly', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: { _id: { $hour: '$createdAt' }, count: { $sum: 1 } } },
+            { $sort: { _id: 1 } },
+        ]);
+        const result = Array.from({ length: 24 }, (_, h) => ({
+            hour: h,
+            count: (data.find(d => d._id === h) || {}).count || 0,
+        }));
+        res.json(result);
+    } catch (err) { next(err); }
+});
+
+// GET /admin/analytics/user-growth?range=7d
+router.get('/admin/analytics/user-growth', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await ActivityLog.aggregate([
+            { $match: { event: 'register', createdAt: { $gte: from } } },
+            { $group: {
+                _id:   { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                count: { $sum: 1 },
+            }},
+            { $sort: { _id: 1 } },
         ]);
         res.json(data);
     } catch (err) { next(err); }
