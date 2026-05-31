@@ -26,6 +26,17 @@
     return p === "index" ? "home" : p;
   }
 
+  function _isUnreleased(item) {
+    const d = item.release_date || item.first_air_date;
+    if (!d) return false;
+    return d > new Date().toISOString().slice(0, 10);
+  }
+
+  function _fmtReleaseDate(dateStr) {
+    const d = new Date(dateStr + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
   // ─── Top Nav ────────────────────────────────────────────────────────────────
 
   var _LANG_OPTS = [
@@ -276,6 +287,13 @@
       div.appendChild(badge);
     }
 
+    if (_isUnreleased(item)) {
+      const csBanner = el("div", "poster__coming-soon");
+      csBanner.textContent = "COMING SOON";
+      csBanner.title = _fmtReleaseDate(item.release_date || item.first_air_date);
+      div.appendChild(csBanner);
+    }
+
     // continue-watching progress bar
     if (opts.progress != null) {
       const wrap = el("div", "poster__progress-wrap");
@@ -439,12 +457,19 @@
       }
 
       const cta = el("div", "hero__cta");
-      const watchBtn = el("button", "btn btn--primary");
-      watchBtn.textContent = "▶ Watch now";
-      watchBtn.addEventListener("click", function () {
-        if (opts.onWatch) opts.onWatch(item);
-        else openDetailModal(item);
-      });
+      const _heroRd = item.release_date || item.first_air_date;
+      const _heroUnreleased = _heroRd ? (_heroRd > new Date().toISOString().slice(0, 10)) : false;
+      const watchBtn = el("button", "btn btn--primary" + (_heroUnreleased ? " detail__watch-coming" : ""));
+      if (_heroUnreleased) {
+        watchBtn.textContent = "📅 Coming " + _fmtReleaseDate(_heroRd);
+        watchBtn.disabled = true;
+      } else {
+        watchBtn.textContent = "▶ Watch now";
+        watchBtn.addEventListener("click", function () {
+          if (opts.onWatch) opts.onWatch(item);
+          else openDetailModal(item);
+        });
+      }
       const listBtn = el("button", "btn btn--ghost");
       listBtn.textContent = "+ My List";
       listBtn.addEventListener("click", function () {
@@ -576,9 +601,11 @@
   function openDetailModal(item) {
     const TMDB_IMG   = "https://image.tmdb.org/t/p/";
     const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + "/tmdb" : "");
-    const theme      = currentTheme();
-    const kind       = item.kind || item.media_type || "movie";
-    const g          = item.grad || ["#1a1a2e", "#16213e", "#0f3460"];
+    const theme       = currentTheme();
+    const kind        = item.kind || item.media_type || "movie";
+    const g           = item.grad || ["#1a1a2e", "#16213e", "#0f3460"];
+    const _rd         = item.release_date || item.first_air_date || null;
+    const _unreleased = _rd ? (_rd > new Date().toISOString().slice(0, 10)) : false;
 
     const backdrop = el("div", "detail-backdrop");
     backdrop.addEventListener("click", function (e) {
@@ -632,7 +659,11 @@
     if (year) { const s = el("span"); s.textContent = year; meta.appendChild(s); }
     if (item.runtime) { const s = el("span"); s.textContent = item.runtime; meta.appendChild(s); }
     if (item.genre)   { const s = el("span"); s.textContent = item.genre;   meta.appendChild(s); }
-    const hd = el("span", "detail__hd"); hd.textContent = "HD"; meta.appendChild(hd);
+    if (_unreleased) {
+      const csLabel = el("span", "detail__coming-badge"); csLabel.textContent = "COMING SOON"; meta.appendChild(csLabel);
+    } else {
+      const hd = el("span", "detail__hd"); hd.textContent = "HD"; meta.appendChild(hd);
+    }
     body.appendChild(meta);
 
     if (item.description || item.overview) {
@@ -642,11 +673,16 @@
     }
 
     const cta = el("div", "detail__cta");
-    const watchBtn = el("button", "btn btn--primary");
-    watchBtn.textContent = "▶ Watch now";
-    watchBtn.addEventListener("click", function () {
-      window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
-    });
+    const watchBtn = el("button", "btn btn--primary" + (_unreleased ? " detail__watch-coming" : ""));
+    if (_unreleased) {
+      watchBtn.textContent = "📅 Coming " + _fmtReleaseDate(_rd);
+      watchBtn.disabled = true;
+    } else {
+      watchBtn.textContent = "▶ Watch now";
+      watchBtn.addEventListener("click", function () {
+        window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
+      });
+    }
     const listBtn = el("button", "btn btn--ghost");
     listBtn.textContent = "+ My List";
     listBtn.addEventListener("click", function () {
