@@ -119,33 +119,42 @@ router.post('/user/keep-watching', auth, async (req, res) => {
         const poster   = typeof body.poster_path === 'string' ? body.poster_path.slice(0, 500) : '';
         const overview = typeof body.overview === 'string' ? body.overview.slice(0, 1000) : '';
         const progress = Math.min(100, Math.max(0, parseInt(body.progress) || 0));
-        const season   = body.season != null ? parseInt(body.season) || undefined : undefined;
-        const episode  = body.episode != null ? parseInt(body.episode) || undefined : undefined;
+        const season   = body.season != null ? (parseInt(body.season) || undefined) : undefined;
+        const episode  = body.episode != null ? (parseInt(body.episode) || undefined) : undefined;
 
-        if (!id || !type || !title || !poster) {
+        if (!id || !type || !title) {
             return res.status(400).json({ error: 'INVALID_INPUT' });
         }
 
-        const item = { id, type, title, poster_path: poster, overview, progress, season, episode };
+        const kwItem = { id, type, title, poster_path: poster, overview, progress, addedAt: new Date() };
+        if (season != null) kwItem.season = season;
+        if (episode != null) kwItem.episode = episode;
 
-        const kwIndex = req.user.keepWatching.findIndex((i) => i.id === item.id && i.type === item.type);
-        if (kwIndex > -1) req.user.keepWatching.splice(kwIndex, 1);
-        req.user.keepWatching.unshift(item);
-        if (req.user.keepWatching.length > 20) req.user.keepWatching.pop();
+        const whItem = { id, type, title, poster_path: poster, overview, progress, last_watched: new Date() };
+        if (season != null) whItem.season = season;
+        if (episode != null) whItem.episode = episode;
 
-        const whIndex = req.user.watchHistory.findIndex((i) => i.id === item.id && i.type === item.type);
-        if (whIndex > -1) {
-            req.user.watchHistory[whIndex].last_watched = new Date();
-            req.user.watchHistory[whIndex].progress = item.progress;
-        } else {
-            req.user.watchHistory.unshift({ ...item, last_watched: new Date() });
-        }
-        if (req.user.watchHistory.length > 100) req.user.watchHistory = req.user.watchHistory.slice(0, 100);
+        const User = req.user.constructor;
 
-        await req.user.save();
-        res.json(req.user.keepWatching);
+        // Atomic: remove existing entry then prepend new one — bypasses full-document validation
+        await User.findByIdAndUpdate(req.user._id, {
+            $pull: { keepWatching: { id, type }, watchHistory: { id, type } },
+        }, { strict: false });
+
+        const updated = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $push: {
+                    keepWatching: { $each: [kwItem], $position: 0, $slice: 20 },
+                    watchHistory: { $each: [whItem], $position: 0, $slice: 100 },
+                },
+            },
+            { new: true, strict: false, select: 'keepWatching' }
+        );
+
+        res.json(updated ? updated.keepWatching : []);
     } catch (error) {
-        logger.error('Keep watching update failed', { error: error.message });
+        logger.error('Keep watching update failed', { error: error.message, stack: error.stack });
         res.status(500).json({ error: 'KEEP_WATCHING_ERROR' });
     }
 });
