@@ -2038,7 +2038,12 @@
             }
             // Restore saved play state — server applied silently, season/episode offered via banner
             _savedState = loadPlayState();
-            if (_savedState) {
+            // Prefer server that last worked for this specific content
+            const _cachedSv = _scLoad(_CONTENT_KEY);
+            if (_cachedSv) {
+                const ci = SERVER_LIST.findIndex(s => s.key === _cachedSv);
+                if (ci >= 0) currentServerIndex = ci;
+            } else if (_savedState) {
                 const savedIdx = SERVER_LIST.findIndex(s => s.key === _savedState.server);
                 if (savedIdx >= 0) currentServerIndex = savedIdx;
             }
@@ -2062,15 +2067,9 @@
                 `;
                 videoPlayerDiv.parentNode.insertBefore(manualControls, videoPlayerDiv.nextSibling);
                 document.getElementById('reportBrokenBtn').onclick = () => {
-                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
-                    if (next !== currentServerIndex) {
-                        currentServerIndex = next;
-                        loadVideoPlayer();
-                        updateOverlayDropdowns();
-                        showNotification('Trying next server: ' + SERVER_LIST[next].label, 'success');
-                    } else {
-                        showNotification('All servers tried. Please try again later.', 'error');
-                    }
+                    errorHandled    = false; // force allow switch
+                    autoSwitchCount = 0;     // user-initiated — reset chain counter
+                    _autoSwitch();
                 };
                 document.getElementById('reloadPlayerBtn').onclick = () => loadVideoPlayer();
             }
@@ -2426,6 +2425,57 @@
         let errorHandled = false;
         let failoverTimeout = null;
 
+        // ── Auto-failover state ───────────────────────────────────────────────
+        let autoSwitchCount   = 0;     // how many auto-switches in current chain
+        let videoActivityDet  = false; // received postMessage from current iframe
+        let _pmHandler        = null;  // current postMessage handler reference
+        const _CONTENT_KEY    = (type || 'movie') + ':' + id;
+
+        // ── Server cache (localStorage, 7-day TTL) ────────────────────────────
+        const _SC = 'eli6.srvCache', _SC_TTL = 604800000;
+        function _scLoad(k) {
+            try {
+                const c = JSON.parse(localStorage.getItem(_SC) || '{}'), e = c[k];
+                return e && (Date.now() - e.ts) < _SC_TTL ? e.sv : null;
+            } catch(e) { return null; }
+        }
+        function _scSave(k, sv) {
+            try {
+                const c = JSON.parse(localStorage.getItem(_SC) || '{}');
+                c[k] = { sv, ts: Date.now() };
+                const ks = Object.keys(c);
+                if (ks.length > 200) {
+                    ks.sort((a, b) => (c[a].ts || 0) - (c[b].ts || 0))
+                      .slice(0, ks.length - 200).forEach(x => delete c[x]);
+                }
+                localStorage.setItem(_SC, JSON.stringify(c));
+            } catch(e) {}
+        }
+
+        // ── Central auto-switch function ──────────────────────────────────────
+        function _autoSwitch() {
+            if (errorHandled) return;
+            errorHandled = true;
+            if (failoverTimeout) { clearTimeout(failoverTimeout); failoverTimeout = null; }
+            if (_pmHandler)      { window.removeEventListener('message', _pmHandler); _pmHandler = null; }
+
+            if (autoSwitchCount >= SERVER_LIST.length) {
+                autoSwitchCount = 0;
+                const modal   = document.getElementById('serverErrorModal');
+                const textEl  = document.getElementById('serverErrorText');
+                const closeBtn = document.getElementById('serverErrorClose');
+                if (textEl)   textEl.innerHTML = 'This content isn\'t available on any server right now.<br><br>Try again later or pick a server manually below.';
+                if (closeBtn) { closeBtn.style.display = 'inline-block'; closeBtn.onclick = () => { if (modal) modal.style.display = 'none'; }; }
+                if (modal)    modal.style.display = 'flex';
+                return;
+            }
+
+            const fromLabel = SERVER_LIST[currentServerIndex].label;
+            currentServerIndex = (currentServerIndex + 1) % SERVER_LIST.length;
+            autoSwitchCount++;
+            showNotification('⚠ ' + fromLabel + ' — trying ' + SERVER_LIST[currentServerIndex].label + '…', 'warning');
+            loadVideoPlayer();
+        }
 
         // Function to test iframe loading
         function testIframeLoading(url) {
@@ -2686,55 +2736,49 @@
             }
             videoIframe.parentNode.replaceChild(newIframe, videoIframe);
 
-            // Attach error and load handlers
-            newIframe.onerror = () => {
-                if (!errorHandled) {
-                    errorHandled = true;
-                    if (failoverTimeout) clearTimeout(failoverTimeout);
-                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
-                    if (next !== currentServerIndex) { currentServerIndex = next; loadVideoPlayer(); }
-                }
-            };
+            // ── Detach any previous postMessage listener ──────────────────────
+            if (_pmHandler) { window.removeEventListener('message', _pmHandler); _pmHandler = null; }
+            videoActivityDet = false;
+
+            // Network-level error → immediately try next server
+            newIframe.onerror = () => _autoSwitch();
+
+            // onload fires even on "content not found" pages — do NOT cancel failover here.
+            // Instead, replace the initial 15s timeout with a shorter 10s "activity window":
+            // if the player sends any postMessage within those 10s it's working;
+            // if silence → content is missing → try next server.
             newIframe.onload = () => {
-                errorHandled = false;
-                if (failoverTimeout) clearTimeout(failoverTimeout);
-                // Start progress tracking from actual iframe load time
                 watchStartTime = Date.now();
                 if (watchTimer) clearInterval(watchTimer);
                 watchTimer = setInterval(function() { sendWatchProgress(); savePlayState(); }, 15000);
+
+                if (failoverTimeout) clearTimeout(failoverTimeout);
+                failoverTimeout = setTimeout(_autoSwitch, 10000);
             };
-            
-            // Auto-failover: if the iframe doesn't signal a successful load within 12s, try the next server
-            failoverTimeout = setTimeout(() => {
-                if (!errorHandled) {
-                    errorHandled = true;
-                    const next = (currentServerIndex + 1) % SERVER_LIST.length;
-                    if (next !== currentServerIndex) {
-                        currentServerIndex = next;
-                        loadVideoPlayer();
-                    }
-                }
-            }, 12000);
+
+            // postMessage from the iframe = video player is alive = content found
+            _pmHandler = function(ev) {
+                if (videoActivityDet) return;
+                if (ev.source === window) return; // ignore own messages
+                videoActivityDet = true;
+                if (failoverTimeout) { clearTimeout(failoverTimeout); failoverTimeout = null; }
+                autoSwitchCount = 0;
+                errorHandled    = false;
+                _scSave(_CONTENT_KEY, SERVER_LIST[currentServerIndex].key);
+            };
+            window.addEventListener('message', _pmHandler);
+
+            // Initial load timeout — if the iframe doesn't even fire onload in 15s, try next server
+            if (failoverTimeout) clearTimeout(failoverTimeout);
+            failoverTimeout = setTimeout(_autoSwitch, 15000);
             // At the end of loadVideoPlayer, always update overlay dropdowns
             updateOverlayDropdowns();
         }
 
         // Show server unavailable message
         function showServerUnavailableMessage() {
-            const videoSection = document.getElementById('videoSection');
-            const contentSection = document.getElementById('contentSection');
-
-            if (videoSection && contentSection) {
-                // Show content section again
-                videoSection.style.display = 'none';
-                contentSection.style.display = 'block';
-
-                // Show alert with helpful message
-                alert(`Content is currently unavailable on ${SERVER_LIST[currentServerIndex].label}. Please try switching to another server.`);
-
-                // Reset video playing state
-                isVideoPlaying = false;
-            }
+            showNotification('Content unavailable on ' + SERVER_LIST[currentServerIndex].label + '. Try another server.', 'warning');
+            isVideoPlaying = false;
         }
 
 
@@ -3133,7 +3177,7 @@
                 top: 20px;
                 right: 20px;
                 padding: 10px 20px;
-                background: ${type === 'success' ? '#2ecc71' : '#e74c3c'};
+                background: ${type === 'success' ? '#2ecc71' : type === 'warning' ? '#e67e22' : '#e74c3c'};
                 color: white;
                 border-radius: 4px;
                 z-index: 9999;
