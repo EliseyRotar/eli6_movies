@@ -3,12 +3,6 @@
   var API_URL  = window.API_BASE_URL || '';
   var TMDB_IMG = 'https://image.tmdb.org/t/p/';
 
-  var AVATAR_COLORS = [
-    '#c8ff3a','#f472b6','#a78bfa','#38bdf8',
-    '#fb923c','#4ade80','#facc15','#f87171',
-    '#818cf8','#2dd4bf','#e879f9','#60a5fa',
-  ];
-
   // ─── helpers ────────────────────────────────────────────────────────────────
 
   function tr(key, fallback) {
@@ -30,6 +24,51 @@
   function getUser() {
     try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; }
   }
+
+  // ─── Profile picture helpers ─────────────────────────────────────────────────
+
+  function resizeImageToBase64(file, maxDim, quality) {
+    return new Promise(function (resolve, reject) {
+      if (!file.type.startsWith('image/')) { reject(new Error('Not an image')); return; }
+      var reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onerror = reject;
+        img.onload = function () {
+          var w = img.width, h = img.height;
+          var scale = Math.min(maxDim / w, maxDim / h, 1);
+          w = Math.round(w * scale);
+          h = Math.round(h * scale);
+          var canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function applyProfilePicture(avatarEl, dataUrl) {
+    if (dataUrl) {
+      var existing = avatarEl.querySelector('.acc__avatar-photo');
+      if (!existing) {
+        var img = document.createElement('img');
+        img.className = 'acc__avatar-photo';
+        avatarEl.appendChild(img);
+        existing = img;
+      }
+      existing.src = dataUrl;
+      avatarEl.style.color = 'transparent';
+    } else {
+      var old = avatarEl.querySelector('.acc__avatar-photo');
+      if (old) old.remove();
+      avatarEl.style.color = '';
+    }
+  }
+
   function posterUrl(item, size) {
     var pp = item.poster_path || item.poster_url || '';
     if (!pp) return '';
@@ -53,11 +92,7 @@
   // ─── Prefs ──────────────────────────────────────────────────────────────────
 
   var DEFAULT_PREFS = {
-    autoplayNext: true, autoplayPreviews: false, wifiOnly: true,
-    skipIntro: true, notifyReleases: true, notifyRecs: false,
-    quality: 'Auto · up to 4K', language: 'English',
-    subtitles: 'English (CC)', audio: 'Original',
-    avatarColor: '', cookieAnalytics: true,
+    cookieAnalytics: true,
   };
   function loadPrefs() {
     try { return Object.assign({}, DEFAULT_PREFS, JSON.parse(localStorage.getItem('eli6.acctPrefs') || '{}')); }
@@ -328,50 +363,6 @@
         saveBtn.disabled = false; saveBtn.textContent = 'Save changes';
       }
     });
-  }
-
-  // ─── Avatar color picker ────────────────────────────────────────────────────
-
-  function openAvatarColorPicker(avatarEl, prefs) {
-    var bodyEl = div();
-    var label = div();
-    label.style.cssText = 'font-size:13px;color:var(--fg-muted);margin-bottom:16px';
-    label.textContent = 'Choose a color for your avatar:';
-    bodyEl.appendChild(label);
-
-    var grid = div('acm__colors');
-    var modal;
-
-    AVATAR_COLORS.forEach(function (color) {
-      var swatch = div('acm__swatch' + (prefs.avatarColor === color ? ' active' : ''));
-      swatch.style.background = color;
-      swatch.title = color;
-      swatch.addEventListener('click', function () {
-        grid.querySelectorAll('.acm__swatch').forEach(function (s) { s.classList.remove('active'); });
-        swatch.classList.add('active');
-        avatarEl.style.background = color;
-        prefs.avatarColor = color;
-        savePrefs(prefs);
-        if (modal) modal.close();
-      });
-      grid.appendChild(swatch);
-    });
-
-    // "Reset to default" option
-    var resetBtn = el('button', 'btn btn--outline');
-    resetBtn.textContent = 'Reset to default';
-    resetBtn.style.cssText = 'width:100%;margin-top:16px;font-size:13px';
-    resetBtn.addEventListener('click', function () {
-      avatarEl.style.background = '';
-      prefs.avatarColor = '';
-      savePrefs(prefs);
-      if (modal) modal.close();
-    });
-
-    bodyEl.appendChild(grid);
-    bodyEl.appendChild(resetBtn);
-
-    modal = openModal({ title: 'Avatar color', body: bodyEl, maxWidth: '340px' });
   }
 
   // ─── Watch history modal ─────────────────────────────────────────────────────
@@ -798,14 +789,95 @@
     var heroInner = div('acc__hero-inner');
 
     var avatarWrap = div('acc__avatar-wrap');
-    var avatarEl   = div('acc__avatar');
+    avatarWrap.style.position = 'relative';
+    var avatarEl = div('acc__avatar');
     avatarEl.textContent = (user.username || 'E')[0].toUpperCase();
-    if (prefs.avatarColor) avatarEl.style.background = prefs.avatarColor;
+
+    // Apply cached picture instantly, then sync from server below
+    var cachedPic = localStorage.getItem('eli6.profilePicture') || '';
+    if (cachedPic) applyProfilePicture(avatarEl, cachedPic);
+
     avatarWrap.appendChild(avatarEl);
+
+    // Hidden file input for uploads
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
+    avatarWrap.appendChild(fileInput);
+
     var editBtn2 = el('button', 'acc__avatar-edit');
-    editBtn2.title = 'Change color'; editBtn2.textContent = '✎';
-    editBtn2.addEventListener('click', function () { openAvatarColorPicker(avatarEl, prefs); });
+    editBtn2.title = 'Edit photo'; editBtn2.textContent = '✎';
     avatarWrap.appendChild(editBtn2);
+
+    // Avatar photo menu
+    var avatarMenuEl = null;
+    function closeAvatarMenu() {
+      if (avatarMenuEl && avatarMenuEl.parentNode) avatarMenuEl.parentNode.removeChild(avatarMenuEl);
+      avatarMenuEl = null;
+    }
+    function openAvatarMenu() {
+      if (avatarMenuEl) { closeAvatarMenu(); return; }
+      var hasPic = !!localStorage.getItem('eli6.profilePicture');
+      var menu = div('acc__avatar-menu');
+
+      var uploadBtn = el('button', 'acc__avatar-menu-btn');
+      uploadBtn.innerHTML = '📷 ' + (hasPic ? 'Change photo' : 'Upload photo');
+      uploadBtn.addEventListener('click', function () {
+        closeAvatarMenu();
+        fileInput.value = '';
+        fileInput.click();
+      });
+
+      var removeBtn = el('button', 'acc__avatar-menu-btn acc__avatar-menu-btn--danger');
+      removeBtn.innerHTML = '🗑 Remove photo';
+      removeBtn.disabled = !hasPic;
+      removeBtn.addEventListener('click', async function () {
+        closeAvatarMenu();
+        removeBtn.disabled = true;
+        try {
+          await apiDelete('/user/profile-picture');
+          localStorage.removeItem('eli6.profilePicture');
+          applyProfilePicture(avatarEl, '');
+          showToast('Profile picture removed');
+        } catch (e) {
+          showToast('Failed to remove picture', 'error');
+        }
+      });
+
+      menu.appendChild(uploadBtn);
+      menu.appendChild(removeBtn);
+      avatarMenuEl = menu;
+      avatarWrap.appendChild(menu);
+
+      // Close on outside click
+      setTimeout(function () {
+        document.addEventListener('click', function _close(ev) {
+          if (!avatarWrap.contains(ev.target)) { closeAvatarMenu(); document.removeEventListener('click', _close); }
+        });
+      }, 0);
+    }
+
+    editBtn2.addEventListener('click', function (e) { e.stopPropagation(); openAvatarMenu(); });
+
+    // Handle file selection
+    fileInput.addEventListener('change', async function () {
+      var file = fileInput.files[0];
+      if (!file) return;
+      editBtn2.textContent = '…'; editBtn2.disabled = true;
+      try {
+        var dataUrl = await resizeImageToBase64(file, 300, 0.85);
+        await apiPut('/user/profile-picture', { data: dataUrl });
+        localStorage.setItem('eli6.profilePicture', dataUrl);
+        applyProfilePicture(avatarEl, dataUrl);
+        showToast('Profile picture updated!');
+      } catch (e) {
+        var msg = e.message;
+        if (msg === 'IMAGE_TOO_LARGE') msg = 'Image too large after compression';
+        showToast(msg || 'Failed to upload picture', 'error');
+      } finally {
+        editBtn2.textContent = '✎'; editBtn2.disabled = false;
+      }
+    });
+
     heroInner.appendChild(avatarWrap);
 
     var heroText = div('acc__hero-text');
@@ -854,6 +926,21 @@
     var freshUser = getUser() || {};
     b3.textContent = calcStreak(wh) + '-day streak';
     if (freshUser.createdAt) b2.textContent = 'Member since ' + formatMemberSince(freshUser.createdAt);
+
+    // Sync profile picture from server (runs in background, updates avatar if changed)
+    fetch(API_URL + '/user/profile-picture', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        var pic = d.profilePicture || '';
+        var cached = localStorage.getItem('eli6.profilePicture') || '';
+        if (pic !== cached) {
+          if (pic) localStorage.setItem('eli6.profilePicture', pic);
+          else localStorage.removeItem('eli6.profilePicture');
+          if (acc.isConnected) applyProfilePicture(avatarEl, pic);
+        }
+      })
+      .catch(function () {});
 
     // ── STATS ─────────────────────────────────────────────────────────────────
     var hours = estimateHours(wh);
@@ -974,42 +1061,6 @@
     });
     quickSection.appendChild(quickGrid);
     acc.appendChild(quickSection);
-
-    // ── PLAYBACK PREFERENCES ──────────────────────────────────────────────────
-    var prefSection = div('acc__section');
-    prefSection.appendChild(makeSectionHead('04', 'Playback preferences'));
-    var prefList = div('acc__prefs');
-    prefList.appendChild(makePrefValueRow('Streaming quality', 'Higher quality uses more data.', prefs.quality, function (valueEl) {
-      openPicker('Streaming quality', ['Auto · up to 4K','1080p','720p','480p'], prefs.quality, function (v) { prefs.quality = v; valueEl.textContent = v; savePrefs(prefs); });
-    }));
-    prefList.appendChild(makePrefToggleRow('Autoplay next episode', 'Roll straight into the next one.', prefs.autoplayNext, function (v) { prefs.autoplayNext = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Autoplay previews while browsing', 'Play short previews when you hover over titles.', prefs.autoplayPreviews, function (v) { prefs.autoplayPreviews = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Skip intros automatically', 'Jump past opening titles for shows.', prefs.skipIntro, function (v) { prefs.skipIntro = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefToggleRow('Downloads over Wi-Fi only', "Don't use mobile data for downloads.", prefs.wifiOnly, function (v) { prefs.wifiOnly = v; savePrefs(prefs); }));
-    prefList.appendChild(makePrefValueRow('App language', 'Interface text and menus.', prefs.language, function (valueEl) {
-      openPicker('App language', ['English','Italiano','Русский'], prefs.language, function (v) {
-        prefs.language = v; valueEl.textContent = v; savePrefs(prefs);
-        var langMap = { 'English': 'en', 'Italiano': 'it', 'Русский': 'ru' };
-        if (window.i18n && window.i18n.changeLanguage) window.i18n.changeLanguage(langMap[v] || 'en');
-      });
-    }));
-    prefList.appendChild(makePrefValueRow('Subtitles', 'Default subtitle track when available.', prefs.subtitles, function (valueEl) {
-      openPicker('Subtitles', ['Off','English (CC)','English','Italiano','Русский'], prefs.subtitles, function (v) { prefs.subtitles = v; valueEl.textContent = v; savePrefs(prefs); });
-    }));
-    prefList.appendChild(makePrefValueRow('Audio track', 'Original audio, dubbed, or descriptive.', prefs.audio, function (valueEl) {
-      openPicker('Audio track', ['Original','English dubbed','Descriptive audio'], prefs.audio, function (v) { prefs.audio = v; valueEl.textContent = v; savePrefs(prefs); });
-    }));
-    prefSection.appendChild(prefList);
-    acc.appendChild(prefSection);
-
-    // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
-    var notifSection = div('acc__section');
-    notifSection.appendChild(makeSectionHead('05', 'Notifications'));
-    var notifList = div('acc__prefs');
-    notifList.appendChild(makePrefToggleRow('New episodes & releases', 'When something on your list drops.', prefs.notifyReleases, function (v) { prefs.notifyReleases = v; savePrefs(prefs); }));
-    notifList.appendChild(makePrefToggleRow('Recommendations', 'Suggestions based on what you watch.', prefs.notifyRecs, function (v) { prefs.notifyRecs = v; savePrefs(prefs); }));
-    notifSection.appendChild(notifList);
-    acc.appendChild(notifSection);
 
     // ── CHANGE PASSWORD ───────────────────────────────────────────────────────
     var secSection = div('acc__section');

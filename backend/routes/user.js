@@ -28,6 +28,37 @@ router.get('/user/profile', auth, async (req, res) => {
     });
 });
 
+// Returns the profile picture separately so the myList sync call stays lean
+router.get('/user/profile-picture', auth, async (req, res) => {
+    res.json({ profilePicture: req.user.profilePicture || '' });
+});
+
+router.put('/user/profile-picture', auth, async (req, res) => {
+    try {
+        const { data } = req.body || {};
+        if (!data || typeof data !== 'string') return res.status(400).json({ error: 'INVALID_DATA' });
+        if (!data.startsWith('data:image/')) return res.status(400).json({ error: 'INVALID_FORMAT' });
+        // ~120 KB base64 = ≈90 KB binary, plenty for a 300×300 JPEG
+        if (data.length > 160000) return res.status(400).json({ error: 'IMAGE_TOO_LARGE' });
+        req.user.profilePicture = data;
+        await req.user.save();
+        res.json({ profilePicture: data });
+    } catch (error) {
+        logger.error('Profile picture update failed', { error: error.message });
+        res.status(500).json({ error: 'UPDATE_ERROR' });
+    }
+});
+
+router.delete('/user/profile-picture', auth, async (req, res) => {
+    try {
+        req.user.profilePicture = '';
+        await req.user.save();
+        res.json({ ok: true });
+    } catch (error) {
+        res.status(500).json({ error: 'UPDATE_ERROR' });
+    }
+});
+
 router.post('/user/mylist', auth, async (req, res) => {
     try {
         const { id, title, type, poster_path, overview } = req.body || {};

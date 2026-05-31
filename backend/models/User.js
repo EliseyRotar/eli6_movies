@@ -112,6 +112,7 @@ const userSchema = new mongoose.Schema(
             enum: ['user', 'admin'],
             default: 'user',
         },
+        profilePicture:          { type: String,  default: '' },
         emailVerified:           { type: Boolean, default: false },
         verificationToken:       { type: String,  default: null },
         verificationTokenExpiry: { type: Date,    default: null },
