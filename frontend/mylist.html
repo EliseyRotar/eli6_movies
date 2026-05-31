@@ -21,9 +21,504 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/design.css" />
+
+  <style>
+    /* ── My List page ── */
+    #grid-mount { padding: 0 var(--pad-x); }
+
+    .ml-toolbar {
+      padding: 20px var(--pad-x) 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .ml-toolbar__top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Search */
+    .ml-search-wrap {
+      flex: 1; min-width: 200px;
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      padding: 9px 16px;
+      transition: border-color 150ms;
+    }
+    .ml-search-wrap:focus-within { border-color: var(--accent); }
+    .ml-search-wrap .material-icons { color: var(--fg-muted); font-size: 18px; flex-shrink: 0; }
+    .ml-search-wrap input {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--fg); font: inherit; font-size: 14px;
+    }
+    .ml-search-wrap input::placeholder { color: var(--fg-faint); }
+
+    /* Actions row */
+    .ml-toolbar__actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    /* Sort */
+    .ml-sort {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg);
+      padding: 9px 14px;
+      font: inherit; font-size: 13px;
+      cursor: pointer; outline: none;
+      transition: border-color 150ms;
+    }
+    .ml-sort:focus { border-color: var(--accent); }
+    .ml-sort option { background: var(--bg-alt); }
+
+    /* View toggle */
+    .ml-view-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+    }
+    .ml-view-btn {
+      background: var(--surface); border: none;
+      color: var(--fg-muted);
+      padding: 9px 11px;
+      display: grid; place-items: center;
+      transition: background 150ms, color 150ms;
+    }
+    .ml-view-btn .material-icons { font-size: 18px; }
+    .ml-view-btn.active { background: var(--surface-hi); color: var(--accent); }
+    .ml-view-btn:hover:not(.active) { background: var(--surface-hi); color: var(--fg); }
+
+    /* Bulk btn */
+    .ml-bulk-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      padding: 9px 11px;
+      display: grid; place-items: center;
+      transition: background 150ms, color 150ms, border-color 150ms;
+    }
+    .ml-bulk-btn .material-icons { font-size: 18px; }
+    .ml-bulk-btn:hover, .ml-bulk-btn.active {
+      background: var(--surface-hi); color: var(--accent); border-color: var(--accent);
+    }
+
+    /* Pick for me */
+    .ml-pick-btn {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+      border-radius: var(--r-md);
+      color: var(--accent);
+      padding: 9px 16px;
+      font-size: 13px; font-weight: 600;
+      white-space: nowrap;
+      transition: background 150ms;
+    }
+    .ml-pick-btn:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+
+    /* Filter chips */
+    .ml-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ml-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--fg-muted);
+      padding: 6px 14px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: all 150ms;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .ml-chip__count {
+      background: var(--surface-hi); color: var(--fg-faint);
+      font-size: 11px; font-weight: 600;
+      padding: 1px 7px; border-radius: var(--r-pill);
+      min-width: 20px; text-align: center;
+    }
+    .ml-chip:hover { border-color: var(--fg-muted); color: var(--fg); }
+    .ml-chip.active {
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
+      border-color: var(--accent); color: var(--accent);
+    }
+    .ml-chip.active .ml-chip__count {
+      background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent);
+    }
+
+    /* Stats bar */
+    .ml-stats {
+      padding: 10px var(--pad-x) 0;
+      font-size: 13px; color: var(--fg-muted);
+    }
+
+    /* Bulk action bar */
+    .ml-bulk-bar {
+      position: sticky; top: 60px; z-index: 40;
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px var(--pad-x);
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+    @media (min-width: 900px) { .ml-bulk-bar { top: 68px; } }
+    #ml-bulk-count { font-size: 14px; font-weight: 600; flex: 1; }
+    .ml-bulk-remove {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,60,60,0.12);
+      border: 1px solid rgba(255,60,60,0.3);
+      border-radius: var(--r-md);
+      color: #ff6b6b;
+      padding: 8px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 150ms;
+    }
+    .ml-bulk-remove:not(:disabled):hover { background: rgba(255,60,60,0.22); }
+    .ml-bulk-remove:disabled { opacity: 0.4; cursor: default; }
+    .ml-bulk-remove .material-icons { font-size: 16px; }
+    .ml-bulk-cancel {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg-muted);
+      padding: 8px 14px; font-size: 13px; cursor: pointer;
+      transition: all 150ms;
+    }
+    .ml-bulk-cancel:hover { color: var(--fg); border-color: var(--fg-muted); }
+
+    /* ── Grid ── */
+    .ml-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(var(--poster-w, 160px), 1fr));
+      gap: var(--poster-gap, 14px);
+      padding: 20px 0 40px;
+    }
+
+    /* ── Card ── */
+    .ml-card {
+      border-radius: var(--r-md);
+      overflow: visible;
+      cursor: pointer;
+      transition: transform 200ms ease;
+    }
+    .ml-card:hover { transform: translateY(-4px); }
+    .ml-card--selected .ml-card__wrap { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .ml-card--watched { opacity: 0.6; }
+    .ml-card--watched:hover { opacity: 1; }
+
+    .ml-card__wrap {
+      position: relative;
+      aspect-ratio: 2/3;
+      overflow: hidden;
+      background: var(--surface);
+      border-radius: var(--r-md);
+    }
+    .ml-card__img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 300ms ease;
+    }
+    .ml-card:hover .ml-card__img { transform: scale(1.04); }
+
+    /* Hover overlay */
+    .ml-card__overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 55%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: flex-end;
+      padding: 10px; gap: 7px;
+      opacity: 0; transition: opacity 200ms ease;
+    }
+    .ml-card:hover .ml-card__overlay,
+    .ml-card--selected .ml-card__overlay { opacity: 1; }
+
+    .ml-card__play-btn, .ml-card__cont-btn {
+      width: 100%;
+      background: var(--accent); color: var(--on-accent);
+      border: none; border-radius: var(--r-pill);
+      padding: 7px 10px; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: opacity 150ms;
+    }
+    .ml-card__play-btn:hover, .ml-card__cont-btn:hover { opacity: 0.88; }
+
+    .ml-card__rm-btn {
+      position: absolute; top: 8px; right: 8px;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.7); color: #fff;
+      border: none; font-size: 16px; line-height: 1;
+      display: grid; place-items: center;
+      cursor: pointer; opacity: 0;
+      transition: opacity 150ms, background 150ms;
+    }
+    .ml-card:hover .ml-card__rm-btn { opacity: 1; }
+    .ml-card__rm-btn:hover { background: rgba(200,0,0,0.85); }
+
+    /* Progress bar on poster */
+    .ml-card__prog {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      height: 3px; background: rgba(255,255,255,0.15);
+    }
+    .ml-card__prog-fill {
+      height: 100%; background: var(--accent); border-radius: 0 2px 2px 0;
+    }
+
+    /* Watched overlay */
+    .ml-card__watched {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 4px; color: rgba(255,255,255,0.8);
+      font-size: 11px; font-weight: 600;
+      pointer-events: none;
+    }
+    .ml-card__watched .material-icons { font-size: 38px; opacity: 0.75; }
+
+    /* Bulk checkbox */
+    .ml-card__check {
+      position: absolute; top: 8px; left: 8px;
+      color: var(--accent);
+      background: rgba(0,0,0,0.55);
+      border-radius: 4px; line-height: 0; padding: 2px;
+    }
+    .ml-card__check .material-icons { font-size: 20px; }
+
+    /* Below-poster info */
+    .ml-card__info { padding: 8px 2px 2px; }
+    .ml-card__badges { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .ml-card__title {
+      font-size: 13px; font-weight: 600; line-height: 1.3;
+      overflow: hidden;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    }
+    .ml-card__year, .ml-card__rating { font-size: 11px; color: var(--fg-muted); }
+    .ml-card__rating { color: #f5c518; }
+
+    /* ── Type badges ── */
+    .ml-badge {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 2px 7px;
+      border-radius: var(--r-pill); flex-shrink: 0; line-height: 1.6;
+    }
+    .ml-badge--movie { background: rgba(99,102,241,0.18); color: #a5b4fc; }
+    .ml-badge--tv    { background: rgba(16,185,129,0.18); color: #6ee7b7; }
+    .ml-badge--anime { background: rgba(245,158,11,0.18); color: #fcd34d; }
+
+    /* ── List view ── */
+    .ml-list {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 20px 0 40px;
+    }
+    .ml-row {
+      display: flex; align-items: center; gap: 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 12px; cursor: pointer;
+      transition: border-color 150ms, background 150ms;
+    }
+    .ml-row:hover { border-color: var(--fg-muted); background: var(--surface-hi); }
+    .ml-row--selected {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 6%, var(--surface));
+    }
+    .ml-row--watched { opacity: 0.65; }
+    .ml-row--watched:hover { opacity: 1; }
+
+    .ml-row__thumb {
+      position: relative; flex-shrink: 0;
+      width: 52px; height: 78px;
+      border-radius: var(--r-sm); overflow: hidden;
+      background: var(--surface-hi);
+    }
+    .ml-row__img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ml-row__watched-icon {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: grid; place-items: center;
+      color: rgba(255,255,255,0.85);
+    }
+    .ml-row__watched-icon .material-icons { font-size: 20px; }
+    .ml-row__check {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      color: var(--accent);
+      background: rgba(0,0,0,0.6);
+      border-radius: 4px; line-height: 0; padding: 2px;
+    }
+    .ml-row__check .material-icons { font-size: 18px; }
+
+    .ml-row__body { flex: 1; min-width: 0; }
+    .ml-row__meta { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    .ml-row__title {
+      font-size: 14px; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+    .ml-row__overview {
+      font-size: 12px; color: var(--fg-muted); line-height: 1.4;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .ml-row__year, .ml-row__rating { font-size: 12px; color: var(--fg-muted); }
+    .ml-row__rating { color: #f5c518; }
+    .ml-row__prog-wrap { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .ml-row__prog-bg {
+      flex: 1; height: 3px; background: var(--border);
+      border-radius: 2px; overflow: hidden;
+    }
+    .ml-row__prog-fill { height: 100%; background: var(--accent); border-radius: 2px; }
+    .ml-row__prog-label { font-size: 11px; color: var(--fg-muted); flex-shrink: 0; }
+
+    .ml-row__actions {
+      display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+    }
+    .ml-row__play-btn {
+      background: var(--accent); color: var(--on-accent);
+      border: none; border-radius: var(--r-pill);
+      padding: 7px 14px; font-size: 12px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; transition: opacity 150ms;
+    }
+    .ml-row__play-btn:hover { opacity: 0.88; }
+    .ml-row__rm-btn {
+      background: var(--surface-hi);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--fg-muted);
+      padding: 5px 10px; font-size: 14px;
+      cursor: pointer; text-align: center;
+      transition: all 150ms;
+    }
+    .ml-row__rm-btn:hover {
+      background: rgba(200,0,0,0.15); color: #ff6b6b;
+      border-color: rgba(200,0,0,0.3);
+    }
+
+    /* ── Empty state ── */
+    .ml-empty { text-align: center; padding: 80px 20px; }
+    .ml-empty__icon { font-size: 56px; margin-bottom: 20px; }
+    .ml-empty__title { font-size: 22px; font-weight: 700; color: var(--fg); margin-bottom: 8px; }
+    .ml-empty__sub {
+      font-size: 15px; color: var(--fg-muted);
+      max-width: 380px; margin: 0 auto 28px;
+    }
+    .ml-empty__btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .ml-empty__btn {
+      display: inline-block;
+      background: var(--accent); color: var(--on-accent);
+      font-weight: 700; font-size: 14px;
+      padding: 12px 24px; border-radius: var(--r-pill);
+      transition: opacity 150ms;
+    }
+    .ml-empty__btn:hover { opacity: 0.88; }
+    .ml-empty__btn--sec {
+      background: var(--surface); color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .ml-empty__btn--sec:hover { opacity: 1; border-color: var(--fg-muted); }
+
+    /* ── Spotlight modal ── */
+    .ml-spotlight {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .ml-spotlight[hidden] { display: none; }
+    .ml-spotlight__bd {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(6px);
+      cursor: pointer;
+    }
+    .ml-spotlight__dialog {
+      position: relative; z-index: 1;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      width: 100%; max-width: 520px;
+      overflow: hidden;
+      animation: ml-pop 240ms ease;
+    }
+    @keyframes ml-pop {
+      from { opacity: 0; transform: scale(0.94) translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .ml-spotlight__hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ml-spotlight__label { font-size: 12px; font-weight: 700; color: var(--fg-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+    .ml-spotlight__close {
+      background: none; border: none; color: var(--fg-muted);
+      padding: 4px; line-height: 0; cursor: pointer;
+      border-radius: 50%; transition: color 150ms, background 150ms;
+    }
+    .ml-spotlight__close:hover { color: var(--fg); background: var(--surface); }
+    .ml-spotlight__close .material-icons { font-size: 20px; }
+    .ml-spotlight__body { display: flex; gap: 20px; padding: 20px; }
+    .ml-spotlight__poster {
+      width: 110px; height: 165px;
+      object-fit: cover; border-radius: var(--r-md);
+      flex-shrink: 0;
+    }
+    .ml-spotlight__info { flex: 1; min-width: 0; }
+    .ml-spotlight__badges { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .ml-spotlight__title { font-size: 20px; font-weight: 700; line-height: 1.2; margin-bottom: 10px; }
+    .ml-spotlight__overview { font-size: 13px; color: var(--fg-muted); line-height: 1.5; }
+    .ml-spotlight__year { font-size: 13px; color: var(--fg-muted); }
+    .ml-spotlight__rating { font-size: 13px; color: #f5c518; }
+    .ml-spotlight__ft {
+      display: flex; gap: 10px;
+      padding: 0 20px 20px;
+    }
+    .ml-spotlight__play {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      background: var(--accent); color: var(--on-accent);
+      border: none; border-radius: var(--r-pill);
+      padding: 12px 20px; font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 150ms;
+    }
+    .ml-spotlight__play:hover { opacity: 0.88; }
+    .ml-spotlight__play .material-icons { font-size: 20px; }
+    .ml-spotlight__again {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-pill);
+      color: var(--fg); padding: 12px 20px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: border-color 150ms;
+    }
+    .ml-spotlight__again:hover { border-color: var(--fg-muted); }
+
+    /* ── Loading ── */
+    .ml-loader {
+      display: flex; align-items: center; gap: 12px;
+      justify-content: center; padding: 60px 20px;
+      color: var(--fg-muted); font-size: 14px;
+    }
+    .ml-spinner {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      animation: ml-spin 700ms linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes ml-spin { to { transform: rotate(360deg); } }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      .ml-pick-btn { display: none; }
+      .ml-row__overview { display: none; }
+      .ml-sort { font-size: 12px; padding: 8px 10px; }
+    }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -32,7 +527,59 @@
     <div class="pagehead">
       <div class="pagehead__eyebrow">Library</div>
       <h1 class="pagehead__title">My List</h1>
-      <p class="pagehead__sub" id="list-count"></p>
+    </div>
+
+    <!-- Toolbar: search + sort + view toggle + bulk + pick -->
+    <div class="ml-toolbar">
+      <div class="ml-toolbar__top">
+        <div class="ml-search-wrap">
+          <i class="material-icons">search</i>
+          <input id="ml-search" type="search" placeholder="Search list…  ( / )" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="ml-toolbar__actions">
+          <select id="ml-sort" class="ml-sort">
+            <option value="added-desc">Recently added</option>
+            <option value="added-asc">Oldest first</option>
+            <option value="alpha-asc">A → Z</option>
+            <option value="alpha-desc">Z → A</option>
+            <option value="rating-desc">Top rated</option>
+            <option value="type">By type</option>
+          </select>
+          <div class="ml-view-toggle" role="group" aria-label="View mode">
+            <button id="ml-view-grid" class="ml-view-btn active" title="Grid view" aria-pressed="true">
+              <i class="material-icons">grid_view</i>
+            </button>
+            <button id="ml-view-list" class="ml-view-btn" title="List view" aria-pressed="false">
+              <i class="material-icons">view_list</i>
+            </button>
+          </div>
+          <button id="ml-bulk-btn" class="ml-bulk-btn" title="Select mode">
+            <i class="material-icons">check_box_outline_blank</i>
+          </button>
+          <button id="ml-pick-btn" class="ml-pick-btn">🎲 Pick for me</button>
+        </div>
+      </div>
+
+      <!-- Filter chips -->
+      <div class="ml-filters" id="ml-filters">
+        <button class="ml-chip active" data-filter="all">All <span class="ml-chip__count"></span></button>
+        <button class="ml-chip" data-filter="movie">Movies <span class="ml-chip__count"></span></button>
+        <button class="ml-chip" data-filter="tv">TV Shows <span class="ml-chip__count"></span></button>
+        <button class="ml-chip" data-filter="anime">Anime <span class="ml-chip__count"></span></button>
+        <button class="ml-chip" data-filter="progress">In Progress <span class="ml-chip__count"></span></button>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div id="ml-stats" class="ml-stats"></div>
+
+    <!-- Bulk action bar -->
+    <div id="ml-bulk-bar" class="ml-bulk-bar" hidden>
+      <span id="ml-bulk-count">0 selected</span>
+      <button id="ml-bulk-remove" class="ml-bulk-remove" disabled>
+        <i class="material-icons">delete</i> Remove selected
+      </button>
+      <button id="ml-bulk-cancel" class="ml-bulk-cancel">Cancel</button>
     </div>
 
     <div id="grid-mount"></div>
@@ -40,6 +587,26 @@
   </div>
 
   <div id="bottomnav-mount"></div>
+
+  <!-- Spotlight modal -->
+  <div id="ml-spotlight" class="ml-spotlight" hidden aria-modal="true" role="dialog" aria-label="Tonight's pick">
+    <div class="ml-spotlight__bd"></div>
+    <div class="ml-spotlight__dialog">
+      <div class="ml-spotlight__hd">
+        <span class="ml-spotlight__label">🎲 Tonight's pick</span>
+        <button class="ml-spotlight__close" aria-label="Close">
+          <i class="material-icons">close</i>
+        </button>
+      </div>
+      <div class="ml-spotlight__body" id="ml-spotlight-content"></div>
+      <div class="ml-spotlight__ft">
+        <button id="ml-spotlight-play" class="ml-spotlight__play">
+          <i class="material-icons">play_arrow</i> Play now
+        </button>
+        <button id="ml-spotlight-again" class="ml-spotlight__again">Pick again</button>
+      </div>
+    </div>
+  </div>
 
   <script src="js/config.js"></script>
   <script src="js/theme.js"></script>
