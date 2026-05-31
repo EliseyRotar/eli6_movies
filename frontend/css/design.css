@@ -312,6 +312,7 @@ html[data-theme="marquee"] .hero__title { letter-spacing: 0.02em; text-transform
 .btn--primary  { background: var(--accent); color: var(--on-accent); }
 .btn--ghost    { background: var(--elevated); color: var(--fg); backdrop-filter: blur(10px); }
 .btn--outline  { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+.btn--in-list  { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); }
 .btn--icon     { padding: 12px 14px; }
 html[data-theme="marquee"] .btn {
   border-radius: 0;

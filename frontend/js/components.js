@@ -471,9 +471,10 @@
         });
       }
       const listBtn = el("button", "btn btn--ghost");
-      listBtn.textContent = "+ My List";
+      if (typeof window.updateMyListBtn === "function") window.updateMyListBtn(item, listBtn);
+      else listBtn.textContent = "+ My List";
       listBtn.addEventListener("click", function () {
-        if (typeof window.toggleMyList === "function") window.toggleMyList(item);
+        if (typeof window.toggleMyList === "function") window.toggleMyList(item, listBtn);
         else showToast("Added to list");
       });
       const infoBtn = el("button", "btn btn--ghost btn--icon");
@@ -684,9 +685,10 @@
       });
     }
     const listBtn = el("button", "btn btn--ghost");
-    listBtn.textContent = "+ My List";
+    if (typeof window.updateMyListBtn === "function") window.updateMyListBtn(item, listBtn);
+    else listBtn.textContent = "+ My List";
     listBtn.addEventListener("click", function () {
-      if (typeof window.toggleMyList === "function") window.toggleMyList(item);
+      if (typeof window.toggleMyList === "function") window.toggleMyList(item, listBtn);
       else showToast("Added to list");
     });
     const likeBtn = el("button", "btn btn--ghost btn--icon");

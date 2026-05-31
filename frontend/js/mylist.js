@@ -190,11 +190,17 @@ function initMyListButtons() {
     });
 }
 
-// Auto-init on DOMContentLoaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMyListButtons);
-} else {
+// Auto-init on DOMContentLoaded + sync myList from server if logged in
+function _mlBoot() {
     initMyListButtons();
+    if (localStorage.getItem('user')) {
+        syncMyListStorage().catch(function () {});
+    }
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _mlBoot);
+} else {
+    _mlBoot();
 }
 
 // Expose for manual use
@@ -206,7 +212,8 @@ window.showMyListToast = showMyListToast;
 window.syncMyListStorage = syncMyListStorage;
 
 // Used by components.js hero carousel and detail modal buttons
-window.toggleMyList = async function (item) {
+// btn is optional — when passed, its text and style update to reflect the new state
+window.toggleMyList = async function (item, btn) {
     if (!localStorage.getItem('user')) {
         showMyListToast('Please sign in to use My List', 'error');
         setTimeout(function () { window.location.href = 'account.html'; }, 1800);
@@ -218,24 +225,44 @@ window.toggleMyList = async function (item) {
     const posterPath = item.poster_path || item.poster_url || '';
     const overview = (item.overview || item.synopsis || item.description || '').substring(0, 500);
 
-    if (!id || !title || !posterPath) {
+    if (!id || !title) {
         showMyListToast('Unable to add this item — missing data', 'error');
         return;
     }
     const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
     const alreadyIn = myListArr.some(function (i) { return i.id === id && i.type === type; });
+    if (btn) btn.disabled = true;
     try {
         if (alreadyIn) {
             await removeFromMyList(id, type);
+            const updated = myListArr.filter(function (i) { return !(i.id === id && i.type === type); });
+            localStorage.setItem('myList', JSON.stringify(updated));
             showMyListToast('Removed from My List', 'info');
+            if (btn) { btn.textContent = '+ My List'; btn.classList.remove('btn--in-list'); }
         } else {
             await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
+            myListArr.unshift({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
+            localStorage.setItem('myList', JSON.stringify(myListArr));
             showMyListToast('Added to My List', 'success');
+            if (btn) { btn.textContent = '✓ My List'; btn.classList.add('btn--in-list'); }
         }
-        syncMyListStorage();
+        syncMyListStorage().catch(function () {});
     } catch (e) {
         showMyListToast(e.message || 'Failed to update My List', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
     }
+};
+
+// Set button text + style based on current localStorage state — call when rendering a button
+window.updateMyListBtn = function (item, btn) {
+    if (!btn) return;
+    const id = parseInt(item.id || item.tmdb_id);
+    const type = item.kind || item.type || 'movie';
+    const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
+    const inList = id && myListArr.some(function (i) { return i.id === id && i.type === type; });
+    btn.textContent = inList ? '✓ My List' : '+ My List';
+    btn.classList.toggle('btn--in-list', !!inList);
 };
 
 function createCard(item) {
@@ -369,9 +396,3 @@ async function fetchAndSetMyListDuration(item, card) {
 }
 
 // After appending each card, call fetchAndSetMyListDuration(item, card)
-// Auto-init on DOMContentLoaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMyListButtons);
-} else {
-    initMyListButtons();
-}

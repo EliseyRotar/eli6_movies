@@ -31,7 +31,7 @@ router.get('/user/profile', auth, async (req, res) => {
 router.post('/user/mylist', auth, async (req, res) => {
     try {
         const { id, title, type, poster_path, overview } = req.body || {};
-        if (!id || !title || !type || !poster_path) {
+        if (!id || !title || !type) {
             return res.status(400).json({ error: 'MISSING_FIELDS' });
         }
         if (!['movie', 'tv', 'anime'].includes(type)) {
