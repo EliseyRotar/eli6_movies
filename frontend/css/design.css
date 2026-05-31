@@ -1096,6 +1096,34 @@ html[data-theme="marquee"] .settings__preset-name { letter-spacing: 0.05em; text
   animation: e6-spin 0.8s linear infinite; flex-shrink: 0;
 }
 
+/* ============ MY LIST — undo toast + button spinner ============ */
+.mylist-undo-toast {
+  position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+  background: var(--surface); color: var(--fg);
+  border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  padding: 12px 16px 12px 18px; border-radius: var(--r-md);
+  font-size: 13px; font-weight: 500; white-space: nowrap;
+  display: flex; align-items: center; gap: 14px;
+  z-index: 9100; box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+  opacity: 0; transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.mylist-undo-toast.show { opacity: 1; pointer-events: auto; }
+.mylist-undo-btn {
+  background: none; border: 1px solid var(--border);
+  color: var(--accent); padding: 4px 12px;
+  border-radius: var(--r-sm); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: background 150ms;
+  flex-shrink: 0;
+}
+.mylist-undo-btn:hover { background: var(--surface-hi); }
+.mylist-spinner {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255,255,255,0.2); border-top-color: currentColor;
+  border-radius: 50%; animation: e6-spin 0.7s linear infinite;
+  vertical-align: middle; margin-left: 5px; flex-shrink: 0;
+}
+
 /* ============ ACCOUNT HUB ============ */
 .acc { padding-bottom: 40px; }
 

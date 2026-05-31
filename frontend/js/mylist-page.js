@@ -571,6 +571,21 @@
       window.renderBottomNav('mylist');
     });
 
+    // Must be logged in to view My List
+    if (!localStorage.getItem('user')) {
+      var mount = document.getElementById('grid-mount');
+      if (mount) {
+        mount.innerHTML =
+          '<div class="ml-empty" style="padding:60px 24px">' +
+          '<div class="ml-empty__icon">🔒</div>' +
+          '<p class="ml-empty__title">Sign in to see your list</p>' +
+          '<p class="ml-empty__sub">Create a free account to save movies and shows.</p>' +
+          '<a href="account.html" class="btn btn--primary" style="margin-top:20px;display:inline-flex;gap:6px">Sign in / Register</a>' +
+          '</div>';
+      }
+      return;
+    }
+
     initControls();
 
     // Show loader

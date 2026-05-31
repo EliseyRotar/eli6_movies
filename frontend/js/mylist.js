@@ -1,155 +1,162 @@
 // Shared My List logic and UI/UX for all pages
-// Usage: Call initMyListButtons() after DOM is ready
 
-const MYLIST_API_URL = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
+const MYLIST_API_URL = window.API_BASE_URL || '';
 
 function _mlEscape(str) {
     return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
 }
 
-// Utility: Show toast notification
-function showMyListToast(message, type = 'success', undoCallback = null) {
-    const toast = document.createElement('div');
-    toast.className = `mylist-toast ${type}`;
-    const span = document.createElement('span');
-    span.textContent = message;
-    toast.appendChild(span);
-    if (undoCallback) {
-        const undoBtn = document.createElement('button');
-        undoBtn.className = 'mylist-undo-btn';
-        undoBtn.textContent = 'Undo';
-        undoBtn.onclick = () => {
-            undoCallback();
-            toast.remove();
-        };
-        toast.appendChild(undoBtn);
-    }
-    document.body.appendChild(toast);
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 50);
-    setTimeout(
-        () => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        },
-        undoCallback ? 3500 : 2500
-    );
+function _mlIsLoggedIn() {
+    return !!localStorage.getItem('user');
 }
 
-// Utility: Spinner HTML
+// ── Toast ────────────────────────────────────────────────────────────────────
+
+function showMyListToast(message, type, undoCallback) {
+    if (!undoCallback) {
+        // Delegate to the shared e6-toast system
+        if (typeof window.showToast === 'function') {
+            window.showToast(message, type);
+        }
+        return;
+    }
+
+    // Undo variant — needs its own persistent element with a button
+    var existing = document.querySelector('.mylist-undo-toast');
+    if (existing) existing.remove();
+
+    var toast = document.createElement('div');
+    toast.className = 'mylist-undo-toast';
+
+    var span = document.createElement('span');
+    span.textContent = message;
+    toast.appendChild(span);
+
+    var undoBtn = document.createElement('button');
+    undoBtn.className = 'mylist-undo-btn';
+    undoBtn.textContent = 'Undo';
+    undoBtn.onclick = function () {
+        undoCallback();
+        toast.remove();
+    };
+    toast.appendChild(undoBtn);
+
+    document.body.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add('show'); });
+
+    var hideTimer = setTimeout(function () {
+        toast.classList.remove('show');
+        setTimeout(function () { toast.remove(); }, 300);
+    }, 3500);
+
+    undoBtn.addEventListener('click', function () { clearTimeout(hideTimer); });
+}
+
+// ── Spinner ──────────────────────────────────────────────────────────────────
+
 function myListSpinner() {
     return '<span class="mylist-spinner"></span>';
 }
 
-// Utility: Show loading spinner
-function showMyListLoading(container) {
-    if (container) {
-        container.innerHTML = `<div class="loading"><div class="loading-spinner"></div></div>`;
-    }
-}
+// ── API helpers ──────────────────────────────────────────────────────────────
 
-// Utility: Show empty state
-function showMyListEmpty(container) {
-    if (container) {
-        container.innerHTML = `<div class="empty-state"><i class="material-icons">favorite_border</i><h2>Your list is empty</h2><p>Start adding movies and TV shows to your list to see them here.</p></div>`;
-    }
-}
-
-// Utility: Handle API errors
-function handleMyListApiError(error) {
-    if (
-        error &&
-        (error.error === 'Please authenticate.' ||
-            error.message === 'Please authenticate.' ||
-            error.status === 401)
-    ) {
+function _mlHandleStatus(status) {
+    if (status === 401) {
         localStorage.removeItem('user');
-        window.location.href = 'account.html';
+        showMyListToast('Session expired — please sign in again', 'error');
+        setTimeout(function () { window.location.href = 'account.html'; }, 1600);
+        var err = new Error('Session expired');
+        err.isAuthError = true;
+        throw err;
     }
 }
 
-// Add to My List
 async function addToMyList(item) {
-    const response = await fetch(`${MYLIST_API_URL}/user/mylist`, {
+    const response = await fetch(MYLIST_API_URL + '/user/mylist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify(item),
     });
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add to My List');
+        _mlHandleStatus(response.status);
+        const err = await response.json().catch(function () { return {}; });
+        const msg = err.error || err.message || 'Failed to add to My List';
+        if (msg === 'ALREADY_EXISTS') throw new Error('Already in your list');
+        throw new Error(msg);
     }
     return await response.json();
 }
 
-// Remove from My List
 async function removeFromMyList(id, type) {
-    const response = await fetch(`${MYLIST_API_URL}/user/mylist/${id}/${type}`, {
+    const response = await fetch(MYLIST_API_URL + '/user/mylist/' + id + '/' + type, {
         method: 'DELETE',
         credentials: 'include',
     });
     if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to remove from My List');
+        _mlHandleStatus(response.status);
+        const err = await response.json().catch(function () { return {}; });
+        throw new Error(err.error || err.message || 'Failed to remove from My List');
     }
     return await response.json();
 }
 
-// Remove from My List with Undo
-async function removeFromMyListWithUndo(id, type, card, undoCallback) {
+// ── Sync localStorage from server ────────────────────────────────────────────
+
+async function syncMyListStorage() {
+    if (!_mlIsLoggedIn()) return;
     try {
-        await removeFromMyList(id, type);
-        if (card) card.remove();
-        showMyListToast('Removed from My List', 'info', async () => {
-            // Undo: re-add the item
-            if (undoCallback) await undoCallback();
-            showMyListToast('Undo: Added back to My List', 'success');
-            syncMyListStorage();
-        });
-        syncMyListStorage();
-    } catch (e) {
-        showMyListToast(e.message || 'Failed to remove from My List', 'error');
-        handleMyListApiError(e);
-    }
+        const response = await fetch(MYLIST_API_URL + '/user/profile', { credentials: 'include' });
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('myList', JSON.stringify(data.myList || []));
+        }
+    } catch (e) {}
 }
 
-// Toggle My List (with UI/UX)
+// ── toggleMyListButton — for .mylist-btn elements ────────────────────────────
+
 async function toggleMyListButton(btn, item) {
     if (btn.classList.contains('mylist-processing')) return;
+
+    if (!_mlIsLoggedIn()) {
+        showMyListToast('Please sign in to use My List', 'error');
+        setTimeout(function () { window.location.href = 'account.html'; }, 1600);
+        return;
+    }
+
     btn.classList.add('mylist-processing', 'mylist-anim');
     const icon = btn.querySelector('.material-icons');
-    const origIcon = icon ? icon.textContent : '';
-    // Show spinner
     if (!btn.querySelector('.mylist-spinner')) {
         btn.insertAdjacentHTML('beforeend', myListSpinner());
     }
     const isInList = btn.classList.contains('in-list');
-    let undoTimeout = null;
-    let lastRemoved = null;
+
     try {
         if (isInList) {
-            // Remove
             await removeFromMyList(item.id, item.type);
             btn.classList.remove('in-list');
             if (icon) icon.textContent = 'add';
-            showMyListToast('Removed from My List', 'info', async () => {
+            showMyListToast('Removed from My List', 'info', async function () {
                 btn.classList.add('mylist-processing');
                 if (!btn.querySelector('.mylist-spinner')) {
                     btn.insertAdjacentHTML('beforeend', myListSpinner());
                 }
-                await addToMyList(item);
-                btn.classList.add('in-list');
-                if (icon) icon.textContent = 'check';
-                showMyListToast('Undo: Added back to My List', 'success');
-                btn.classList.remove('mylist-processing');
-                const sp = btn.querySelector('.mylist-spinner');
-                if (sp) sp.remove();
-                syncMyListStorage();
+                try {
+                    await addToMyList(item);
+                    btn.classList.add('in-list');
+                    if (icon) icon.textContent = 'check';
+                    showMyListToast('Added back to My List', 'success');
+                } catch (e) {
+                    if (!e.isAuthError) showMyListToast(e.message || 'Failed to undo', 'error');
+                } finally {
+                    btn.classList.remove('mylist-processing');
+                    var sp = btn.querySelector('.mylist-spinner');
+                    if (sp) sp.remove();
+                    syncMyListStorage();
+                }
             });
         } else {
-            // Add
             await addToMyList(item);
             btn.classList.add('in-list');
             if (icon) icon.textContent = 'check';
@@ -157,7 +164,7 @@ async function toggleMyListButton(btn, item) {
         }
         syncMyListStorage();
     } catch (e) {
-        showMyListToast(e.message || 'Failed to update My List', 'error');
+        if (!e.isAuthError) showMyListToast(e.message || 'Failed to update My List', 'error');
     } finally {
         btn.classList.remove('mylist-processing', 'mylist-anim');
         const sp = btn.querySelector('.mylist-spinner');
@@ -165,35 +172,28 @@ async function toggleMyListButton(btn, item) {
     }
 }
 
-// Sync localStorage with backend
-async function syncMyListStorage() {
-    const response = await fetch(`${MYLIST_API_URL}/user/profile`, {
-        credentials: 'include',
-    });
-    if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('myList', JSON.stringify(data.myList));
-    }
-}
+// ── initMyListButtons ────────────────────────────────────────────────────────
 
-// Initialize all My List buttons on the page
 function initMyListButtons() {
-    document.querySelectorAll('.mylist-btn').forEach((btn) => {
-        if (btn.dataset.mylistInit) return; // Prevent double init
+    document.querySelectorAll('.mylist-btn').forEach(function (btn) {
+        if (btn.dataset.mylistInit) return;
         btn.dataset.mylistInit = '1';
         btn.addEventListener('click', async function (e) {
             e.stopPropagation();
             e.preventDefault();
-            const item = JSON.parse(btn.dataset.mylistItem);
+            var item;
+            try { item = JSON.parse(btn.dataset.mylistItem); } catch (ex) { return; }
+            if (!item) return;
             await toggleMyListButton(btn, item);
         });
     });
 }
 
-// Auto-init on DOMContentLoaded + sync myList from server if logged in
+// ── Boot ─────────────────────────────────────────────────────────────────────
+
 function _mlBoot() {
     initMyListButtons();
-    if (localStorage.getItem('user')) {
+    if (_mlIsLoggedIn()) {
         syncMyListStorage().catch(function () {});
     }
 }
@@ -203,41 +203,45 @@ if (document.readyState === 'loading') {
     _mlBoot();
 }
 
-// Expose for manual use
-window.initMyListButtons = initMyListButtons;
-window.toggleMyListButton = toggleMyListButton;
-window.addToMyList = addToMyList;
-window.removeFromMyList = removeFromMyList;
-window.showMyListToast = showMyListToast;
-window.syncMyListStorage = syncMyListStorage;
+// ── window.toggleMyList — hero / detail modal buttons ────────────────────────
 
-// Used by components.js hero carousel and detail modal buttons
-// btn is optional — when passed, its text and style update to reflect the new state
 window.toggleMyList = async function (item, btn) {
-    if (!localStorage.getItem('user')) {
+    if (!_mlIsLoggedIn()) {
         showMyListToast('Please sign in to use My List', 'error');
-        setTimeout(function () { window.location.href = 'account.html'; }, 1800);
+        setTimeout(function () { window.location.href = 'account.html'; }, 1600);
         return;
     }
-    const id = parseInt(item.id || item.tmdb_id || item.mal_id);
+    const id   = parseInt(item.id || item.tmdb_id || item.mal_id);
     const type = item.kind || item.type || 'movie';
-    const title = item.title || item.name || '';
+    const title      = item.title || item.name || '';
     const posterPath = item.poster_path || item.poster_url || '';
-    const overview = (item.overview || item.synopsis || item.description || '').substring(0, 500);
+    const overview   = (item.overview || item.synopsis || item.description || '').substring(0, 500);
 
     if (!id || !title) {
         showMyListToast('Unable to add this item — missing data', 'error');
         return;
     }
+
     const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
     const alreadyIn = myListArr.some(function (i) { return i.id === id && i.type === type; });
+
     if (btn) btn.disabled = true;
     try {
         if (alreadyIn) {
             await removeFromMyList(id, type);
             const updated = myListArr.filter(function (i) { return !(i.id === id && i.type === type); });
             localStorage.setItem('myList', JSON.stringify(updated));
-            showMyListToast('Removed from My List', 'info');
+            showMyListToast('Removed from My List', 'info', async function () {
+                try {
+                    await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
+                    myListArr.unshift({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
+                    localStorage.setItem('myList', JSON.stringify(myListArr));
+                    if (btn) { btn.textContent = '✓ My List'; btn.classList.add('btn--in-list'); btn.disabled = false; }
+                    showMyListToast('Added back to My List', 'success');
+                } catch (e) {
+                    if (!e.isAuthError) showMyListToast(e.message || 'Failed to undo', 'error');
+                }
+            });
             if (btn) { btn.textContent = '+ My List'; btn.classList.remove('btn--in-list'); }
         } else {
             await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
@@ -248,16 +252,17 @@ window.toggleMyList = async function (item, btn) {
         }
         syncMyListStorage().catch(function () {});
     } catch (e) {
-        showMyListToast(e.message || 'Failed to update My List', 'error');
+        if (!e.isAuthError) showMyListToast(e.message || 'Failed to update My List', 'error');
     } finally {
         if (btn) btn.disabled = false;
     }
 };
 
-// Set button text + style based on current localStorage state — call when rendering a button
+// ── window.updateMyListBtn — set button state from localStorage ───────────────
+
 window.updateMyListBtn = function (item, btn) {
     if (!btn) return;
-    const id = parseInt(item.id || item.tmdb_id);
+    const id   = parseInt(item.id || item.tmdb_id);
     const type = item.kind || item.type || 'movie';
     const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
     const inList = id && myListArr.some(function (i) { return i.id === id && i.type === type; });
@@ -265,134 +270,76 @@ window.updateMyListBtn = function (item, btn) {
     btn.classList.toggle('btn--in-list', !!inList);
 };
 
+// ── Expose for manual use ────────────────────────────────────────────────────
+
+window.initMyListButtons  = initMyListButtons;
+window.toggleMyListButton = toggleMyListButton;
+window.addToMyList        = addToMyList;
+window.removeFromMyList   = removeFromMyList;
+window.showMyListToast    = showMyListToast;
+window.syncMyListStorage  = syncMyListStorage;
+
+// ── createCard (legacy — used by old mylist page, kept for compatibility) ─────
+
 function createCard(item) {
     const card = document.createElement('div');
     card.className = 'movie-card';
 
-    // Handle image path - explicit approach
     let posterPath;
     const originalPath = item.poster_path;
-
     if (!originalPath) {
         posterPath = 'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image';
     } else if (originalPath.startsWith('http')) {
         posterPath = originalPath;
     } else if (originalPath.startsWith('/w500/')) {
-        posterPath = `https://image.tmdb.org/t/p${originalPath}`;
+        posterPath = 'https://image.tmdb.org/t/p' + originalPath;
     } else if (originalPath.startsWith('/')) {
-        posterPath = `https://image.tmdb.org/t/p/w500${originalPath}`;
+        posterPath = 'https://image.tmdb.org/t/p/w500' + originalPath;
     } else {
-        posterPath = `https://image.tmdb.org/t/p/${originalPath}`;
+        posterPath = 'https://image.tmdb.org/t/p/' + originalPath;
     }
 
-    // Use up-to-date myList
     const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
-    const isInList = myListArr.some(
-        (listItem) => listItem.id === item.id && listItem.type === item.type
-    );
-    const rating =
-        typeof item.rating === 'number'
-            ? item.rating
-            : item.vote_average
-              ? item.vote_average
-              : null;
+    const isInList  = myListArr.some(function (i) { return i.id === item.id && i.type === item.type; });
+    const rating    = typeof item.rating === 'number' ? item.rating : (item.vote_average || null);
     const ratingDisplay = rating ? rating.toFixed(1) : 'N/A';
-    const year =
-        item.year ||
-        (item.release_date
-            ? item.release_date.split('-')[0]
-            : item.first_air_date
-              ? item.first_air_date.split('-')[0]
-              : 'N/A');
-    const title = item.title || item.name;
-    const overview = item.overview
-        ? item.overview.substring(0, 100) + (item.overview.length > 100 ? '...' : '')
-        : '';
+    const year      = item.year || (item.release_date ? item.release_date.split('-')[0] : item.first_air_date ? item.first_air_date.split('-')[0] : 'N/A');
+    const title     = item.title || item.name;
+    const overview  = item.overview ? item.overview.substring(0, 100) + (item.overview.length > 100 ? '...' : '') : '';
     const typeLabel = item.type === 'movie' ? 'Movie' : 'TV Show';
-    let duration = 'N/A';
-    if (typeof item.runtime === 'number') {
-        duration = `${item.runtime} min`;
-    } else if (item.type === 'tv' && item.episode_run_time && item.episode_run_time.length > 0) {
-        duration = `${item.episode_run_time[0]} min`;
-    }
     const isWatched = (item.progress || 0) >= 90;
 
-    card.innerHTML = `
-        <img src="${_mlEscape(posterPath)}"
-             alt="${_mlEscape(title)}"
-             loading="lazy"
-             onerror="this.src='https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image'; this.classList.add('error');">
-        <div class="movie-info">
-            <div class="card-actions">
-                <button class="action-btn play-btn" title="Play" aria-label="Play">
-                    <i class="material-icons">play_arrow</i>
-                </button>
-                <button class="action-btn remove-btn" title="Remove from My List" aria-label="Remove from My List">
-                    <i class="material-icons">delete</i>
-                </button>
-            </div>
-            <div class="movie-title">${_mlEscape(title)}</div>
-            <div class="card-meta">
-                <span class="rating"><i class="material-icons" style="font-size: 16px;">star</i> ${_mlEscape(ratingDisplay)}</span>
-                <span>|</span>
-                <span>${_mlEscape(year)}</span>
-                <span>|</span>
-                <span class="duration">${_mlEscape(duration)}</span>
-            </div>
-            <p class="movie-overview">${_mlEscape(overview)}</p>
-            ${isWatched ? '<span class="watched-badge">Watched</span>' : ''}
-        </div>
-    `;
+    card.innerHTML =
+        '<img src="' + _mlEscape(posterPath) + '" alt="' + _mlEscape(title) + '" loading="lazy" onerror="this.src=\'https://via.placeholder.com/500x750/2a2a2a/ffffff?text=No+Image\'">' +
+        '<div class="movie-info">' +
+        '<div class="card-actions">' +
+        '<button class="action-btn play-btn" title="Play"><i class="material-icons">play_arrow</i></button>' +
+        '<button class="action-btn remove-btn" title="Remove from My List"><i class="material-icons">delete</i></button>' +
+        '</div>' +
+        '<div class="movie-title">' + _mlEscape(title) + '</div>' +
+        '<div class="card-meta"><span class="rating"><i class="material-icons" style="font-size:16px">star</i> ' + _mlEscape(ratingDisplay) + '</span><span>|</span><span>' + _mlEscape(year) + '</span><span>|</span><span class="duration">N/A</span></div>' +
+        '<p class="movie-overview">' + _mlEscape(overview) + '</p>' +
+        (isWatched ? '<span class="watched-badge">Watched</span>' : '') +
+        '</div>';
 
-    // Overlay button actions
-    const playBtn = card.querySelector('.play-btn');
-    const removeBtn = card.querySelector('.remove-btn');
-    playBtn.addEventListener('click', (e) => {
+    card.querySelector('.play-btn').addEventListener('click', function (e) {
         e.stopPropagation();
-        playContent(item.id, item.type);
+        window.location.href = 'player.html?type=' + item.type + '&id=' + item.id;
     });
-    removeBtn.addEventListener('click', async (e) => {
+    card.querySelector('.remove-btn').addEventListener('click', async function (e) {
         e.stopPropagation();
-        await removeFromMyList(item.id, item.type);
-        card.remove();
-        if (window.showMyListToast) window.showMyListToast('Removed from My List', 'info');
-        if (window.updateStats) window.updateStats();
+        try {
+            await removeFromMyList(item.id, item.type);
+            card.remove();
+            showMyListToast('Removed from My List', 'info');
+        } catch (err) {
+            if (!err.isAuthError) showMyListToast(err.message || 'Failed to remove', 'error');
+        }
     });
-
-    // Card click navigates to player (unless clicking a button)
-    card.addEventListener('click', (e) => {
+    card.addEventListener('click', function (e) {
         if (e.target.closest('.action-btn')) return;
-        playContent(item.id, item.type);
+        window.location.href = 'player.html?type=' + item.type + '&id=' + item.id;
     });
 
     return card;
 }
-
-async function fetchAndSetMyListDuration(item, card) {
-    try {
-        const TMDB_PROXY = window.TMDB_PROXY_URL || (window.API_BASE_URL ? window.API_BASE_URL + '/tmdb' : '');
-        let url = '';
-        if (item.type === 'movie') {
-            url = `${TMDB_PROXY}/movie/${item.id}`;
-        } else if (item.type === 'tv') {
-            url = `${TMDB_PROXY}/tv/${item.id}`;
-        }
-        const response = await fetch(url);
-        if (!response.ok) return;
-        const data = await response.json();
-        let duration = 'N/A';
-        if (item.type === 'movie' && typeof data.runtime === 'number') {
-            duration = `${data.runtime} min`;
-        } else if (
-            item.type === 'tv' &&
-            data.episode_run_time &&
-            data.episode_run_time.length > 0
-        ) {
-            duration = `${data.episode_run_time[0]} min`;
-        }
-        const durationSpan = card.querySelector('.duration');
-        if (durationSpan) durationSpan.textContent = duration;
-    } catch (e) {}
-}
-
-// After appending each card, call fetchAndSetMyListDuration(item, card)
