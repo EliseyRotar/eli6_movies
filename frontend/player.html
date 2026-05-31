@@ -2048,6 +2048,35 @@
                 if (savedIdx >= 0) currentServerIndex = savedIdx;
             }
 
+            // Pre-check server availability when no cached server is known
+            let _srvAvailability = null;
+            if (!_cachedSv) {
+                const _ploading = document.getElementById('playerLoading');
+                if (_ploading) _ploading.textContent = 'Checking servers…';
+                try {
+                    const _imdbId = (contentData && contentData.external_ids && contentData.external_ids.imdb_id) || '';
+                    const _cp = new URLSearchParams({ type, id, imdb_id: _imdbId, season: season || 1, episode: episode || 1 });
+                    const _apiBase = (window.API_BASE_URL || '').replace(/\/api$/, '');
+                    const _checkRes = await Promise.race([
+                        fetch(`${_apiBase}/api/check-servers?${_cp}`),
+                        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 8000))
+                    ]);
+                    if (_checkRes.ok) {
+                        const _cd = await _checkRes.json();
+                        if (_cd.results && _cd.results.length) {
+                            _srvAvailability = {};
+                            _cd.results.forEach(r => { _srvAvailability[r.key] = r.available; });
+                            const _first = _cd.results.find(r => r.available);
+                            if (_first) {
+                                const _fi = SERVER_LIST.findIndex(s => s.key === _first.key);
+                                if (_fi >= 0) currentServerIndex = _fi;
+                            }
+                        }
+                    }
+                } catch (_e) { /* pre-check failed — proceed with default order */ }
+                if (_ploading) _ploading.textContent = 'Loading video player...';
+            }
+
             // Auto-load the video player on page load
             loadVideoPlayer();
             isVideoPlaying = true;
@@ -2074,12 +2103,15 @@
                 document.getElementById('reloadPlayerBtn').onclick = () => loadVideoPlayer();
             }
 
-            // Dynamically populate server dropdown
+            // Dynamically populate server dropdown with availability indicators
             const serverSelect = document.getElementById('overlayServerSelect');
             if (serverSelect) {
-                // Only show 2Anime if type === 'anime'
                 const filteredServers = SERVER_LIST.filter(srv => srv.key !== '2anime' || type === 'anime');
-                serverSelect.innerHTML = filteredServers.map(srv => `<option value="${srv.key}">${srv.label}</option>`).join('');
+                serverSelect.innerHTML = filteredServers.map(srv => {
+                    const avail = _srvAvailability ? _srvAvailability[srv.key] : undefined;
+                    const badge = avail === true ? ' ✓' : avail === false ? ' ✗' : '';
+                    return `<option value="${srv.key}"${avail === false ? ' style="opacity:0.5"' : ''}>${srv.label}${badge}</option>`;
+                }).join('');
             }
         });
 

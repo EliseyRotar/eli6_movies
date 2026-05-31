@@ -8,6 +8,9 @@ const router = express.Router();
 // sessionId -> { lastSeen, userId, username, path }
 const activeSessions = new Map();
 
+// The site's own hostname — referrers matching this are internal navigation, not real referrers
+const SITE_HOST = (process.env.SITE_HOST || 'eli6movies.vercel.app').replace(/^www\./, '');
+
 // Evict stale sessions older than 2 min (run opportunistically)
 function evictStale() {
     const cutoff = Date.now() - 2 * 60 * 1000;
@@ -18,7 +21,31 @@ function evictStale() {
 
 function extractHost(url) {
     if (!url) return null;
-    try { return new URL(url).hostname.replace(/^www\./, ''); } catch (_) { return null; }
+    try {
+        const host = new URL(url).hostname.replace(/^www\./, '');
+        return host === SITE_HOST ? null : host;  // filter self-referrers
+    } catch (_) { return null; }
+}
+
+// Render routes requests through multiple internal proxy hops (all 10.x.x.x).
+// We iterate every possible IP source and return the first public (non-private) IP.
+const PRIV_RE = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|::1$|fc00:|fd)/i;
+
+function isPrivate(ip) {
+    const clean = (ip || '').replace(/^::ffff:/, '');
+    return !clean || PRIV_RE.test(clean);
+}
+
+function getClientIp(req) {
+    const candidates = [
+        req.headers['cf-connecting-ip'],               // Cloudflare (if ever added)
+        req.headers['true-client-ip'],                  // Akamai / Cloudflare Enterprise
+        req.headers['x-real-ip'],                       // Nginx
+        ...(req.headers['x-forwarded-for'] || '').split(','),
+        req.ip,
+    ].map(s => (s || '').trim().replace(/^::ffff:/, '')).filter(Boolean);
+
+    return candidates.find(ip => !isPrivate(ip)) || '';
 }
 
 function parseUA(ua) {
@@ -63,7 +90,7 @@ router.post('/data', optionalAuth, (req, res) => {
             const username = req.user?.username || null;
 
             if (type === 'pv') {
-                const ip  = req.ip || '';
+                const ip  = getClientIp(req);
                 const ua  = req.headers['user-agent'] || '';
                 const utmSource   = typeof body.utm_source   === 'string' ? body.utm_source.slice(0, 100)   : null;
                 const utmMedium   = typeof body.utm_medium   === 'string' ? body.utm_medium.slice(0, 100)   : null;
@@ -76,9 +103,10 @@ router.post('/data', optionalAuth, (req, res) => {
                     path:        safePath,
                     referrer:    extractHost(ref),
                     ip,
-                    country:     geo.country    || null,
-                    countryCode: geo.countryCode || null,
-                    city:        geo.city        || null,
+                    country:     geo.country     || null,
+                    countryCode: geo.countryCode  || null,
+                    city:        geo.city         || null,
+                    isp:         geo.isp          || null,
                     browser:     parsed.browser,
                     os:          parsed.os,
                     device:      parsed.device,

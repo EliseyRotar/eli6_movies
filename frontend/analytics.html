@@ -559,18 +559,30 @@ function renderRecentTable(data){
   const tbody=document.getElementById('recentBody');
   if(!tbody) return;
   if(!data.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No data</td></tr>';return;}
-  tbody.innerHTML=data.map(r=>`
-    <tr>
-      <td class="ip-cell">${esc(r.ip)||'—'}</td>
+  tbody.innerHTML=data.map(r=>{
+    // IP cell: show IP + ISP as subtitle
+    const ispStr = r.isp ? r.isp.replace(/^AS\d+\s*/,'') : '';
+    const ipCell = `<div class="ip-cell" title="${esc(r.isp||r.ip||'')}">${esc(r.ip)||'—'}${ispStr?`<br><span style="color:var(--muted2);font-size:.65rem;font-weight:400">${esc(ispStr)}</span>`:''}</div>`;
+    // Country cell: flag + country + city as subtitle
+    const locCell = r.country
+      ? `<span title="${esc(r.city?r.city+', ':'')}${esc(r.country)}">${countryFlag(r.countryCode)} ${esc(r.country)}${r.city?`<br><span style="color:var(--muted2);font-size:.65rem">${esc(r.city)}</span>`:''}</span>`
+      : '—';
+    // Referrer: only show external referrers
+    const refCell = r.referrer
+      ? `<a href="https://${esc(r.referrer)}" target="_blank" rel="noopener" style="color:var(--accent2)">${esc(r.referrer)}</a>`
+      : '<span style="color:var(--muted2);font-size:.68rem">direct</span>';
+    return `<tr>
+      <td>${ipCell}</td>
       <td>${r.username?`<span class="badge user-row">${esc(r.username)}</span>`:'<span style="color:var(--muted)">anon</span>'}</td>
       <td class="path-cell">${esc(r.path)}</td>
-      <td>${r.country?`${countryFlag(r.countryCode)} ${esc(r.country)}`:'—'}</td>
+      <td>${locCell}</td>
       <td>${esc(r.browser)} / ${esc(r.os)}</td>
       <td><span class="badge ${esc(r.device)}">${esc(r.device)}</span></td>
-      <td>${r.referrer?`<a href="https://${esc(r.referrer)}" target="_blank" rel="noopener" style="color:var(--accent2)">${esc(r.referrer)}</a>`:'—'}</td>
+      <td>${refCell}</td>
       <td class="dur-cell">${fmtDur(r.duration)}</td>
       <td class="time-cell">${timeAgo(r.createdAt)}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 // ── Auth log ─────────────────────────────────────────────────
@@ -605,10 +617,10 @@ function filterRecent(q){
 // ── CSV export ───────────────────────────────────────────────
 function exportCSV(){
   if(!recentData.length){alert('Load the Activity tab first, then export.');return;}
-  const headers=['IP','User','Page','Country','Browser','OS','Device','Referrer','Duration(s)','Time'];
+  const headers=['IP','ISP','User','Page','Country','City','Browser','OS','Device','Referrer','Duration(s)','Time'];
   const rows=recentData.map(r=>[
-    r.ip||'',r.username||'',r.path||'',
-    r.country||'',r.browser||'',r.os||'',r.device||'',
+    r.ip||'',r.isp||'',r.username||'',r.path||'',
+    r.country||'',r.city||'',r.browser||'',r.os||'',r.device||'',
     r.referrer||'',r.duration||'',r.createdAt||''
   ].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(','));
   const csv=[headers.join(','),...rows].join('\n');
@@ -878,6 +890,8 @@ function renderShell(){
           <div class="search-bar">
             <input class="search-input" id="activitySearch" placeholder="Filter IP, user, page…" oninput="filterRecent(this.value)"/>
           </div>
+          <button class="btn-icon" id="migrateBtn" title="Fix referrers and geo-enrich old records">🔧 Fix Historical Data</button>
+          <button class="btn-icon" id="debugIpBtn" title="Show what IP headers the server sees">🔍 Debug IP</button>
         </div>
       </div>
       <div class="tab-bar">
@@ -1012,6 +1026,38 @@ document.getElementById('rangeTabs').addEventListener('click',async e=>{
 document.getElementById('autoRefreshBtn').addEventListener('click',toggleAutoRefresh);
 document.getElementById('exportBtn').addEventListener('click',exportCSV);
 
+// ── Migrate / Debug IP (wired after renderShell) ──────────────
+async function runMigration(){
+  const btn=document.getElementById('migrateBtn');
+  if(!btn) return;
+  btn.disabled=true; btn.textContent='🔄 Running…';
+  try{
+    const r=await fetch(API+'/admin/analytics/migrate',{method:'POST',credentials:'include'});
+    const d=await r.json();
+    btn.textContent='✓ Done';
+    alert(`Migration complete!\n• Referrers fixed: ${d.referrersFixed}\n• Records geo-enriched: ${d.geoEnriched}\n\n${d.note}`);
+    await loadRecent();
+  }catch(e){
+    btn.textContent='✗ Failed';
+    alert('Migration failed: '+(e.message||e));
+  }finally{
+    setTimeout(()=>{if(btn)btn.textContent='🔧 Fix Historical Data';btn&&(btn.disabled=false);},3000);
+  }
+}
+
+async function debugIp(){
+  const btn=document.getElementById('debugIpBtn');
+  if(!btn) return;
+  btn.disabled=true; btn.textContent='🔄 Fetching…';
+  try{
+    const r=await fetch(API+'/admin/analytics/debug-ip',{credentials:'include'});
+    const d=await r.json();
+    const lines=Object.entries(d).map(([k,v])=>`${k}: ${v??'—'}`).join('\n');
+    alert('IP headers the backend sees:\n\n'+lines);
+  }catch(e){ alert('Failed: '+(e.message||e)); }
+  finally{ btn.disabled=false; btn.textContent='🔍 Debug IP'; }
+}
+
 // ── Boot ──────────────────────────────────────────────────────
 (async()=>{
   showWaking(1);
@@ -1020,6 +1066,10 @@ document.getElementById('exportBtn').addEventListener('click',exportCSV);
 
   renderShell();
   await loadAll();
+
+  // Wire up dynamic buttons rendered by renderShell
+  document.getElementById('migrateBtn')?.addEventListener('click', runMigration);
+  document.getElementById('debugIpBtn')?.addEventListener('click', debugIp);
 
   // Live every 5s
   setInterval(refreshLive,5000);

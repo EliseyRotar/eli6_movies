@@ -2,7 +2,6 @@
     'use strict';
 
     var API = (window.API_BASE_URL || 'https://eli6movies.onrender.com/api').replace(/\/+$/, '');
-    var start = Date.now();
 
     function sid() {
         var s = sessionStorage.getItem('_sid');
@@ -11,7 +10,7 @@
     }
 
     function send(payload) {
-        // text/plain avoids CORS preflight — simple request works even during cold starts
+        // text/plain avoids CORS preflight — works even during cold starts
         var blob = new Blob([JSON.stringify(payload)], { type: 'text/plain' });
         navigator.sendBeacon(API + '/data', blob);
     }
@@ -31,14 +30,36 @@
     }
     var utms = getUtms();
 
-    // Page view
-    send({ type: 'pv', sid: sid(), path: location.pathname, ref: document.referrer || null,
-           utm_source: utms.src || null, utm_medium: utms.med || null, utm_campaign: utms.camp || null });
+    // Filter same-domain referrers — internal navigation is not a real referrer
+    var ref = document.referrer || null;
+    try {
+        if (ref && new URL(ref).hostname === location.hostname) ref = null;
+    } catch (_) {}
 
-    // Duration on tab close / navigate away
+    // Page view
+    send({
+        type: 'pv', sid: sid(), path: location.pathname, ref: ref,
+        utm_source: utms.src || null, utm_medium: utms.med || null, utm_campaign: utms.camp || null,
+    });
+
+    // ── Duration: only count time the tab is actually visible ────────────────
+    // Fixes the "8 minutes on page" problem where hidden/background time was counted.
+    var activeMs    = 0;
+    var visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
+
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') {
-            send({ type: 'dur', sid: sid(), path: location.pathname, dur: Math.round((Date.now() - start) / 1000) });
+            if (visibleSince !== null) {
+                activeMs += Date.now() - visibleSince;
+                visibleSince = null;
+            }
+            var secs = Math.round(activeMs / 1000);
+            if (secs > 0) {
+                send({ type: 'dur', sid: sid(), path: location.pathname, dur: secs });
+            }
+        } else {
+            // Tab became visible again — restart the visible timer
+            visibleSince = Date.now();
         }
     });
 

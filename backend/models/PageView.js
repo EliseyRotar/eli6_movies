@@ -11,6 +11,7 @@ const schema = new mongoose.Schema({
     country:     { type: String, default: null },
     countryCode: { type: String, default: null },
     city:        { type: String, default: null },
+    isp:         { type: String, default: null },
     browser:     { type: String, default: null },
     os:          { type: String, default: null },
     device:      { type: String, default: 'desktop' },

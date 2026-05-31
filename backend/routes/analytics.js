@@ -5,6 +5,8 @@ const PageView = require('../models/PageView');
 const ActivityLog = require('../models/ActivityLog');
 const { activeSessions } = require('./track');
 
+const SITE_HOST = (process.env.SITE_HOST || 'eli6movies.vercel.app').replace(/^www\./, '');
+
 const router = express.Router();
 router.use('/admin/analytics', auth, adminOnly);
 
@@ -194,7 +196,7 @@ router.get('/admin/analytics/referrers', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
         const data = await PageView.aggregate([
-            { $match: { createdAt: { $gte: from }, referrer: { $nin: [null, ''] } } },
+            { $match: { createdAt: { $gte: from }, referrer: { $nin: [null, '', SITE_HOST] } } },
             { $group: { _id: '$referrer', count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 10 },
@@ -253,6 +255,60 @@ router.get('/admin/analytics/user-growth', async (req, res, next) => {
         ]);
         res.json(data);
     } catch (err) { next(err); }
+});
+
+// POST /admin/analytics/migrate — one-time fix for historical data
+// • Nulls out self-referrers (eli6movies.vercel.app stored in old records)
+// • Re-runs geo lookup for any records that have a real (non-private) IP but no country
+router.post('/admin/analytics/migrate', async (req, res, next) => {
+    try {
+        const { geoLookup } = require('../utils/geoip');
+        const PRIV_RE = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.)/;
+
+        // 1) Fix self-referrers in bulk
+        const refFix = await PageView.updateMany(
+            { referrer: SITE_HOST },
+            { $set: { referrer: null } }
+        );
+
+        // 2) Geo-enrich records that have a real IP but no country (batched, max 500)
+        const orphans = await PageView.find({
+            country: null,
+            ip: { $exists: true, $ne: null, $ne: '' },
+        }).select('_id ip').limit(500).lean();
+
+        let geoFixed = 0;
+        for (const doc of orphans) {
+            const clean = (doc.ip || '').replace(/^::ffff:/, '');
+            if (!clean || PRIV_RE.test(clean)) continue;
+            const geo = await geoLookup(clean);
+            if (geo.country) {
+                await PageView.updateOne(
+                    { _id: doc._id },
+                    { $set: { country: geo.country, countryCode: geo.countryCode, city: geo.city, isp: geo.isp } }
+                );
+                geoFixed++;
+            }
+        }
+
+        res.json({
+            referrersFixed: refFix.modifiedCount,
+            geoEnriched: geoFixed,
+            note: 'Private IPs (10.x.x.x) cannot be geo-located — those records were never captured with real IPs.',
+        });
+    } catch (err) { next(err); }
+});
+
+// GET /admin/analytics/debug-ip — shows what IP headers the server receives (for diagnosing proxy issues)
+router.get('/admin/analytics/debug-ip', (req, res) => {
+    res.json({
+        'req.ip':              req.ip,
+        'x-forwarded-for':     req.headers['x-forwarded-for'] || null,
+        'x-real-ip':           req.headers['x-real-ip'] || null,
+        'cf-connecting-ip':    req.headers['cf-connecting-ip'] || null,
+        'true-client-ip':      req.headers['true-client-ip'] || null,
+        'socket.remoteAddress': req.socket?.remoteAddress || null,
+    });
 });
 
 // GET /admin/analytics/recent?limit=50

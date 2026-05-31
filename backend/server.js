@@ -19,10 +19,13 @@ const ruembedRoutes = require('./routes/ruembed');
 const { router: trackRoutes } = require('./routes/track');
 const analyticsRoutes    = require('./routes/analytics');
 const passwordResetRoutes = require('./routes/passwordReset');
+const checkServersRoutes  = require('./routes/checkServers');
 const auth = require('./middleware/auth');
 
 const app = express();
-app.set('trust proxy', 1);
+// Render.com runs behind multiple internal proxy hops (all 10.x.x.x).
+// 'true' tells Express to treat the leftmost X-Forwarded-For IP as the real client IP.
+app.set('trust proxy', true);
 
 const allowedOrigins = (
     process.env.FRONTEND_ORIGIN || 'http://localhost:5500,http://localhost:5173'
@@ -82,6 +85,7 @@ app.use('/api/embed', auth, ruembedRoutes);
 app.use('/api', trackRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api', passwordResetRoutes);
+app.use('/api', checkServersRoutes);
 
 app.use(errorHandler);
 
