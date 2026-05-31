@@ -557,7 +557,7 @@ html[data-theme="marquee"] .pagehead__title { letter-spacing: 0.02em; text-trans
 /* ============ SEARCH ============ */
 .search-bar { position: relative; padding: 24px var(--pad-x) 8px; }
 .search-input {
-  width: 100%; padding: 16px 20px 16px 50px;
+  width: 100%; padding: 16px 48px 16px 50px;
   background: var(--surface); color: var(--fg);
   border: 1px solid var(--border);
   border-radius: var(--r-pill);
@@ -570,6 +570,106 @@ html[data-theme="marquee"] .pagehead__title { letter-spacing: 0.02em; text-trans
   position: absolute; left: calc(var(--pad-x) + 18px); top: 50%; transform: translateY(-20%);
   color: var(--fg-muted); font-size: 20px; pointer-events: none;
 }
+.search-clear {
+  position: absolute; right: calc(var(--pad-x) + 10px); top: 50%;
+  transform: translateY(-50%); margin-top: 12px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--elevated); border: 0; color: var(--fg-muted);
+  font-size: 18px; line-height: 1;
+  display: none; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 150ms, color 150ms;
+  flex-shrink: 0;
+}
+.search-clear.visible { display: flex; }
+.search-clear:hover { background: var(--surface-hi); color: var(--fg); }
+
+/* ── Typeahead dropdown ── */
+.search-typeahead {
+  display: none; position: absolute;
+  left: var(--pad-x); right: var(--pad-x);
+  top: calc(100% - 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  z-index: 300;
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.55);
+}
+.search-typeahead.open { display: block; }
+.search-typeahead__item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 80ms;
+}
+.search-typeahead__item:last-child { border-bottom: 0; }
+.search-typeahead__item:hover,
+.search-typeahead__item--active { background: var(--surface-hi); }
+.search-typeahead__thumb {
+  width: 34px; height: 50px;
+  object-fit: cover; border-radius: var(--r-sm);
+  background: var(--elevated); flex-shrink: 0;
+}
+.search-typeahead__thumb--person {
+  height: 34px; border-radius: 50%;
+}
+.search-typeahead__info { flex: 1; min-width: 0; }
+.search-typeahead__title {
+  font-size: 14px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.search-typeahead__meta { font-size: 11px; color: var(--fg-muted); margin-top: 2px; }
+.search-typeahead__type {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; padding: 2px 6px;
+  border-radius: var(--r-sm); flex-shrink: 0;
+}
+.search-typeahead__type--movie  { background: rgba(239,68,68,0.2);  color: #f87171; }
+.search-typeahead__type--tv     { background: rgba(59,130,246,0.2); color: #60a5fa; }
+.search-typeahead__type--person { background: rgba(16,185,129,0.2); color: #34d399; }
+
+/* ── Recent search pills with delete ── */
+.search-recent-pill {
+  display: flex; align-items: stretch;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-pill); overflow: hidden;
+}
+.search-recent-pill__btn {
+  background: transparent; border: 0;
+  padding: 6px 8px 6px 12px;
+  font-size: 13px; color: var(--fg); cursor: pointer;
+  font-family: inherit;
+}
+.search-recent-pill__btn:hover { color: var(--accent); }
+.search-recent-pill__del {
+  background: transparent; border: 0; border-left: 1px solid var(--border);
+  padding: 6px 10px; font-size: 14px; color: var(--fg-muted);
+  cursor: pointer; line-height: 1;
+  transition: color 100ms;
+}
+.search-recent-pill__del:hover { color: var(--fg); }
+
+/* ── Person card ── */
+.person-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-md); padding: 18px 12px 14px;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center; gap: 8px; cursor: pointer;
+  transition: border-color 150ms, transform 150ms;
+}
+.person-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.person-card__photo {
+  width: 72px; height: 72px; border-radius: 50%;
+  object-fit: cover; background: var(--elevated); flex-shrink: 0;
+}
+.person-card__name { font-weight: 700; font-size: 14px; line-height: 1.3; }
+.person-card__dept {
+  font-size: 10px; color: var(--fg-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.person-card__known { font-size: 11px; color: var(--fg-muted); }
+
 .search-count {
   padding: 12px var(--pad-x) 8px;
   font-size: 12px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase;
