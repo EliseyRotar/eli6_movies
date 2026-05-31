@@ -100,6 +100,7 @@ router.put('/admin/users/:id/reset-password', async (req, res, next) => {
         const user = await userService.findById(id);
         if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
         user.password = await userService.hashPassword(newPassword);
+        user.sessions = []; // revoke all existing sessions for the target account
         await user.save();
         res.json({
             message: 'PASSWORD_RESET',

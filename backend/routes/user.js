@@ -232,6 +232,8 @@ router.put('/user/password', auth, async (req, res) => {
         const isMatch = await userService.verifyPassword(req.user, currentPassword);
         if (!isMatch) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
         req.user.password = await userService.hashPassword(newPassword);
+        // Revoke all other sessions — attacker holding a stolen token can no longer authenticate
+        req.user.sessions = req.jti ? req.user.sessions.filter(s => s.jti === req.jti) : [];
         await req.user.save();
         res.json({ message: 'PASSWORD_UPDATED' });
     } catch (error) {

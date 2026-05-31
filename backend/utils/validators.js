@@ -21,7 +21,7 @@ function validateNewPassword(password = '') {
 }
 
 function validateUsername(username = '') {
-    return typeof username === 'string' && username.trim().length >= 3;
+    return typeof username === 'string' && /^[a-zA-Z0-9_-]{3,30}$/.test(username.trim());
 }
 
 function requireNumber(value) {

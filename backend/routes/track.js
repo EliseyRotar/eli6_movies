@@ -51,7 +51,11 @@ router.post('/data', optionalAuth, (req, res) => {
                 try { body = JSON.parse(body); } catch (_) { return; }
             }
             body = body || {};
-            const { type, sid, path, ref, dur } = body;
+            const type = typeof body.type === 'string' ? body.type : '';
+            const sid  = typeof body.sid  === 'string' ? body.sid.slice(0, 128) : '';
+            const path = body.path;
+            const ref  = body.ref;
+            const dur  = body.dur;
             if (!type || !sid) return;
 
             const safePath = String(path || '/').slice(0, 300);

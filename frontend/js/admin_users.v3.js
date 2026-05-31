@@ -1,5 +1,9 @@
 /* Admin Users Panel - v3 (cache-busted) */
 
+function esc(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+}
+
 let allUsers = [];
 let filteredUsers = [];
 let currentPage = 1;
@@ -132,28 +136,28 @@ function displayUsers(users) {
                     .map(
                         (user) => `
                     <tr>
-                        <td><input type="checkbox" value="${user._id}" class="user-checkbox"></td>
+                        <td><input type="checkbox" value="${esc(user._id)}" class="user-checkbox"></td>
                         <td>
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <div class="user-avatar">${user.username ? user.username.charAt(0).toUpperCase() : 'U'}</div>
+                                <div class="user-avatar">${user.username ? esc(user.username.charAt(0).toUpperCase()) : 'U'}</div>
                                 <div class="user-info">
-                                    <h4>${user.username || 'N/A'}</h4>
-                                    <p>ID: ${user._id}</p>
+                                    <h4>${esc(user.username) || 'N/A'}</h4>
+                                    <p>ID: ${esc(user._id)}</p>
                                 </div>
                             </div>
                         </td>
-                        <td>${user.email || 'N/A'}</td>
-                        <td><span class="stat-badge ${user.role === 'admin' ? 'admin-badge' : ''}">${user.role || 'user'}</span></td>
+                        <td>${esc(user.email) || 'N/A'}</td>
+                        <td><span class="stat-badge ${user.role === 'admin' ? 'admin-badge' : ''}">${esc(user.role) || 'user'}</span></td>
                         <td><span class="stat-badge">${user.myList ? user.myList.length : 0} items</span></td>
                         <td><span class="stat-badge">${user.keepWatching ? user.keepWatching.length : 0} items</span></td>
                         <td><span class="stat-badge">${user.watchHistory ? user.watchHistory.length : 0} items</span></td>
                         <td>${formatDate(user.createdAt)}</td>
                         <td>
-                            <button class="btn btn-secondary" onclick="viewUser('${user._id}')">View</button>
-                            <button class="btn btn-primary" onclick="editUser('${user._id}')">Edit</button>
-                            <button class="btn btn-secondary" onclick="resetPassword('${user._id}')">Reset PW</button>
-                            <button class="btn btn-secondary" onclick="changeRole('${user._id}')">Role</button>
-                            <button class="btn btn-secondary" style="background:#e74c3c;" onclick="deleteUser('${user._id}')">Delete</button>
+                            <button class="btn btn-secondary" onclick="viewUser('${esc(user._id)}')">View</button>
+                            <button class="btn btn-primary" onclick="editUser('${esc(user._id)}')">Edit</button>
+                            <button class="btn btn-secondary" onclick="resetPassword('${esc(user._id)}')">Reset PW</button>
+                            <button class="btn btn-secondary" onclick="changeRole('${esc(user._id)}')">Role</button>
+                            <button class="btn btn-secondary" style="background:#e74c3c;" onclick="deleteUser('${esc(user._id)}')">Delete</button>
                         </td>
                     </tr>
                 `
@@ -283,10 +287,10 @@ function viewUser(id) {
     if (!user) return;
     openModal(`
         <h2>User Details</h2>
-        <div><b>ID:</b> ${user._id}</div>
-        <div><b>Username:</b> ${user.username}</div>
-        <div><b>Email:</b> ${user.email}</div>
-        <div><b>Role:</b> ${user.role || 'user'}</div>
+        <div><b>ID:</b> ${esc(user._id)}</div>
+        <div><b>Username:</b> ${esc(user.username)}</div>
+        <div><b>Email:</b> ${esc(user.email)}</div>
+        <div><b>Role:</b> ${esc(user.role) || 'user'}</div>
         <div><b>My List:</b> ${user.myList ? user.myList.length : 0} items</div>
         <div><b>Keep Watching:</b> ${user.keepWatching ? user.keepWatching.length : 0} items</div>
         <div><b>Watch History:</b> ${user.watchHistory ? user.watchHistory.length : 0} items</div>
@@ -301,8 +305,8 @@ function editUser(id) {
     openModal(`
         <h2>Edit User</h2>
         <form id="editUserForm">
-            <label>Username:<br><input type="text" id="editUsername" value="${user.username || ''}" required></label><br><br>
-            <label>Email:<br><input type="email" id="editEmail" value="${user.email || ''}" required></label><br><br>
+            <label>Username:<br><input type="text" id="editUsername" value="${esc(user.username || '')}" required></label><br><br>
+            <label>Email:<br><input type="email" id="editEmail" value="${esc(user.email || '')}" required></label><br><br>
             <button type="submit" class="btn btn-primary">Save</button>
             <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
         </form>

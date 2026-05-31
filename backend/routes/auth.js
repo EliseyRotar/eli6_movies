@@ -40,7 +40,7 @@ router.post('/register', async (req, res, next) => {
 
         const existing = await userService.findByEmail(email);
         if (existing) {
-            return res.status(400).json({ error: 'USER_EXISTS' });
+            return res.status(400).json({ error: 'REGISTRATION_FAILED' });
         }
 
         const user = await userService.createUser({
@@ -61,7 +61,8 @@ router.post('/register', async (req, res, next) => {
 
         // Send email verification (non-blocking — failure doesn't affect registration)
         const verificationToken = crypto.randomBytes(32).toString('hex');
-        user.verificationToken = verificationToken;
+        user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+        user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
         user.emailVerified = false;
         await user.save();
         const verifyUrl = `${APP_URL}/verify-email.html?token=${verificationToken}`;
@@ -146,7 +147,8 @@ router.post('/auth/resend-verification', async (req, res) => {
         if (!user || user.emailVerified) return res.json(OK);
 
         const verificationToken = crypto.randomBytes(32).toString('hex');
-        user.verificationToken = verificationToken;
+        user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+        user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
         await user.save();
         const verifyUrl = `${APP_URL}/verify-email.html?token=${verificationToken}`;
         sendEmail({
@@ -165,10 +167,15 @@ router.get('/auth/verify-email', async (req, res) => {
     if (!token || typeof token !== 'string') return res.status(400).json({ error: 'MISSING_TOKEN' });
 
     try {
-        const user = await userService.findOne({ verificationToken: token });
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+        const user = await userService.findOne({ verificationToken: tokenHash });
         if (!user) return res.status(400).json({ error: 'TOKEN_INVALID' });
-        user.emailVerified     = true;
-        user.verificationToken = null;
+        if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
+            return res.status(400).json({ error: 'TOKEN_EXPIRED' });
+        }
+        user.emailVerified          = true;
+        user.verificationToken      = null;
+        user.verificationTokenExpiry = null;
         await user.save();
         res.json({ message: 'EMAIL_VERIFIED' });
     } catch (err) {
