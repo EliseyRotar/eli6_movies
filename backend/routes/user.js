@@ -1,7 +1,15 @@
 const express = require('express');
+const { v2: cloudinary } = require('cloudinary');
 const auth = require('../middleware/auth');
 const userService = require('../services/userService');
 const logger = require('../utils/logger');
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key:    process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure:     true,
+});
 const {
     validateEmail,
     validateUsername,
@@ -38,11 +46,19 @@ router.put('/user/profile-picture', auth, async (req, res) => {
         const { data } = req.body || {};
         if (!data || typeof data !== 'string') return res.status(400).json({ error: 'INVALID_DATA' });
         if (!data.startsWith('data:image/')) return res.status(400).json({ error: 'INVALID_FORMAT' });
-        // ~120 KB base64 = ≈90 KB binary, plenty for a 300×300 JPEG
         if (data.length > 160000) return res.status(400).json({ error: 'IMAGE_TOO_LARGE' });
-        req.user.profilePicture = data;
+
+        const result = await cloudinary.uploader.upload(data, {
+            public_id: `profile_${req.user._id}`,
+            overwrite: true,
+            folder:    'eli6movies/avatars',
+            transformation: [{ width: 300, height: 300, crop: 'fill', gravity: 'face' }],
+        });
+
+        req.user.profilePicture = result.secure_url;
+        req.user.profilePicturePublicId = result.public_id;
         await req.user.save();
-        res.json({ profilePicture: data });
+        res.json({ profilePicture: result.secure_url });
     } catch (error) {
         logger.error('Profile picture update failed', { error: error.message });
         res.status(500).json({ error: 'UPDATE_ERROR' });
@@ -51,7 +67,11 @@ router.put('/user/profile-picture', auth, async (req, res) => {
 
 router.delete('/user/profile-picture', auth, async (req, res) => {
     try {
+        if (req.user.profilePicturePublicId) {
+            await cloudinary.uploader.destroy(req.user.profilePicturePublicId).catch(() => {});
+        }
         req.user.profilePicture = '';
+        req.user.profilePicturePublicId = null;
         await req.user.save();
         res.json({ ok: true });
     } catch (error) {

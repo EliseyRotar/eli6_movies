@@ -3,6 +3,9 @@
   "cleanUrls": false,
   "trailingSlash": false,
   "routes": [
+    { "src": "/watch/movie/([0-9]+)", "dest": "/player.html?type=movie&id=$1" },
+    { "src": "/watch/tv/([0-9]+)",    "dest": "/player.html?type=tv&id=$1"    },
+    { "src": "/watch/anime/([0-9]+)", "dest": "/player.html?type=anime&id=$1" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/404.html", "status": 404 }
   ],

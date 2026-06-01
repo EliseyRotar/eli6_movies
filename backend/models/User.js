@@ -113,6 +113,14 @@ const userSchema = new mongoose.Schema(
             default: 'user',
         },
         profilePicture:          { type: String,  default: '' },
+        profilePicturePublicId:  { type: String,  default: null },
+        tvNotifications: {
+            type: [{
+                showId:           { type: Number, required: true },
+                lastEpisodeKey:   { type: String, default: null },
+            }],
+            default: [],
+        },
         emailVerified:           { type: Boolean, default: false },
         verificationToken:       { type: String,  default: null },
         verificationTokenExpiry: { type: Date,    default: null },

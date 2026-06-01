@@ -6,6 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ELI6 MOVIES - Player</title>
     <link rel="icon" href="favicon.ico">
+    <meta property="og:type"        content="video.movie">
+    <meta property="og:site_name"   content="ELI6 Movies">
+    <meta property="og:title"       content="ELI6 Movies - Watch Now">
+    <meta property="og:description" content="Stream movies, TV shows and anime for free on ELI6 Movies.">
+    <meta property="og:image"       content="https://eli6movies.vercel.app/og-cover.jpg">
+    <meta property="og:url"         content="">
+    <meta name="twitter:card"       content="summary_large_image">
+    <meta name="twitter:title"      content="ELI6 Movies - Watch Now">
+    <meta name="twitter:description" content="Stream movies, TV shows and anime for free on ELI6 Movies.">
+    <meta name="twitter:image"      content="https://eli6movies.vercel.app/og-cover.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -1998,6 +2008,17 @@
         const VIXSRC_API_URL = 'https://vixsrc.to';
         const AUTH_API_URL = window.API_BASE_URL || '';
 
+        function updateOgTags(title, description, imageUrl) {
+            const setMeta = (sel, val) => { const m = document.querySelector(sel); if (m && val) m.setAttribute('content', val); };
+            setMeta('meta[property="og:title"]',       title);
+            setMeta('meta[property="og:description"]', description);
+            setMeta('meta[property="og:image"]',       imageUrl);
+            setMeta('meta[property="og:url"]',         location.href);
+            setMeta('meta[name="twitter:title"]',      title);
+            setMeta('meta[name="twitter:description"]', description);
+            setMeta('meta[name="twitter:image"]',      imageUrl);
+        }
+
         function esc(s) {
             if (s == null) return '';
             const d = document.createElement('div');
@@ -2223,6 +2244,7 @@
             heroTitle.textContent = title;
             heroDescription.textContent = overview;
             document.title = title + ' — ELI6 Movies';
+            updateOgTags(title + ' — ELI6 Movies', overview, image || '');
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = episodes;
@@ -2302,6 +2324,10 @@
             heroTitle.textContent = title;
             heroDescription.textContent = overview;
             document.title = title + ' — ELI6 Movies';
+            const _ogImage = contentData.backdrop_path
+                ? `https://image.tmdb.org/t/p/w1280${contentData.backdrop_path}`
+                : (contentData.poster_path ? `https://image.tmdb.org/t/p/w500${contentData.poster_path}` : '');
+            updateOgTags(title + ' — ELI6 Movies', overview, _ogImage);
 
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;

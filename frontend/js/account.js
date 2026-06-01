@@ -865,9 +865,10 @@
       editBtn2.textContent = '…'; editBtn2.disabled = true;
       try {
         var dataUrl = await resizeImageToBase64(file, 300, 0.85);
-        await apiPut('/user/profile-picture', { data: dataUrl });
-        localStorage.setItem('eli6.profilePicture', dataUrl);
-        applyProfilePicture(avatarEl, dataUrl);
+        var result = await apiPut('/user/profile-picture', { data: dataUrl });
+        var url = (result && result.profilePicture) || dataUrl;
+        localStorage.setItem('eli6.profilePicture', url);
+        applyProfilePicture(avatarEl, url);
         showToast('Profile picture updated!');
       } catch (e) {
         var msg = e.message;

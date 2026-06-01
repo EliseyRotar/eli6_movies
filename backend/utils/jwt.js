@@ -5,7 +5,7 @@ if (!JWT_SECRET) {
     throw new Error('JWT_SECRET must be set');
 }
 
-const DEFAULT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
+const DEFAULT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '90d';
 
 function createToken(payload, options = {}) {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: DEFAULT_EXPIRES_IN, ...options });

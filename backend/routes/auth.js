@@ -22,7 +22,7 @@ const cookieBase = {
     // none required for cross-origin (Vercel frontend ↔ Render backend)
     sameSite: isProd ? 'none' : 'strict',
     secure: isProd,
-    maxAge: Number(process.env.JWT_COOKIE_MAX_AGE || 15 * 60 * 1000),
+    maxAge: Number(process.env.JWT_COOKIE_MAX_AGE || 90 * 24 * 60 * 60 * 1000),
 };
 
 function sanitizeUser(user) {
@@ -100,6 +100,8 @@ router.post('/login', async (req, res, next) => {
 
         const jti = crypto.randomUUID();
         const token = createToken({ userId: user._id, jti });
+        const sessionCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+        user.sessions = user.sessions.filter(s => s.createdAt > sessionCutoff);
         user.sessions.push({ jti, ua: req.headers['user-agent'] || '', ip: req.ip || '' });
         if (user.sessions.length > 10) user.sessions = user.sessions.slice(-10);
         await user.save();
