@@ -19,7 +19,6 @@ const ruembedRoutes = require('./routes/ruembed');
 const { router: trackRoutes } = require('./routes/track');
 const analyticsRoutes    = require('./routes/analytics');
 const passwordResetRoutes = require('./routes/passwordReset');
-const checkServersRoutes  = require('./routes/checkServers');
 const cronRoutes          = require('./routes/cron');
 const auth = require('./middleware/auth');
 
@@ -86,7 +85,6 @@ app.use('/api/embed', auth, ruembedRoutes);
 app.use('/api', trackRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api', passwordResetRoutes);
-app.use('/api', checkServersRoutes);
 app.use('/api', cronRoutes);
 
 app.use(errorHandler);
