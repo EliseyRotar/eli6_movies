@@ -4,7 +4,7 @@ const User = require('../models/User');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
-const FROM_EMAIL   = process.env.RESEND_FROM_EMAIL || 'ELI6 Movies <notifications@eli6movies.com>';
+const FROM_EMAIL   = process.env.MAIL_FROM || 'ELI6 Movies <onboarding@resend.dev>';
 const APP_URL      = process.env.APP_URL || 'https://eli6movies.vercel.app';
 
 // Fetch details + latest aired episode for a TV show from TMDB

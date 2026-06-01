@@ -14,9 +14,9 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN
-        value: 7d
+        value: 90d
       - key: JWT_COOKIE_MAX_AGE
-        value: 604800000
+        value: 7776000000
       - key: TMDB_API_KEY
         sync: false
       - key: TMDB_LANGUAGE
@@ -27,9 +27,19 @@ services:
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
+      - key: SITE_HOST
+        value: eli6movies.vercel.app
+      - key: APP_URL
+        value: https://eli6movies.vercel.app
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM
         sync: false
-      - key: APP_URL
-        value: https://eli6movies.vercel.app
+      - key: CRON_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
