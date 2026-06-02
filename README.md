@@ -1,146 +1,229 @@
 # ELI6 Movies
 
-Free streaming site for movies, TV shows, and anime. No subscription, no sign-up required to browse.
+> Free streaming for movies, TV shows, and anime. Zero ads, zero subscription, zero sign-up required.
 
-**Live site:** https://eli6movies.vercel.app
-**API:** https://eli6movies.onrender.com
+**Live:** https://eli6movies.vercel.app
+
+---
+
+## Features
+
+- **10+ embed servers** with automatic failover — if one source doesn't play, it tries the next
+- **Source quality badge** — shows CAM / WEB / HD / AIRING based on release dates (TMDB)
+- **User accounts** — optional; required only for My List and episode notifications
+- **My List & Keep Watching** — pick up where you left off
+- **Episode notifications** — get an email when a new episode of a show you follow drops
+- **Multi-language UI** — English, Italian, Russian
+- **Mobile-first** — bottom navigation, responsive layout, Android TV / spatial nav support
+- **Multiple themes** — Pulse, Noir, Marquee, and more
+- **Zero tracking** — no third-party analytics or ad networks
 
 ---
 
 ## Stack
 
-| Layer | Service | Cost |
-|-------|---------|------|
-| Frontend | [Vercel](https://vercel.com) | Free |
-| Backend API | [Render](https://render.com) | Free |
-| Database | [MongoDB Atlas M0](https://www.mongodb.com/atlas) | Free |
-| Metadata | [TMDB API](https://www.themoviedb.org/documentation/api) | Free |
-| Video embeds | VidSrc, VixSrc, Embed.su, AutoEmbed + more | Third-party |
+| Layer | Technology | Cost |
+|-------|-----------|------|
+| Frontend | Vanilla JS + HTML/CSS on [Vercel](https://vercel.com) | Free |
+| Backend | Node.js / Express on [Render](https://render.com) | Free |
+| Database | [MongoDB Atlas M0](https://mongodb.com/atlas) | Free |
+| Metadata | [TMDB API](https://themoviedb.org/documentation/api) | Free |
+| Avatars | [Cloudinary](https://cloudinary.com) | Free |
+| Email | [Resend](https://resend.com) | Free |
+| Video | Third-party embed providers (no files hosted here) | — |
+
+**Total hosting cost: $0/month**
 
 ---
 
-## Deploy (one-time setup)
+## Self-hosting guide
 
-### 1. MongoDB Atlas — free database
+### 1. Clone the repo
 
-1. Go to [mongodb.com/atlas](https://www.mongodb.com/atlas) → **Try Free**
-2. Create a free **M0** cluster (any region)
-3. Under **Security → Database Access**: add a user with a password
-4. Under **Security → Network Access**: click **Allow Access from Anywhere** (0.0.0.0/0)
-5. Under **Database → Connect**: choose **Drivers**, copy the connection string
-   It looks like: `mongodb+srv://user:password@cluster.mongodb.net/eli6_movies?retryWrites=true&w=majority`
+```bash
+git clone https://github.com/EliseyRotar/eli6_movies.git
+cd eli6_movies
+```
 
-### 2. Backend — Render
+### 2. MongoDB Atlas (free database)
 
-1. Go to [render.com](https://render.com) → **New Web Service**
-2. Connect the GitHub repo `EliseyRotar/eli6_movies`
-3. Set **Root Directory** to `backend`
-4. Set these environment variables in the Render dashboard:
+1. Create a free M0 cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
+2. **Database Access** → add a user with a strong password
+3. **Network Access** → Allow Access from Anywhere (`0.0.0.0/0`) — required for Render's dynamic IPs
+4. **Database → Connect → Drivers** → copy the connection string:
+   ```
+   mongodb+srv://user:password@cluster.mongodb.net/eli6_movies?retryWrites=true&w=majority
+   ```
+
+### 3. TMDB API key (free)
+
+1. Register at [themoviedb.org](https://themoviedb.org)
+2. Settings → API → Request an API key (v3 auth)
+
+### 4. Backend on Render
+
+1. [render.com](https://render.com) → New Web Service → connect your fork
+2. **Root Directory:** `backend`
+3. **Start command:** `node server.js`
+4. **Environment variables:**
 
 | Variable | Value |
 |----------|-------|
 | `NODE_ENV` | `production` |
 | `PORT` | `3000` |
-| `MONGODB_URI` | _(your Atlas connection string)_ |
-| `JWT_SECRET` | `REDACTED_JWT_SECRET` |
-| `JWT_EXPIRES_IN` | `7d` |
-| `JWT_COOKIE_MAX_AGE` | `604800000` |
-| `TMDB_API_KEY` | `REDACTED_TMDB_API_KEY` |
+| `MONGODB_URI` | your Atlas connection string |
+| `JWT_SECRET` | any 64+ character random string (`openssl rand -hex 32`) |
+| `JWT_EXPIRES_IN` | `90d` |
+| `JWT_COOKIE_MAX_AGE` | `7776000000` |
+| `TMDB_API_KEY` | your TMDB v3 API key |
 | `TMDB_LANGUAGE` | `en-US` |
 | `TMDB_TIMEOUT_MS` | `8000` |
-| `FRONTEND_ORIGIN` | _(your Vercel URL, e.g. `https://eli6-movies.vercel.app`)_ |
+| `FRONTEND_ORIGIN` | your Vercel URL |
+| `APP_URL` | your Vercel URL |
+| `SITE_HOST` | your Vercel domain (no `https://`) |
 
-5. Deploy. Render will give you a URL like `https://eli6-movies-api.onrender.com`
+**Optional — for episode email notifications:**
 
-### 3. Frontend — Vercel
+| Variable | Value |
+|----------|-------|
+| `RESEND_API_KEY` | API key from [resend.com](https://resend.com) |
+| `MAIL_FROM` | e.g. `ELI6 Movies <you@yourdomain.com>` |
+| `CRON_SECRET` | any random string (protects the cron endpoint) |
 
-1. Go to [vercel.com](https://vercel.com) → **New Project** → import `EliseyRotar/eli6_movies`
-2. Vercel auto-detects `vercel.json` and serves the `frontend/` folder
-3. No build step needed (pure HTML/JS/CSS)
-4. After deployment, copy your Vercel URL (e.g. `https://eli6-movies.vercel.app`)
+**Optional — for profile picture uploads:**
 
-### 4. Wire them together
+| Variable | Value |
+|----------|-------|
+| `CLOUDINARY_CLOUD_NAME` | from [cloudinary.com](https://cloudinary.com) |
+| `CLOUDINARY_API_KEY` | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
 
-1. In `frontend/js/config.js`, set your Render URL:
+### 5. Frontend on Vercel
+
+1. [vercel.com](https://vercel.com) → New Project → import your fork
+2. Set **Root Directory** to `frontend`
+3. No build step needed — pure static files
+4. In `frontend/js/config.js`, update the API URL to your Render service:
    ```js
-   window.API_BASE_URL = 'https://eli6-movies-api.onrender.com/api';
-   window.TMDB_PROXY_URL = window.API_BASE_URL + '/tmdb';
+   window.API_BASE_URL = 'https://your-render-service.onrender.com/api';
    ```
-2. Commit and push — Vercel auto-redeploys
-3. In Render dashboard, update `FRONTEND_ORIGIN` to your Vercel URL and redeploy
 
-### 5. Keep backend awake (optional)
+### 6. Wire together and deploy
 
-Render free tier sleeps after 15 minutes idle. To prevent this:
-1. Sign up at [uptimerobot.com](https://uptimerobot.com) (free)
-2. Add a **HTTP(S)** monitor pointing to `https://your-render-url.onrender.com/api/health`
-3. Set interval to **5 minutes**
+```bash
+# Update config.js with your Render URL, then commit
+git add frontend/js/config.js
+git commit -m "config: set production API URL"
+git push
+```
+
+Vercel auto-deploys on push. In Render, update `FRONTEND_ORIGIN` to your Vercel URL and redeploy.
+
+### 7. Keep backend awake (optional)
+
+Render free tier sleeps after 15 minutes idle. Prevent this with [UptimeRobot](https://uptimerobot.com) (free):
+- Monitor type: HTTP(S)
+- URL: `https://your-render-url.onrender.com/api/health`
+- Interval: 5 minutes
+
+### 8. Episode notifier cron (optional)
+
+If you set up Resend, trigger the episode checker daily via [cron-job.org](https://cron-job.org):
+- URL: `POST https://your-render-url.onrender.com/api/cron/check-episodes`
+- Header: `X-Cron-Secret: <your CRON_SECRET>`
+- Schedule: once daily
 
 ---
 
 ## Local development
 
 ```bash
-git clone https://github.com/EliseyRotar/eli6_movies.git
-cd eli6_movies/backend
+cd backend
 cp env.example .env
-# Edit .env: set JWT_SECRET, TMDB_API_KEY, MONGODB_URI
+# Fill in MONGODB_URI, JWT_SECRET, TMDB_API_KEY in .env
 npm install
 node server.js
 
-# Frontend: open frontend/index.html with any static server
-# python3 -m http.server 5500 --directory ../frontend
+# In a separate terminal — serve the frontend
+cd ../frontend
+python3 -m http.server 5500
+# Open http://localhost:5500
 ```
 
 ---
 
-## Environment variables
+## Project structure
 
-```env
-NODE_ENV=production
-PORT=3000
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=<64+ char random string>
-JWT_EXPIRES_IN=7d
-JWT_COOKIE_MAX_AGE=604800000
-TMDB_API_KEY=REDACTED_TMDB_API_KEY
-TMDB_LANGUAGE=en-US
-TMDB_TIMEOUT_MS=8000
-FRONTEND_ORIGIN=https://your-app.vercel.app
+```
+eli6_movies/
+├── frontend/          # Static site (Vercel)
+│   ├── index.html     # Homepage
+│   ├── movies.html    # Movies browse
+│   ├── tvshows.html   # TV shows browse
+│   ├── anime.html     # Anime browse
+│   ├── player.html    # Video player
+│   ├── search.html    # Search
+│   ├── mylist.html    # Watchlist
+│   ├── account.html   # Login / profile
+│   ├── settings.html  # User settings
+│   ├── css/           # Stylesheets (theme system)
+│   ├── js/
+│   │   ├── config.js      # API URL configuration
+│   │   ├── components.js  # Shared UI components
+│   │   ├── theme.js       # Theme switcher
+│   │   ├── i18n.js        # Internationalization (EN/IT/RU)
+│   │   ├── mylist.js      # My List sync
+│   │   └── ...
+│   └── vercel.json    # Clean URL rewrites + CSP headers
+└── backend/           # Express API (Render)
+    ├── server.js      # Entry point
+    ├── routes/
+    │   ├── auth.js         # Login, register, logout
+    │   ├── user.js         # Profile, My List, Keep Watching, avatar
+    │   ├── tmdb.js         # TMDB proxy with tiered cache
+    │   ├── catalog.js      # Browse endpoints
+    │   ├── checkServers.js # Embed provider health check
+    │   ├── cron.js         # Episode notifier trigger
+    │   └── passwordReset.js
+    ├── models/
+    │   └── User.js         # User schema
+    ├── middleware/
+    │   ├── auth.js         # JWT auth
+    │   ├── rateLimit.js    # Rate limiting
+    │   └── csrf.js         # CSRF protection
+    └── jobs/
+        └── episodeNotifier.js  # New episode email logic
 ```
 
 ---
 
-## Features
-
-- Trending movies, TV shows, and anime from TMDB
-- Full-text search with live results
-- 10+ embed servers (VidSrc, VixSrc, Embed.su, AutoEmbed, and more)
-- User accounts with persistent My List and watch history
-- Keep Watching — resume where you left off
-- Multi-language UI (EN / IT / RU)
-- Mobile-first responsive design with bottom navigation
-- Android TV / spatial navigation support
-
----
-
-## API endpoints
+## API reference
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/api/health` | — | Health check |
-| POST | `/api/register` | — | Create account |
-| POST | `/api/login` | — | Login |
-| POST | `/api/logout` | — | Logout |
-| GET | `/api/user/profile` | JWT | Profile + myList |
-| POST | `/api/user/mylist` | JWT | Add to My List |
-| DELETE | `/api/user/mylist/:id/:type` | JWT | Remove from My List |
-| GET | `/api/user/keep-watching` | JWT | Keep Watching list |
-| POST | `/api/user/keep-watching` | JWT | Update Keep Watching |
-| GET | `/api/tmdb/*` | — | Proxied TMDB requests |
+| `GET` | `/api/health` | — | Health check |
+| `POST` | `/api/register` | — | Create account |
+| `POST` | `/api/login` | — | Login (sets JWT cookie) |
+| `POST` | `/api/logout` | — | Logout |
+| `GET` | `/api/user/profile` | JWT | Profile + My List |
+| `POST` | `/api/user/mylist` | JWT | Add to My List |
+| `DELETE` | `/api/user/mylist/:id/:type` | JWT | Remove from My List |
+| `GET` | `/api/user/keep-watching` | JWT | Keep Watching list |
+| `POST` | `/api/user/keep-watching` | JWT | Update progress |
+| `POST` | `/api/user/avatar` | JWT | Upload profile picture |
+| `GET` | `/api/tmdb/*` | — | Proxied TMDB requests (cached) |
+| `GET` | `/api/check-servers` | — | Embed provider health |
+| `POST` | `/api/cron/check-episodes` | Cron-Secret header | Episode notifier trigger |
 
 ---
 
 ## Credits
 
-Movie/TV data: [TMDB](https://www.themoviedb.org) — Anime data: [Jikan](https://jikan.moe) — Video embeds: third-party providers (this site does not host any files)
+- Movie and TV metadata: [TMDB](https://themoviedb.org)
+- Video embed providers: third-party (this project does not host any video files)
+
+---
+
+## License
+
+MIT
