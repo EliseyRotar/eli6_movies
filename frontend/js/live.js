@@ -3,7 +3,8 @@
 
   var STREAMED = 'https://streamed.pk/api';
   var ESX = 'https://api.embedsportex.site/api';
-  var TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
+  var ESX_ORIGIN = 'https://api.embedsportex.site';
+  var TSDB = 'https://www.thesportsdb.com/api/v1/json/123';
 
   // Sports where team lookups make sense (skip tennis, fight, motor — no team banners)
   var TEAM_SPORTS = { football: 1, basketball: 1, 'american-football': 1, hockey: 1, baseball: 1, cricket: 1, rugby: 1, volleyball: 1 };
@@ -27,8 +28,11 @@
     if (key in cache) return cache[key];
     if (_fetchInFlight[key]) return _fetchInFlight[key];
 
-    _fetchInFlight[key] = fetch(TSDB + '/searchteams.php?t=' + encodeURIComponent(teamName))
-      .then(function(r) { return r.ok ? r.json() : null; })
+    var controller = new AbortController();
+    var timer = setTimeout(function() { controller.abort(); }, 5000);
+
+    _fetchInFlight[key] = fetch(TSDB + '/searchteams.php?t=' + encodeURIComponent(teamName), { signal: controller.signal })
+      .then(function(r) { clearTimeout(timer); return r.ok ? r.json() : null; })
       .then(function(d) {
         var team = d && d.teams && d.teams[0];
         var url = team && (team.strTeamBanner || team.strTeamFanart1 || team.strTeamFanart2 || null);
@@ -37,7 +41,7 @@
         delete _fetchInFlight[key];
         return cache[key];
       })
-      .catch(function() { cache[key] = null; delete _fetchInFlight[key]; return null; });
+      .catch(function() { clearTimeout(timer); cache[key] = null; delete _fetchInFlight[key]; return null; });
 
     return _fetchInFlight[key];
   }
@@ -160,6 +164,7 @@
   var refreshTimer = null;
   var refreshCountdown = 0;
   var countdownInterval = null;
+  var _openPlayerSeq = 0; // race condition guard for openPlayer
 
   // --- data ---
 
@@ -172,21 +177,27 @@
       var live = liveRes.ok ? (await liveRes.json() || []) : [];
       var today = todayRes.ok ? (await todayRes.json() || []) : [];
       var liveIds = new Set(live.map(function (m) { return m.id; }));
+      // Normalize category aliases from streamed.pk (e.g. "motor-sports" → "motorsports")
+      var CAT_NORMALIZE = { 'motor-sports': 'motorsports', 'american-football': 'american-football' };
       return (Array.isArray(today) ? today : []).map(function (m) {
+        var cat = m.category || 'other';
         return Object.assign({}, m, {
           isLive: liveIds.has(m.id),
           provider: 'streamed',
+          category: CAT_NORMALIZE[cat] || cat,
         });
       });
     } catch (e) { return []; }
   }
 
   function parseWIB(str) {
-    if (!str) return 0;
-    var p = str.split(' ');
+    if (!str || typeof str !== 'string') return 0;
+    var p = str.trim().split(' ');
     var d = p[0].split('-').map(Number);
     var t = (p[1] || '00:00').split(':').map(Number);
-    return Date.UTC(d[0], d[1] - 1, d[2], t[0] - 7, t[1]);
+    if (d.length < 3 || isNaN(d[0]) || isNaN(d[1]) || isNaN(d[2])) return 0;
+    var ts = Date.UTC(d[0], d[1] - 1, d[2], (t[0] || 0) - 7, t[1] || 0);
+    return isNaN(ts) ? 0 : ts;
   }
 
   async function fetchESX() {
@@ -204,12 +215,15 @@
         data[esxKey].forEach(function (m) {
           var start = parseWIB(m.kickoff);
           var end = parseWIB(m.endTime) || (start + 3 * 3600000);
+          var poster = m.poster || null;
+          // ESX sometimes returns relative paths — resolve to their origin
+          if (poster && poster.startsWith('/')) poster = ESX_ORIGIN + poster;
           out.push({
             id: 'esx-' + (m.slug || m.slugkey || Math.random()),
             title: m.tag || '',
             category: cat,
             league: m.league || '',
-            poster: m.poster || null,
+            poster: poster,
             date: start,
             isLive: now >= start && now <= end,
             provider: 'esx',
@@ -370,11 +384,6 @@
     input.type = 'text';
     input.className = 'live-search-input';
     input.placeholder = lt('live.search.placeholder', 'Search matches, leagues, sports…');
-    input.addEventListener('input', function () {
-      searchQuery = input.value;
-      renderMatches();
-    });
-
     var clear = document.createElement('button');
     clear.className = 'live-search-clear';
     clear.textContent = '✕';
@@ -387,7 +396,9 @@
     });
 
     input.addEventListener('input', function () {
+      searchQuery = input.value;
       clear.hidden = !input.value;
+      renderMatches();
     });
 
     wrap.appendChild(icon);
@@ -409,14 +420,30 @@
       return (a.date || 0) - (b.date || 0);
     });
 
+    // Disconnect observer before clearing — prevents memory leak from dangling card references
+    _cardObserver.disconnect();
     mount.innerHTML = '';
 
     if (!list.length) {
       var empty = document.createElement('div');
       empty.className = 'live-empty';
-      empty.innerHTML = searchQuery
-        ? '<span style="font-size:32px">🔍</span><br>' + lt('live.empty.noResults', 'No matches found for') + ' "' + searchQuery + '"'
-        : '<span style="font-size:32px">📺</span><br>' + lt('live.empty.noMatches', 'No matches scheduled right now.');
+      if (searchQuery) {
+        var emIcon = document.createElement('span');
+        emIcon.style.fontSize = '32px';
+        emIcon.textContent = '🔍';
+        var emText = document.createTextNode(' ' + lt('live.empty.noResults', 'No matches found for') + ' “' + searchQuery + '”');
+        empty.appendChild(emIcon);
+        empty.appendChild(document.createElement('br'));
+        empty.appendChild(emText);
+      } else {
+        var emIcon = document.createElement('span');
+        emIcon.style.fontSize = '32px';
+        emIcon.textContent = '📺';
+        var emText = document.createTextNode(' ' + lt('live.empty.noMatches', 'No matches scheduled right now.'));
+        empty.appendChild(emIcon);
+        empty.appendChild(document.createElement('br'));
+        empty.appendChild(emText);
+      }
       mount.appendChild(empty);
       return;
     }
@@ -680,6 +707,8 @@
   }
 
   async function openPlayer(match) {
+    var seq = ++_openPlayerSeq; // increment sequence; stale async results check this
+
     var modal = ensureModal();
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
@@ -695,6 +724,7 @@
     var oldFr = document.querySelector('#live-player-wrap iframe');
     if (oldFr) oldFr.remove();
     loading.style.display = 'flex';
+    loading.textContent = lt('live.player.loading', 'Loading stream…');
     sourcesEl.innerHTML = '';
 
     if (match.provider === 'streamed' && Array.isArray(match.sources) && match.sources.length) {
@@ -708,16 +738,19 @@
           });
         })
       );
+      if (seq !== _openPlayerSeq) return; // another match was clicked while we waited
       var sources = results.flat().filter(function (s) { return s.url; });
       renderSources(sourcesEl, loading, sources);
 
     } else if (match.provider === 'esx' && Array.isArray(match.iframes) && match.iframes.length) {
+      if (seq !== _openPlayerSeq) return;
       var sources = match.iframes.map(function (f, i) {
         return { label: f.server || ('Stream ' + (i + 1)), url: f.url, hd: /fhd|hd/i.test(f.server || '') };
       });
       renderSources(sourcesEl, loading, sources);
 
     } else {
+      if (seq !== _openPlayerSeq) return;
       loading.textContent = lt('live.player.noStreams', 'No streams found for this match.');
     }
   }
@@ -729,9 +762,19 @@
     var old = wrap && wrap.querySelector('iframe');
     if (old) old.remove();
 
+    // Show loading state while new stream initialises
+    var loadingEl = document.getElementById('live-player-loading');
+    if (loadingEl) {
+      loadingEl.textContent = lt('live.player.loading', 'Loading stream…');
+      loadingEl.style.display = 'flex';
+    }
+
     var fr = document.createElement('iframe');
     fr.allowFullscreen = true;
     fr.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
+    fr.addEventListener('load', function() {
+      if (loadingEl) loadingEl.style.display = 'none';
+    });
     fr.src = url;
     if (wrap) wrap.appendChild(fr);
     return fr;
