@@ -41,6 +41,23 @@
     'other': 'Other',
   };
 
+  // subtle dark gradient per sport — applied to every card so they all have depth
+  var CAT_GRAD = {
+    'football':          'linear-gradient(150deg,#0d2b0d 0%,#06130a 100%)',
+    'basketball':        'linear-gradient(150deg,#2d1200 0%,#160900 100%)',
+    'american-football': 'linear-gradient(150deg,#231500 0%,#110a00 100%)',
+    'tennis':            'linear-gradient(150deg,#162300 0%,#0b1200 100%)',
+    'motorsports':       'linear-gradient(150deg,#2d0808 0%,#160404 100%)',
+    'fight':             'linear-gradient(150deg,#2d0815 0%,#16040a 100%)',
+    'hockey':            'linear-gradient(150deg,#08152d 0%,#040b16 100%)',
+    'baseball':          'linear-gradient(150deg,#1a1000 0%,#0d0800 100%)',
+    'cricket':           'linear-gradient(150deg,#142200 0%,#0a1100 100%)',
+    'rugby':             'linear-gradient(150deg,#0a2018 0%,#051008 100%)',
+    'volleyball':        'linear-gradient(150deg,#0d152d 0%,#070b16 100%)',
+    'badminton':         'linear-gradient(150deg,#1e1400 0%,#0f0a00 100%)',
+    'other':             'linear-gradient(150deg,#151515 0%,#080808 100%)',
+  };
+
   var CAT_ICON = {
     'football': '⚽',
     'basketball': '🏀',
@@ -365,12 +382,16 @@
     var card = document.createElement('div');
     card.className = 'match-card' + (m.isLive ? ' match-card--live' : '');
 
-    // poster bg if available
+    // gradient bg always; poster on top if available
+    var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
+    card.classList.add('match-card--has-poster');
     if (m.poster) {
-      card.style.backgroundImage = 'linear-gradient(180deg, rgba(0,0,0,0) 30%, var(--surface) 100%), url(' + m.poster + ')';
-      card.style.backgroundSize = 'cover';
-      card.style.backgroundPosition = 'center top';
-      card.classList.add('match-card--has-poster');
+      card.style.backgroundImage =
+        'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.72) 65%, #080808 100%), url(' + m.poster + '),' + grad;
+      card.style.backgroundSize = 'cover, cover, cover';
+      card.style.backgroundPosition = 'center, center top, center';
+    } else {
+      card.style.backgroundImage = grad;
     }
 
     // sport + live badge

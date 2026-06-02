@@ -1578,3 +1578,50 @@ html[data-theme="marquee"] .acc__field input { border-radius: 0; }
 html[data-theme="marquee"] .live-src-btn { border-radius: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 html[data-theme="marquee"] .match-card { border-radius: 0; }
 html[data-theme="marquee"] .live-modal__player { border-radius: 0; }
+
+/* colored card text (all cards get dark gradient so force white text) */
+.match-card--has-poster { border-color: rgba(255,255,255,0.08); }
+.match-card--has-poster:hover { border-color: var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.6); }
+.match-card--has-poster .match-card__top { color: rgba(255,255,255,0.55); }
+.match-card--has-poster .match-card__live-badge { color: #ff6b6b; }
+.match-card--has-poster .match-card__title { color: #fff; }
+.match-card--has-poster .match-card__league { color: rgba(255,255,255,0.5); }
+.match-card--has-poster .match-card__time { color: rgba(255,255,255,0.5); }
+.match-card--has-poster .match-card__time--live { color: #ff6b6b; }
+.match-card--has-poster .match-card__time--soon { color: var(--accent); }
+.match-card--has-poster .match-card__play { color: var(--accent); }
+
+/* mobile live sports */
+@media (max-width: 899px) {
+  /* tighter padding so content doesn't feel squeezed */
+  .match-grid { padding: 0 14px 28px; gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  .live-search-wrap { padding-left: 14px; padding-right: 14px; }
+  .live-refresh-bar { padding-left: 14px; padding-right: 14px; }
+  .live-empty { padding: 40px 14px; }
+
+  /* smaller cards on mobile */
+  .match-card--has-poster { min-height: 130px; }
+  .match-card__title { font-size: 13px; }
+  .match-card__top { font-size: 10px; }
+
+  /* section title padding */
+  .live-section .row__head { padding: 0 14px; }
+
+  /* full-screen modal on mobile */
+  .live-modal { padding: 0; align-items: stretch; }
+  .live-modal__inner {
+    max-width: 100%; border-radius: 0;
+    min-height: 100dvh; min-height: 100vh;
+    background: #0a0a0a;
+    gap: 0;
+  }
+  .live-modal__hdr { padding: 14px 16px; }
+  .live-modal__player {
+    border-radius: 0;
+    border-left: none; border-right: none;
+  }
+  .live-modal__srcbar { padding: 12px 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .live-modal__sources { gap: 8px; }
+  .live-src-btn { padding: 10px 18px; font-size: 14px; min-height: 44px; }
+}
