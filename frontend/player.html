@@ -1911,7 +1911,7 @@
                     <div class="player-loading" id="playerLoading">Loading video player...</div>
                     <iframe id="videoIframe" class="video-iframe" style="display: none;" allowfullscreen
                         allow="fullscreen; web-share"
-                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"></iframe>
+                        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock"></iframe>
                     
                     <!-- Resume Banner -->
                     <div class="resume-banner" id="resumeBanner" role="status" aria-live="polite">
@@ -2756,7 +2756,7 @@
             if (currentServer === 'vixsrc') {
                 newIframe.removeAttribute('sandbox');
             } else {
-                newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
+                newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
             }
             videoIframe.parentNode.replaceChild(newIframe, videoIframe);
 
@@ -3691,7 +3691,7 @@
             if (currentServer === 'vixsrc') {
                 videoIframe.removeAttribute('sandbox');
             } else {
-                videoIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
+                videoIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
             }
         }
 

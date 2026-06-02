@@ -3,6 +3,68 @@
 
   var STREAMED = 'https://streamed.pk/api';
   var ESX = 'https://api.embedsportex.site/api';
+  var TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
+
+  // Sports where team lookups make sense (skip tennis, fight, motor — no team banners)
+  var TEAM_SPORTS = { football: 1, basketball: 1, 'american-football': 1, hockey: 1, baseball: 1, cricket: 1, rugby: 1, volleyball: 1 };
+
+  // Persistent image cache keyed by normalized team name (survives re-render within the session)
+  var _teamImgCache = null;
+  function teamImgCache() {
+    if (!_teamImgCache) {
+      try { _teamImgCache = JSON.parse(sessionStorage.getItem('eli6.teamImgs') || '{}'); } catch(e) { _teamImgCache = {}; }
+    }
+    return _teamImgCache;
+  }
+  function saveTeamImgCache() {
+    try { sessionStorage.setItem('eli6.teamImgs', JSON.stringify(_teamImgCache)); } catch(e) {}
+  }
+
+  var _fetchInFlight = {};
+  async function fetchTeamBanner(teamName) {
+    var key = teamName.toLowerCase().trim();
+    var cache = teamImgCache();
+    if (key in cache) return cache[key];
+    if (_fetchInFlight[key]) return _fetchInFlight[key];
+
+    _fetchInFlight[key] = fetch(TSDB + '/searchteams.php?t=' + encodeURIComponent(teamName))
+      .then(function(r) { return r.ok ? r.json() : null; })
+      .then(function(d) {
+        var team = d && d.teams && d.teams[0];
+        var url = team && (team.strTeamBanner || team.strTeamFanart1 || team.strTeamFanart2 || null);
+        cache[key] = url || null;
+        saveTeamImgCache();
+        delete _fetchInFlight[key];
+        return cache[key];
+      })
+      .catch(function() { cache[key] = null; delete _fetchInFlight[key]; return null; });
+
+    return _fetchInFlight[key];
+  }
+
+  function applyCardImage(card, imgUrl, cat) {
+    if (!imgUrl || !card.isConnected) return;
+    var grad = CAT_GRAD[cat] || CAT_GRAD['other'];
+    card.style.backgroundImage =
+      'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.78) 60%,#080808 100%),url(' + imgUrl + '),' + grad;
+    card.style.backgroundSize = 'cover,cover,cover';
+    card.style.backgroundPosition = 'center,center top,center';
+  }
+
+  // IntersectionObserver — only fetches when card is near viewport
+  var _cardObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (!entry.isIntersecting) return;
+      _cardObserver.unobserve(entry.target);
+      var card = entry.target;
+      var m = card.__match;
+      if (!m || m.poster) return; // already has an image
+      if (!TEAM_SPORTS[m.category]) return;
+      var vs = (m.title || '').match(/^(.+?)\s+vs\.?\s+(.+)$/i);
+      if (!vs) return;
+      fetchTeamBanner(vs[1].trim()).then(function(url) { applyCardImage(card, url, m.category); });
+    });
+  }, { rootMargin: '200px' });
 
   // ESX sport key → internal category
   var ESX_CAT = {
@@ -475,6 +537,11 @@
     card.appendChild(bot);
 
     card.addEventListener('click', function () { openPlayer(m); });
+
+    // lazy-load real team image from TheSportsDB when card enters viewport
+    card.__match = m;
+    _cardObserver.observe(card);
+
     return card;
   }
 
@@ -586,7 +653,7 @@
     iframe.allowFullscreen = true;
     iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
     // sandbox blocks popup ads; allow-same-origin keeps HLS fetch working for cross-origin embeds
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
 
     playerWrap.appendChild(loading);
     playerWrap.appendChild(iframe);
