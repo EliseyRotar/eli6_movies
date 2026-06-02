@@ -353,5 +353,59 @@
     "animeSearch": {
         "title": "Anime Search",
         "subtitle": "Find your favorite anime series and movies"
+    },
+    "live": {
+        "page": {
+            "eyebrow": "Live",
+            "title": "Sports",
+            "subtitle": "Live matches and today's schedule — football, NBA, NFL, F1, and more."
+        },
+        "search": { "placeholder": "Search matches, leagues, sports…" },
+        "tabs": { "all": "All" },
+        "sections": {
+            "liveNow": "Live Now",
+            "todaySchedule": "Today's Schedule"
+        },
+        "time": { "liveNow": "Live now" },
+        "empty": {
+            "noResults": "No matches found for",
+            "noMatches": "No matches scheduled right now.",
+            "fetching": "Fetching live matches…"
+        },
+        "refresh": {
+            "autoRefresh": "Auto-refreshing in",
+            "button": "↻ Refresh now",
+            "refreshing": "↻ Refreshing…"
+        },
+        "player": {
+            "loading": "Loading stream…",
+            "noStreams": "No streams found for this match.",
+            "noAvailable": "No streams available.",
+            "sources": "Sources:",
+            "fallbackTitle": "Live Stream"
+        },
+        "categories": {
+            "football": "Football",
+            "basketball": "Basketball",
+            "americanFootball": "NFL / CFL",
+            "volleyball": "Volleyball",
+            "badminton": "Badminton",
+            "motorsports": "Motorsports",
+            "tennis": "Tennis",
+            "baseball": "Baseball",
+            "fight": "UFC / Boxing",
+            "hockey": "Hockey",
+            "rugby": "Rugby",
+            "cricket": "Cricket",
+            "golf": "Golf",
+            "afl": "AFL",
+            "darts": "Darts",
+            "billiards": "Billiards",
+            "other": "Other"
+        },
+        "streams": {
+            "watch": "Watch",
+            "streams": "streams"
+        }
     }
 }

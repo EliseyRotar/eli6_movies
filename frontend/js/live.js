@@ -21,41 +21,56 @@
     'other': 'other',
   };
 
-  var CAT_LABEL = {
-    'football': 'Football',
-    'basketball': 'Basketball',
-    'american-football': 'NFL / CFL',
-    'volleyball': 'Volleyball',
-    'badminton': 'Badminton',
-    'motorsports': 'Motorsports',
-    'tennis': 'Tennis',
-    'baseball': 'Baseball',
-    'fight': 'UFC / Boxing',
-    'hockey': 'Hockey',
-    'rugby': 'Rugby',
-    'cricket': 'Cricket',
-    'golf': 'Golf',
-    'afl': 'AFL',
-    'darts': 'Darts',
-    'billiards': 'Billiards',
-    'other': 'Other',
+  // i18n helper (named lt to avoid conflict with local vars named t)
+  function lt(key, fallback) {
+    return (window.i18n && window.i18n.t(key, fallback)) || fallback || key;
+  }
+
+  var CAT_LABEL_KEYS = {
+    'football':          'live.categories.football',
+    'basketball':        'live.categories.basketball',
+    'american-football': 'live.categories.americanFootball',
+    'volleyball':        'live.categories.volleyball',
+    'badminton':         'live.categories.badminton',
+    'motorsports':       'live.categories.motorsports',
+    'tennis':            'live.categories.tennis',
+    'baseball':          'live.categories.baseball',
+    'fight':             'live.categories.fight',
+    'hockey':            'live.categories.hockey',
+    'rugby':             'live.categories.rugby',
+    'cricket':           'live.categories.cricket',
+    'golf':              'live.categories.golf',
+    'afl':               'live.categories.afl',
+    'darts':             'live.categories.darts',
+    'billiards':         'live.categories.billiards',
+    'other':             'live.categories.other',
   };
 
-  // subtle dark gradient per sport — applied to every card so they all have depth
+  var CAT_LABEL_FALLBACK = {
+    'football': 'Football', 'basketball': 'Basketball',
+    'american-football': 'NFL / CFL', 'volleyball': 'Volleyball',
+    'badminton': 'Badminton', 'motorsports': 'Motorsports',
+    'tennis': 'Tennis', 'baseball': 'Baseball', 'fight': 'UFC / Boxing',
+    'hockey': 'Hockey', 'rugby': 'Rugby', 'cricket': 'Cricket',
+    'golf': 'Golf', 'afl': 'AFL', 'darts': 'Darts', 'billiards': 'Billiards', 'other': 'Other',
+  };
+
+  // vibrant radial color glow per sport — makes every card visually distinct
   var CAT_GRAD = {
-    'football':          'linear-gradient(150deg,#0d2b0d 0%,#06130a 100%)',
-    'basketball':        'linear-gradient(150deg,#2d1200 0%,#160900 100%)',
-    'american-football': 'linear-gradient(150deg,#231500 0%,#110a00 100%)',
-    'tennis':            'linear-gradient(150deg,#162300 0%,#0b1200 100%)',
-    'motorsports':       'linear-gradient(150deg,#2d0808 0%,#160404 100%)',
-    'fight':             'linear-gradient(150deg,#2d0815 0%,#16040a 100%)',
-    'hockey':            'linear-gradient(150deg,#08152d 0%,#040b16 100%)',
-    'baseball':          'linear-gradient(150deg,#1a1000 0%,#0d0800 100%)',
-    'cricket':           'linear-gradient(150deg,#142200 0%,#0a1100 100%)',
-    'rugby':             'linear-gradient(150deg,#0a2018 0%,#051008 100%)',
-    'volleyball':        'linear-gradient(150deg,#0d152d 0%,#070b16 100%)',
-    'badminton':         'linear-gradient(150deg,#1e1400 0%,#0f0a00 100%)',
-    'other':             'linear-gradient(150deg,#151515 0%,#080808 100%)',
+    'football':          'radial-gradient(ellipse at top left,rgba(34,197,94,.45) 0%,transparent 65%)',
+    'basketball':        'radial-gradient(ellipse at top left,rgba(249,115,22,.5) 0%,transparent 65%)',
+    'american-football': 'radial-gradient(ellipse at top left,rgba(239,68,68,.45) 0%,transparent 65%)',
+    'tennis':            'radial-gradient(ellipse at top left,rgba(163,230,53,.42) 0%,transparent 65%)',
+    'motorsports':       'radial-gradient(ellipse at top left,rgba(248,113,113,.5) 0%,transparent 65%)',
+    'fight':             'radial-gradient(ellipse at top left,rgba(236,72,153,.48) 0%,transparent 65%)',
+    'hockey':            'radial-gradient(ellipse at top left,rgba(59,130,246,.48) 0%,transparent 65%)',
+    'baseball':          'radial-gradient(ellipse at top left,rgba(245,158,11,.45) 0%,transparent 65%)',
+    'cricket':           'radial-gradient(ellipse at top left,rgba(16,185,129,.45) 0%,transparent 65%)',
+    'rugby':             'radial-gradient(ellipse at top left,rgba(180,83,9,.48) 0%,transparent 65%)',
+    'volleyball':        'radial-gradient(ellipse at top left,rgba(139,92,246,.48) 0%,transparent 65%)',
+    'badminton':         'radial-gradient(ellipse at top left,rgba(234,179,8,.45) 0%,transparent 65%)',
+    'golf':              'radial-gradient(ellipse at top left,rgba(74,222,128,.38) 0%,transparent 65%)',
+    'other':             'radial-gradient(ellipse at top left,rgba(107,114,128,.35) 0%,transparent 65%)',
   };
 
   var CAT_ICON = {
@@ -210,7 +225,11 @@
   }
 
   function catIcon(cat) { return CAT_ICON[cat] || '🔴'; }
-  function catLabel(cat) { return CAT_LABEL[cat] || (cat ? cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ') : ''); }
+  function catLabel(cat) {
+    var key = CAT_LABEL_KEYS[cat];
+    var fb  = CAT_LABEL_FALLBACK[cat] || (cat ? cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, ' ') : '');
+    return key ? lt(key, fb) : fb;
+  }
 
   function filtered() {
     var q = searchQuery.toLowerCase().trim();
@@ -256,7 +275,7 @@
       btn.className = 'pill live-tab' + (s === currentSport ? ' pill--active' : '');
       btn.dataset.sport = s;
 
-      var label = s === 'all' ? 'All' : (catIcon(s) + ' ' + catLabel(s));
+      var label = s === 'all' ? lt('live.tabs.all', 'All') : (catIcon(s) + ' ' + catLabel(s));
       btn.innerHTML = label + ' <span class="live-tab__count">' + cnt + '</span>';
 
       btn.addEventListener('click', function () {
@@ -288,7 +307,7 @@
     var input = document.createElement('input');
     input.type = 'text';
     input.className = 'live-search-input';
-    input.placeholder = 'Search matches, leagues, sports…';
+    input.placeholder = lt('live.search.placeholder', 'Search matches, leagues, sports…');
     input.addEventListener('input', function () {
       searchQuery = input.value;
       renderMatches();
@@ -334,8 +353,8 @@
       var empty = document.createElement('div');
       empty.className = 'live-empty';
       empty.innerHTML = searchQuery
-        ? '<span style="font-size:32px">🔍</span><br>No matches found for "' + searchQuery + '"'
-        : '<span style="font-size:32px">📺</span><br>No matches scheduled right now.';
+        ? '<span style="font-size:32px">🔍</span><br>' + lt('live.empty.noResults', 'No matches found for') + ' "' + searchQuery + '"'
+        : '<span style="font-size:32px">📺</span><br>' + lt('live.empty.noMatches', 'No matches scheduled right now.');
       mount.appendChild(empty);
       return;
     }
@@ -350,7 +369,7 @@
       head.className = 'row__head';
       var t = document.createElement('h2');
       t.className = 'row__title';
-      t.innerHTML = '<span class="live-section-dot"></span> Live Now <span class="live-section-cnt">' + live.length + '</span>';
+      t.innerHTML = '<span class="live-section-dot"></span> ' + lt('live.sections.liveNow', 'Live Now') + ' <span class="live-section-cnt">' + live.length + '</span>';
       head.appendChild(t);
       sec.appendChild(head);
       var grid = document.createElement('div');
@@ -367,7 +386,7 @@
       head2.className = 'row__head';
       var t2 = document.createElement('h2');
       t2.className = 'row__title';
-      t2.textContent = "Today's Schedule";
+      t2.textContent = lt('live.sections.todaySchedule', "Today's Schedule");
       head2.appendChild(t2);
       sec2.appendChild(head2);
       var grid2 = document.createElement('div');
@@ -382,14 +401,16 @@
     var card = document.createElement('div');
     card.className = 'match-card' + (m.isLive ? ' match-card--live' : '');
 
-    // gradient bg always; poster on top if available
+    // vibrant sport glow + optional poster image on every card
     var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
     card.classList.add('match-card--has-poster');
+    card.style.backgroundColor = '#0a0a0a';
+    card.dataset.sportIcon = catIcon(m.category);
     if (m.poster) {
       card.style.backgroundImage =
-        'linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.72) 65%, #080808 100%), url(' + m.poster + '),' + grad;
-      card.style.backgroundSize = 'cover, cover, cover';
-      card.style.backgroundPosition = 'center, center top, center';
+        'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.75) 60%,#080808 100%),url(' + m.poster + '),' + grad;
+      card.style.backgroundSize = 'cover,cover,cover';
+      card.style.backgroundPosition = 'center,center top,center';
     } else {
       card.style.backgroundImage = grad;
     }
@@ -447,7 +468,7 @@
     var srcCount = m.sources ? m.sources.length : (m.iframes ? m.iframes.length : 0);
     var playEl = document.createElement('span');
     playEl.className = 'match-card__play';
-    playEl.innerHTML = '&#9654; ' + (srcCount > 1 ? srcCount + ' streams' : 'Watch');
+    playEl.innerHTML = '&#9654; ' + (srcCount > 1 ? srcCount + ' ' + lt('live.streams.streams', 'streams') : lt('live.streams.watch', 'Watch'));
 
     bot.appendChild(timeEl);
     bot.appendChild(playEl);
@@ -467,10 +488,10 @@
     bar.id = 'live-refresh-bar';
     var label = document.createElement('span');
     label.id = 'live-refresh-label';
-    label.textContent = 'Auto-refreshing in 5:00';
+    label.textContent = lt('live.refresh.autoRefresh', 'Auto-refreshing in') + ' 5:00';
     var btn = document.createElement('button');
     btn.className = 'live-refresh-btn';
-    btn.textContent = '↻ Refresh now';
+    btn.textContent = lt('live.refresh.button', '↻ Refresh now');
     btn.addEventListener('click', function () { forceRefresh(); });
     bar.appendChild(label);
     bar.appendChild(btn);
@@ -487,7 +508,7 @@
       if (label) {
         var m = Math.floor(refreshCountdown / 60);
         var s = refreshCountdown % 60;
-        label.textContent = 'Auto-refreshing in ' + m + ':' + (s < 10 ? '0' : '') + s;
+        label.textContent = lt('live.refresh.autoRefresh', 'Auto-refreshing in') + ' ' + m + ':' + (s < 10 ? '0' : '') + s;
       }
       if (refreshCountdown <= 0) {
         clearInterval(countdownInterval);
@@ -498,11 +519,11 @@
 
   async function forceRefresh() {
     var btn = document.querySelector('.live-refresh-btn');
-    if (btn) { btn.textContent = '↻ Refreshing…'; btn.disabled = true; }
+    if (btn) { btn.textContent = lt('live.refresh.refreshing', '↻ Refreshing…'); btn.disabled = true; }
     await loadMatches();
     renderTabs();
     renderMatches();
-    if (btn) { btn.textContent = '↻ Refresh now'; btn.disabled = false; }
+    if (btn) { btn.textContent = lt('live.refresh.button', '↻ Refresh now'); btn.disabled = false; }
     startRefreshCountdown();
   }
 
@@ -558,13 +579,14 @@
     var loading = document.createElement('div');
     loading.className = 'live-modal__player-loading';
     loading.id = 'live-player-loading';
-    loading.textContent = 'Loading stream…';
+    loading.textContent = lt('live.player.loading', 'Loading stream…');
 
     var iframe = document.createElement('iframe');
     iframe.id = 'live-iframe';
     iframe.allowFullscreen = true;
     iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
-    // no sandbox — sports embeds need unrestricted scripts
+    // sandbox blocks popup ads; allow-same-origin keeps HLS fetch working for cross-origin embeds
+    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms');
 
     playerWrap.appendChild(loading);
     playerWrap.appendChild(iframe);
@@ -575,7 +597,7 @@
 
     var srcLabel = document.createElement('span');
     srcLabel.className = 'live-modal__src-label';
-    srcLabel.textContent = 'Sources:';
+    srcLabel.textContent = lt('live.player.sources', 'Sources:');
 
     var srcBtns = document.createElement('div');
     srcBtns.className = 'live-modal__sources';
@@ -636,14 +658,14 @@
       renderSources(sourcesEl, iframe, loading, sources);
 
     } else {
-      loading.textContent = 'No streams found for this match.';
+      loading.textContent = lt('live.player.noStreams', 'No streams found for this match.');
     }
   }
 
   function renderSources(wrap, iframe, loading, sources) {
     wrap.innerHTML = '';
     if (!sources.length) {
-      loading.textContent = 'No streams available.';
+      loading.textContent = lt('live.player.noAvailable', 'No streams available.');
       return;
     }
 
@@ -685,13 +707,21 @@
 
     var mount = document.getElementById('matches-mount');
     if (mount) {
-      mount.innerHTML = '<div class="live-empty"><span style="font-size:32px">📡</span><br>Fetching live matches…</div>';
+      mount.innerHTML = '<div class="live-empty"><span style="font-size:32px">📡</span><br>' + lt('live.empty.fetching', 'Fetching live matches…') + '</div>';
     }
 
     await loadMatches();
     renderTabs();
     renderMatches();
     startRefreshCountdown();
+
+    // re-render dynamic text when user switches language
+    window.addEventListener('eli6.langChanged', function () {
+      renderSearch();
+      renderRefreshBar();
+      renderTabs();
+      renderMatches();
+    });
   }
 
   document.addEventListener('DOMContentLoaded', init);

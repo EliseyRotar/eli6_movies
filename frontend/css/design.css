@@ -1579,6 +1579,19 @@ html[data-theme="marquee"] .live-src-btn { border-radius: 0; font-family: var(--
 html[data-theme="marquee"] .match-card { border-radius: 0; }
 html[data-theme="marquee"] .live-modal__player { border-radius: 0; }
 
+/* sport icon watermark in card background */
+.match-card--has-poster::before {
+  content: attr(data-sport-icon);
+  position: absolute;
+  right: -8px; bottom: -12px;
+  font-size: 80px;
+  line-height: 1;
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+  filter: grayscale(0.3);
+}
+
 /* colored card text (all cards get dark gradient so force white text) */
 .match-card--has-poster { border-color: rgba(255,255,255,0.08); }
 .match-card--has-poster:hover { border-color: var(--accent); box-shadow: 0 8px 32px rgba(0,0,0,0.6); }

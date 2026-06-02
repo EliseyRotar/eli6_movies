@@ -353,5 +353,59 @@
     "animeSearch": {
         "title": "Cerca Anime",
         "subtitle": "Trova le tue serie e film anime preferiti"
+    },
+    "live": {
+        "page": {
+            "eyebrow": "Live",
+            "title": "Sport",
+            "subtitle": "Partite in diretta e programma di oggi — calcio, NBA, NFL, F1 e altro."
+        },
+        "search": { "placeholder": "Cerca partite, leghe, sport…" },
+        "tabs": { "all": "Tutti" },
+        "sections": {
+            "liveNow": "In Diretta",
+            "todaySchedule": "Programma di Oggi"
+        },
+        "time": { "liveNow": "In diretta" },
+        "empty": {
+            "noResults": "Nessun risultato per",
+            "noMatches": "Nessuna partita in programma adesso.",
+            "fetching": "Caricamento partite in diretta…"
+        },
+        "refresh": {
+            "autoRefresh": "Aggiornamento automatico tra",
+            "button": "↻ Aggiorna ora",
+            "refreshing": "↻ Aggiornamento…"
+        },
+        "player": {
+            "loading": "Caricamento streaming…",
+            "noStreams": "Nessuno streaming trovato per questa partita.",
+            "noAvailable": "Nessuno streaming disponibile.",
+            "sources": "Fonti:",
+            "fallbackTitle": "Diretta Live"
+        },
+        "categories": {
+            "football": "Calcio",
+            "basketball": "Basket",
+            "americanFootball": "Football Americano",
+            "volleyball": "Pallavolo",
+            "badminton": "Badminton",
+            "motorsports": "Motorsport",
+            "tennis": "Tennis",
+            "baseball": "Baseball",
+            "fight": "UFC / Boxe",
+            "hockey": "Hockey",
+            "rugby": "Rugby",
+            "cricket": "Cricket",
+            "golf": "Golf",
+            "afl": "AFL",
+            "darts": "Freccette",
+            "billiards": "Biliardo",
+            "other": "Altro"
+        },
+        "streams": {
+            "watch": "Guarda",
+            "streams": "stream"
+        }
     }
 }

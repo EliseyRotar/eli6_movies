@@ -353,5 +353,59 @@
     "animeSearch": {
         "title": "Аниме Поиск",
         "subtitle": "Найдите свои любимые аниме-сериалы и фильмы"
+    },
+    "live": {
+        "page": {
+            "eyebrow": "Прямой эфир",
+            "title": "Спорт",
+            "subtitle": "Прямые трансляции и расписание на сегодня — футбол, NBA, NFL, F1 и многое другое."
+        },
+        "search": { "placeholder": "Поиск матчей, лиг, видов спорта…" },
+        "tabs": { "all": "Все" },
+        "sections": {
+            "liveNow": "Сейчас в эфире",
+            "todaySchedule": "Расписание на сегодня"
+        },
+        "time": { "liveNow": "Сейчас в эфире" },
+        "empty": {
+            "noResults": "Матчи не найдены по запросу",
+            "noMatches": "Сейчас нет запланированных матчей.",
+            "fetching": "Загрузка прямых трансляций…"
+        },
+        "refresh": {
+            "autoRefresh": "Автообновление через",
+            "button": "↻ Обновить сейчас",
+            "refreshing": "↻ Обновление…"
+        },
+        "player": {
+            "loading": "Загрузка трансляции…",
+            "noStreams": "Трансляции для этого матча не найдены.",
+            "noAvailable": "Трансляции недоступны.",
+            "sources": "Источники:",
+            "fallbackTitle": "Прямой эфир"
+        },
+        "categories": {
+            "football": "Футбол",
+            "basketball": "Баскетбол",
+            "americanFootball": "Американский футбол",
+            "volleyball": "Волейбол",
+            "badminton": "Бадминтон",
+            "motorsports": "Автоспорт",
+            "tennis": "Теннис",
+            "baseball": "Бейсбол",
+            "fight": "UFC / Бокс",
+            "hockey": "Хоккей",
+            "rugby": "Регби",
+            "cricket": "Крикет",
+            "golf": "Гольф",
+            "afl": "AFL",
+            "darts": "Дартс",
+            "billiards": "Бильярд",
+            "other": "Прочее"
+        },
+        "streams": {
+            "watch": "Смотреть",
+            "streams": "потока"
+        }
     }
 }
