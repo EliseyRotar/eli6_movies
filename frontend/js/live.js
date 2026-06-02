@@ -648,15 +648,9 @@
     loading.id = 'live-player-loading';
     loading.textContent = lt('live.player.loading', 'Loading stream…');
 
-    var iframe = document.createElement('iframe');
-    iframe.id = 'live-iframe';
-    iframe.allowFullscreen = true;
-    iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
-    // sandbox blocks popup ads; allow-same-origin keeps HLS fetch working for cross-origin embeds
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
-
+    playerWrap.id = 'live-player-wrap';
     playerWrap.appendChild(loading);
-    playerWrap.appendChild(iframe);
+    // iframe is created fresh on each source load (replacing it bypasses beforeunload interception)
 
     // sources bar
     var srcBar = document.createElement('div');
@@ -695,20 +689,19 @@
     document.getElementById('live-modal-league').textContent = match.league || '';
 
     var sourcesEl = document.getElementById('live-sources');
-    var iframe = document.getElementById('live-iframe');
     var loading = document.getElementById('live-player-loading');
 
-    iframe.src = '';
-    iframe.style.display = 'none';
+    // Kill any existing iframe immediately
+    var oldFr = document.querySelector('#live-player-wrap iframe');
+    if (oldFr) oldFr.remove();
     loading.style.display = 'flex';
     sourcesEl.innerHTML = '';
 
     if (match.provider === 'streamed' && Array.isArray(match.sources) && match.sources.length) {
-      // fetch all sources in parallel
       var results = await Promise.all(
         match.sources.map(async function (src) {
           var streams = await getStreamEmbed(src.source, src.id);
-          return streams.map(function (s, i) {
+          return streams.map(function (s) {
             var label = src.source.charAt(0).toUpperCase() + src.source.slice(1);
             if (streams.length > 1) label += ' ' + (s.hd ? 'HD' : 'SD');
             return { label: label, url: s.embedUrl, hd: s.hd };
@@ -716,30 +709,44 @@
         })
       );
       var sources = results.flat().filter(function (s) { return s.url; });
-      renderSources(sourcesEl, iframe, loading, sources);
+      renderSources(sourcesEl, loading, sources);
 
     } else if (match.provider === 'esx' && Array.isArray(match.iframes) && match.iframes.length) {
       var sources = match.iframes.map(function (f, i) {
         return { label: f.server || ('Stream ' + (i + 1)), url: f.url, hd: /fhd|hd/i.test(f.server || '') };
       });
-      renderSources(sourcesEl, iframe, loading, sources);
+      renderSources(sourcesEl, loading, sources);
 
     } else {
       loading.textContent = lt('live.player.noStreams', 'No streams found for this match.');
     }
   }
 
-  function renderSources(wrap, iframe, loading, sources) {
+  function spawnIframe(url) {
+    // Remove existing iframe — embed players hook beforeunload to block src changes,
+    // so we destroy and recreate the element to bypass that interception entirely.
+    var wrap = document.getElementById('live-player-wrap');
+    var old = wrap && wrap.querySelector('iframe');
+    if (old) old.remove();
+
+    var fr = document.createElement('iframe');
+    fr.allowFullscreen = true;
+    fr.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
+    fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
+    fr.src = url;
+    if (wrap) wrap.appendChild(fr);
+    return fr;
+  }
+
+  function renderSources(wrap, loading, sources) {
     wrap.innerHTML = '';
     if (!sources.length) {
       loading.textContent = lt('live.player.noAvailable', 'No streams available.');
       return;
     }
 
-    // load first source
     loading.style.display = 'none';
-    iframe.style.display = 'block';
-    iframe.src = sources[0].url;
+    spawnIframe(sources[0].url);
 
     sources.forEach(function (src, i) {
       var btn = document.createElement('button');
@@ -748,7 +755,7 @@
       btn.addEventListener('click', function () {
         wrap.querySelectorAll('.live-src-btn').forEach(function (b) { b.classList.remove('live-src-btn--active'); });
         btn.classList.add('live-src-btn--active');
-        iframe.src = src.url;
+        spawnIframe(src.url);
       });
       wrap.appendChild(btn);
     });
@@ -757,8 +764,9 @@
   function closePlayer() {
     var modal = document.getElementById('live-modal');
     if (modal) modal.hidden = true;
-    var iframe = document.getElementById('live-iframe');
-    if (iframe) iframe.src = '';
+    // Remove iframe entirely — stops the stream and any audio
+    var fr = document.querySelector('#live-player-wrap iframe');
+    if (fr) fr.remove();
     document.body.style.overflow = '';
   }
 
