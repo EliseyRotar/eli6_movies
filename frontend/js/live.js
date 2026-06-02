@@ -732,7 +732,6 @@
     var fr = document.createElement('iframe');
     fr.allowFullscreen = true;
     fr.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
-    fr.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
     fr.src = url;
     if (wrap) wrap.appendChild(fr);
     return fr;
