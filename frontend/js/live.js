@@ -11,14 +11,17 @@
 
   // Persistent image cache keyed by normalized team name (survives re-render within the session)
   var _teamImgCache = null;
+  var TEAM_CACHE_KEY = 'eli6.teamImgs.v2'; // v2: fixed TSDB property names (strBanner not strTeamBanner)
   function teamImgCache() {
     if (!_teamImgCache) {
-      try { _teamImgCache = JSON.parse(sessionStorage.getItem('eli6.teamImgs') || '{}'); } catch(e) { _teamImgCache = {}; }
+      try { _teamImgCache = JSON.parse(sessionStorage.getItem(TEAM_CACHE_KEY) || '{}'); } catch(e) { _teamImgCache = {}; }
+      // Clear legacy broken cache
+      try { sessionStorage.removeItem('eli6.teamImgs'); } catch(e) {}
     }
     return _teamImgCache;
   }
   function saveTeamImgCache() {
-    try { sessionStorage.setItem('eli6.teamImgs', JSON.stringify(_teamImgCache)); } catch(e) {}
+    try { sessionStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(_teamImgCache)); } catch(e) {}
   }
 
   var _fetchInFlight = {};
@@ -35,7 +38,8 @@
       .then(function(r) { clearTimeout(timer); return r.ok ? r.json() : null; })
       .then(function(d) {
         var team = d && d.teams && d.teams[0];
-        var url = team && (team.strTeamBanner || team.strTeamFanart1 || team.strTeamFanart2 || null);
+        // Correct TSDB field names: strBanner, strFanart1..4 (banner-style images first, then fall back to badge/logo so smaller leagues still get a visual)
+        var url = team && (team.strFanart1 || team.strFanart2 || team.strFanart3 || team.strFanart4 || team.strBanner || team.strBadge || team.strLogo || null);
         cache[key] = url || null;
         saveTeamImgCache();
         delete _fetchInFlight[key];
