@@ -62,6 +62,7 @@
       { k: "movies",  label: "Movies",   href: "movies.html" },
       { k: "tvshows", label: "TV Shows", href: "tvshows.html" },
       { k: "anime",   label: "Anime",    href: "anime.html" },
+      { k: "live",    label: "Live",     href: "live.html" },
       { k: "mylist",  label: "My List",  href: "mylist.html" },
     ];
 
