@@ -49,7 +49,7 @@ cd eli6_movies
 
 1. Create a free M0 cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
 2. **Database Access** → add a user with a strong password
-3. **Network Access** → Allow Access from Anywhere (`0.0.0.0/0`) — required for Render's dynamic IPs
+3. **Network Access** → Add Render's outbound CIDR ranges for your region (Render Dashboard → your service → Connect → Outbound tab). This is safer than `0.0.0.0/0` — restricts access to Render's IP space only. Ranges are fixed per region even on the free tier.
 4. **Database → Connect → Drivers** → copy the connection string:
    ```
    mongodb+srv://user:password@cluster.mongodb.net/eli6_movies?retryWrites=true&w=majority
