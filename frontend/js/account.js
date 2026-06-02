@@ -3,7 +3,6 @@
   var API_URL  = window.API_BASE_URL || '';
   var TMDB_IMG = 'https://image.tmdb.org/t/p/';
 
-  // ─── helpers ────────────────────────────────────────────────────────────────
 
   function tr(key, fallback) {
     return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
@@ -25,7 +24,6 @@
     try { return JSON.parse(localStorage.getItem('user')); } catch (e) { return null; }
   }
 
-  // ─── Profile picture helpers ─────────────────────────────────────────────────
 
   function resizeImageToBase64(file, maxDim, quality) {
     return new Promise(function (resolve, reject) {
@@ -89,7 +87,6 @@
     return Math.floor(days / 7) + 'w ago';
   }
 
-  // ─── Prefs ──────────────────────────────────────────────────────────────────
 
   var DEFAULT_PREFS = {
     cookieAnalytics: true,
@@ -100,7 +97,6 @@
   }
   function savePrefs(p) { localStorage.setItem('eli6.acctPrefs', JSON.stringify(p)); }
 
-  // ─── API calls ──────────────────────────────────────────────────────────────
 
   async function apiPost(path, body) {
     var r = await fetch(API_URL + path, {
@@ -130,7 +126,6 @@
     return true;
   }
 
-  // ─── Hub data fetching ──────────────────────────────────────────────────────
 
   async function fetchHubData() {
     var keepWatching = [], watchHistory = [], myList = [], sessions = [], currentJti = null;
@@ -184,7 +179,6 @@
     return { keepWatching, watchHistory, myList, sessions, currentJti };
   }
 
-  // ─── Stats helpers ──────────────────────────────────────────────────────────
 
   function calcStreak(watchHistory) {
     if (!watchHistory || !watchHistory.length) return 0;
@@ -242,7 +236,6 @@
     catch (e) { return '—'; }
   }
 
-  // ─── Generic modal builder ──────────────────────────────────────────────────
 
   function openModal(opts) {
     // opts: { title, body (el), footer ([el...]), maxWidth, onClose }
@@ -291,7 +284,6 @@
     return { close: close, body: body };
   }
 
-  // ─── Edit profile modal ─────────────────────────────────────────────────────
 
   function openEditProfileModal(currentUser, nameEl, emailEl) {
     var bodyEl = div();
@@ -365,7 +357,6 @@
     });
   }
 
-  // ─── Watch history modal ─────────────────────────────────────────────────────
 
   function openWatchHistoryModal(whData) {
     var list = whData ? whData.slice() : [];
@@ -450,7 +441,6 @@
     openModal({ title: 'Watch history (' + list.length + ' titles)', body: bodyEl, maxWidth: '520px' });
   }
 
-  // ─── Download my data ───────────────────────────────────────────────────────
 
   async function downloadMyData() {
     showToast('Preparing your data…');
@@ -492,7 +482,6 @@
     }
   }
 
-  // ─── Cookie settings modal ──────────────────────────────────────────────────
 
   function openCookieSettingsModal(prefs) {
     var bodyEl = div();
@@ -544,7 +533,6 @@
     openModal({ title: 'Cookie & tracking settings', body: bodyEl });
   }
 
-  // ─── Delete account modal ───────────────────────────────────────────────────
 
   function openDeleteAccountModal() {
     var bodyEl = div();
@@ -585,7 +573,6 @@
     });
   }
 
-  // ─── Picker modal (for pref value rows) ────────────────────────────────────
 
   function closePicker(backdrop) {
     if (!backdrop.parentNode) return;
@@ -613,7 +600,6 @@
     document.body.appendChild(backdrop);
   }
 
-  // ─── Auth forms ─────────────────────────────────────────────────────────────
 
   function field(label, id, type, placeholder) {
     var wrap = div();
@@ -717,7 +703,6 @@
     mount.appendChild(wrap);
   }
 
-  // ─── Hub section builders ────────────────────────────────────────────────────
 
   function makeToggle(on, onChange) {
     var btn = el('button', 'acc__toggle' + (on ? ' is-on' : ''));
@@ -773,13 +758,11 @@
     return row;
   }
 
-  // ─── Account hub (async, real data) ──────────────────────────────────────────
 
   async function renderAccountHub(acc) {
     var user  = getUser() || {};
     var prefs = loadPrefs();
 
-    // ── HERO ─────────────────────────────────────────────────────────────────
     var memberSince = formatMemberSince(user.createdAt);
     var cachedWH    = user.watchHistory || [];
     var streak      = calcStreak(cachedWH);
@@ -858,7 +841,6 @@
 
     editBtn2.addEventListener('click', function (e) { e.stopPropagation(); openAvatarMenu(); });
 
-    // Handle file selection
     fileInput.addEventListener('change', async function () {
       var file = fileInput.files[0];
       if (!file) return;
@@ -906,13 +888,11 @@
     hero.appendChild(heroInner);
     acc.appendChild(hero);
 
-    // ── LOADING STATE ─────────────────────────────────────────────────────────
     var loadEl = div();
     loadEl.style.cssText = 'padding:60px var(--pad-x);text-align:center;color:var(--fg-muted);font-family:var(--font-mono);font-size:11px;letter-spacing:0.15em;text-transform:uppercase';
     loadEl.textContent = 'Loading…';
     acc.appendChild(loadEl);
 
-    // ── FETCH REAL DATA ───────────────────────────────────────────────────────
     var data = await fetchHubData();
     if (!acc.isConnected) return;
     acc.removeChild(loadEl);
@@ -923,7 +903,6 @@
     var sessions   = Array.isArray(data.sessions)       ? data.sessions       : [];
     var currentJti = data.currentJti || null;
 
-    // Update hero badges with fresh data
     var freshUser = getUser() || {};
     b3.textContent = calcStreak(wh) + '-day streak';
     if (freshUser.createdAt) b2.textContent = 'Member since ' + formatMemberSince(freshUser.createdAt);
@@ -943,7 +922,6 @@
       })
       .catch(function () {});
 
-    // ── STATS ─────────────────────────────────────────────────────────────────
     var hours = estimateHours(wh);
     var statGrid = div('acc__statgrid');
     [
@@ -962,7 +940,6 @@
     });
     acc.appendChild(statGrid);
 
-    // ── KEEP WATCHING ─────────────────────────────────────────────────────────
     var contSection = div('acc__section');
     contSection.appendChild(makeSectionHead('01', 'Keep watching', 'See all', function () { window.location.href = 'index.html'; }));
     if (kw.length === 0) {
@@ -1004,7 +981,6 @@
     }
     acc.appendChild(contSection);
 
-    // ── WATCH BREAKDOWN ───────────────────────────────────────────────────────
     var tasteSection = div('acc__section');
     var breakdownBars = calcTypeBreakdown(wh);
     tasteSection.appendChild(makeSectionHead('02', 'Watch breakdown'));
@@ -1030,7 +1006,6 @@
     }
     acc.appendChild(tasteSection);
 
-    // ── QUICK ACTIONS ─────────────────────────────────────────────────────────
     var quickSection = div('acc__section');
     quickSection.appendChild(makeSectionHead('03', 'Quick actions'));
     var quickGrid = div('acc__quick');
@@ -1063,7 +1038,6 @@
     quickSection.appendChild(quickGrid);
     acc.appendChild(quickSection);
 
-    // ── CHANGE PASSWORD ───────────────────────────────────────────────────────
     var secSection = div('acc__section');
     secSection.appendChild(makeSectionHead(null, tr('account.changePassword','Change password')));
     var secCard = div('acc__prefs');
@@ -1094,7 +1068,6 @@
     secSection.appendChild(secCard);
     acc.appendChild(secSection);
 
-    // ── SIGNED-IN DEVICES ─────────────────────────────────────────────────────
     var devSection = div('acc__section');
     var devList = div('acc__devices');
     var otherCount = sessions.filter(function (s) { return s.jti !== currentJti; }).length;
@@ -1156,7 +1129,6 @@
     devSection.appendChild(devList);
     acc.appendChild(devSection);
 
-    // ── PRIVACY & DATA ────────────────────────────────────────────────────────
     var privSection = div('acc__section');
     privSection.appendChild(makeSectionHead('07', 'Privacy & data'));
     var privList = div('acc__prefs');
@@ -1186,7 +1158,6 @@
     privSection.appendChild(privList);
     acc.appendChild(privSection);
 
-    // ── DANGER ZONE ───────────────────────────────────────────────────────────
     var danger = div('acc__danger');
     var dangerInfo = div();
     var dangerText = div('acc__danger-text'); dangerText.textContent = 'Sign out of ELI6';
@@ -1209,7 +1180,6 @@
     acc.appendChild(danger);
   }
 
-  // ─── Main render ────────────────────────────────────────────────────────────
 
   function renderPage() {
     var mount = document.getElementById('account-mount');
@@ -1233,7 +1203,6 @@
     window.renderFooter('footer-mount');
   }
 
-  // ─── Boot ────────────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', function () {
     window.renderTopNav('account');

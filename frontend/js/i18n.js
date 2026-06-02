@@ -47,7 +47,6 @@ class I18nManager {
      * Detect the current language from various sources
      */
     detectLanguage() {
-        // Check URL parameter first
         const urlParams = new URLSearchParams(window.location.search);
         const urlLang = urlParams.get('lng');
 
@@ -57,14 +56,12 @@ class I18nManager {
             return;
         }
 
-        // Check cookie
         const cookieLang = this.getLanguageCookie();
         if (cookieLang && this.supportedLanguages.includes(cookieLang)) {
             this.currentLanguage = cookieLang;
             return;
         }
 
-        // Check browser language
         const browserLang = navigator.language.split('-')[0];
         if (this.supportedLanguages.includes(browserLang)) {
             this.currentLanguage = browserLang;
@@ -147,7 +144,6 @@ class I18nManager {
             const translation = this.t(key);
 
             if (translation && translation !== key) {
-                // Handle different element types
                 if (element.tagName === 'INPUT' && element.type === 'placeholder') {
                     element.placeholder = translation;
                 } else if (element.tagName === 'IMG') {
@@ -279,7 +275,6 @@ class I18nManager {
         this.currentLanguage = lang;
         this.setLanguageCookie(lang);
 
-        // Update URL parameter
         const url = new URL(window.location);
         url.searchParams.set('lng', lang);
         window.history.replaceState({}, '', url);
@@ -290,7 +285,6 @@ class I18nManager {
         // Re-translate static content
         this.translateStaticContent();
 
-        // Update language switcher
         this.updateLanguageSwitcher();
 
         // Translate dynamic content
@@ -330,7 +324,6 @@ class I18nManager {
      * Setup observer for dynamic content translation
      */
     setupDynamicTranslationObserver() {
-        // Create a mutation observer to watch for new content
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'childList') {

@@ -18,7 +18,6 @@
   var _taTimer       = null;
   var _taIdx         = -1;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   function _lang() {
     return (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
@@ -30,7 +29,6 @@
       .catch(function () { return null; });
   }
 
-  // ── Storage ────────────────────────────────────────────────────────────────
 
   function _saveSearch(q) {
     try {
@@ -51,7 +49,6 @@
     } catch (_) {}
   }
 
-  // ── Normalizers ────────────────────────────────────────────────────────────
 
   function _normMovie(i) {
     return Object.assign({}, i, {
@@ -89,7 +86,6 @@
     });
   }
 
-  // ── Fetch helpers ──────────────────────────────────────────────────────────
 
   // Returns { items, total_results, total_pages }
   async function _doFetch(q, page) {
@@ -132,7 +128,6 @@
     return [r[0] || { results: [] }, r[1] || { results: [] }];
   }
 
-  // ── Pills ──────────────────────────────────────────────────────────────────
 
   function buildPills() {
     var mount = document.getElementById('pills-mount');
@@ -155,7 +150,6 @@
     mount.appendChild(wrap);
   }
 
-  // ── Typeahead ──────────────────────────────────────────────────────────────
 
   function _thumbUrl(item) {
     if (item.kind === 'person') {
@@ -280,7 +274,6 @@
     openTypeahead(items.slice(0, 6));
   }
 
-  // ── Person filmography ─────────────────────────────────────────────────────
 
   async function showPersonFilmography(person) {
     var mount   = document.getElementById('results-mount');
@@ -356,7 +349,6 @@
     mount.appendChild(grid);
   }
 
-  // ── Person card ────────────────────────────────────────────────────────────
 
   function makePersonCard(person) {
     var card = document.createElement('div');
@@ -401,7 +393,6 @@
     return card;
   }
 
-  // ── Render results ─────────────────────────────────────────────────────────
 
   function _renderResults(mount, items, q) {
     var people = items.filter(function (i) { return i.kind === 'person'; });
@@ -479,7 +470,6 @@
     }
   }
 
-  // ── Empty state ────────────────────────────────────────────────────────────
 
   function _renderEmptyState(mount, q) {
     var empty = document.createElement('div');
@@ -500,7 +490,6 @@
     });
   }
 
-  // ── Main search ────────────────────────────────────────────────────────────
 
   async function doSearch(q) {
     _currentQuery = q;
@@ -533,7 +522,6 @@
     _renderResults(mount, result.items, q);
   }
 
-  // ── Default content ────────────────────────────────────────────────────────
 
   async function showDefaultContent() {
     var mount   = document.getElementById('results-mount');
@@ -604,7 +592,6 @@
     }
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
 
   document.addEventListener('DOMContentLoaded', function () {
     window.renderTopNav('search');

@@ -10,7 +10,6 @@ function _mlIsLoggedIn() {
     return !!localStorage.getItem('user');
 }
 
-// ── Toast ────────────────────────────────────────────────────────────────────
 
 function showMyListToast(message, type, undoCallback) {
     if (!undoCallback) {
@@ -52,13 +51,11 @@ function showMyListToast(message, type, undoCallback) {
     undoBtn.addEventListener('click', function () { clearTimeout(hideTimer); });
 }
 
-// ── Spinner ──────────────────────────────────────────────────────────────────
 
 function myListSpinner() {
     return '<span class="mylist-spinner"></span>';
 }
 
-// ── API helpers ──────────────────────────────────────────────────────────────
 
 function _mlHandleStatus(status) {
     if (status === 401) {
@@ -101,7 +98,6 @@ async function removeFromMyList(id, type) {
     return await response.json();
 }
 
-// ── Sync localStorage from server ────────────────────────────────────────────
 
 async function syncMyListStorage() {
     if (!_mlIsLoggedIn()) return;
@@ -114,7 +110,6 @@ async function syncMyListStorage() {
     } catch (e) {}
 }
 
-// ── toggleMyListButton — for .mylist-btn elements ────────────────────────────
 
 async function toggleMyListButton(btn, item) {
     if (btn.classList.contains('mylist-processing')) return;
@@ -172,7 +167,6 @@ async function toggleMyListButton(btn, item) {
     }
 }
 
-// ── initMyListButtons ────────────────────────────────────────────────────────
 
 function initMyListButtons() {
     document.querySelectorAll('.mylist-btn').forEach(function (btn) {
@@ -189,7 +183,6 @@ function initMyListButtons() {
     });
 }
 
-// ── Boot ─────────────────────────────────────────────────────────────────────
 
 function _mlBoot() {
     initMyListButtons();
@@ -203,7 +196,6 @@ if (document.readyState === 'loading') {
     _mlBoot();
 }
 
-// ── window.toggleMyList — hero / detail modal buttons ────────────────────────
 
 window.toggleMyList = async function (item, btn) {
     if (!_mlIsLoggedIn()) {
@@ -258,7 +250,6 @@ window.toggleMyList = async function (item, btn) {
     }
 };
 
-// ── window.updateMyListBtn — set button state from localStorage ───────────────
 
 window.updateMyListBtn = function (item, btn) {
     if (!btn) return;
@@ -270,7 +261,6 @@ window.updateMyListBtn = function (item, btn) {
     btn.classList.toggle('btn--in-list', !!inList);
 };
 
-// ── Expose for manual use ────────────────────────────────────────────────────
 
 window.initMyListButtons  = initMyListButtons;
 window.toggleMyListButton = toggleMyListButton;
@@ -279,7 +269,6 @@ window.removeFromMyList   = removeFromMyList;
 window.showMyListToast    = showMyListToast;
 window.syncMyListStorage  = syncMyListStorage;
 
-// ── createCard (legacy — used by old mylist page, kept for compatibility) ─────
 
 function createCard(item) {
     const card = document.createElement('div');

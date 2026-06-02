@@ -4,7 +4,6 @@
 (function (window) {
   "use strict";
 
-  // ─── helpers ────────────────────────────────────────────────────────────────
 
   function safeCssPath(path) {
     return String(path || '').replace(/[^a-zA-Z0-9/_.\-]/g, '');
@@ -37,7 +36,6 @@
     return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   }
 
-  // ─── Top Nav ────────────────────────────────────────────────────────────────
 
   var _LANG_OPTS = [
     { code: "en", label: "English",  flag: "🇺🇸" },
@@ -165,7 +163,6 @@
     document.addEventListener("eli6.themeChanged", function () { renderTopNav(active); }, { once: true });
   }
 
-  // ─── Bottom Nav ─────────────────────────────────────────────────────────────
 
   function renderBottomNav(active) {
     const mountId = "bottomnav-mount";
@@ -203,7 +200,6 @@
     mount.appendChild(nav);
   }
 
-  // ─── Poster ─────────────────────────────────────────────────────────────────
   // opts: { rank, badge, wide, progress, onClick, showMeta }
 
   function makePoster(item, opts) {
@@ -347,7 +343,6 @@
     }
   }
 
-  // ─── Row ────────────────────────────────────────────────────────────────────
   // opts: { seeAllHref, numbered, badge }
 
   function makeRow(title, items, opts) {
@@ -385,7 +380,6 @@
     return row;
   }
 
-  // ─── Hero Slider ────────────────────────────────────────────────────────────
 
   function makeHeroSlider(items, container, opts) {
     opts = opts || {};
@@ -597,7 +591,6 @@
     return { go: go, stop: function () { clearInterval(timer); } };
   }
 
-  // ─── Detail Modal ───────────────────────────────────────────────────────────
 
   function openDetailModal(item) {
     const TMDB_IMG   = "https://image.tmdb.org/t/p/";
@@ -771,7 +764,6 @@
     function onKey(e) { if (e.key === "Escape") closeModal(); }
     document.addEventListener("keydown", onKey);
 
-    // ── Async: real credits + episodes ─────────────────────────────────────────
     const _closedRef = { v: false };
     const _detailId  = item.tmdb_id || item.id;
 
@@ -904,7 +896,6 @@
     }
   }
 
-  // ─── Footer ─────────────────────────────────────────────────────────────────
 
   function renderFooter(mountId) {
     const mount = document.getElementById(mountId || "footer-mount");
@@ -943,7 +934,6 @@
     mount.appendChild(footer);
   }
 
-  // ─── Cookie Banner ──────────────────────────────────────────────────────────
 
   function renderCookieBanner() {
     if (localStorage.getItem("eli6.cookies.accepted")) return;
@@ -976,7 +966,6 @@
     document.body.appendChild(banner);
   }
 
-  // ─── Toast ──────────────────────────────────────────────────────────────────
 
   let _toastTimer = null;
 
@@ -997,7 +986,6 @@
     _toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3000);
   }
 
-  // ─── exports ────────────────────────────────────────────────────────────────
 
   Object.assign(window, {
     renderTopNav:      renderTopNav,

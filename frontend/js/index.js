@@ -4,7 +4,6 @@
 const AUTH_API_URL  = window.API_BASE_URL  || '';
 const TMDB_BASE_URL = window.TMDB_PROXY_URL || (AUTH_API_URL ? AUTH_API_URL + '/tmdb' : '');
 
-// ─── TMDB fetch helpers ───────────────────────────────────────────────────────
 
 async function fetchContent(type, category, lang) {
   const endpoints = {
@@ -97,7 +96,6 @@ async function fetchAnimeContent() {
   } catch (e) { return []; }
 }
 
-// ─── My List sync ─────────────────────────────────────────────────────────────
 
 async function syncMyList() {
   if (!localStorage.getItem('user')) return;
@@ -112,7 +110,6 @@ async function syncMyList() {
   }
 }
 
-// ─── Play ─────────────────────────────────────────────────────────────────────
 
 function playContent(id, type, link_url) {
   if (type === 'anime' && link_url) {
@@ -122,7 +119,6 @@ function playContent(id, type, link_url) {
   }
 }
 
-// ─── Item → component-compatible shape ───────────────────────────────────────
 
 function normalise(item, type) {
   return Object.assign({}, item, {
@@ -133,7 +129,6 @@ function normalise(item, type) {
   });
 }
 
-// ─── Remove from Keep Watching ───────────────────────────────────────────────
 
 async function removeFromKeepWatching(id, type) {
   try {
@@ -148,7 +143,6 @@ async function removeFromKeepWatching(id, type) {
   }
 }
 
-// ─── Main page init ───────────────────────────────────────────────────────────
 
 async function initPage() {
   const lang     = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
@@ -278,13 +272,11 @@ async function initPage() {
   renderFooter('footer-mount');
 }
 
-// ─── i18n row-title helper ────────────────────────────────────────────────────
 
 function tr(key, fallback) {
   return (window.i18n && window.i18n.t) ? window.i18n.t(key, fallback) : fallback;
 }
 
-// ─── Boot ─────────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async function () {
   renderTopNav('home');

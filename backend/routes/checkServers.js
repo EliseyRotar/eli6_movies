@@ -12,7 +12,6 @@ const NEG_RE = /\b(video\s+not\s+found|content\s+not\s+found|not\s+available|pag
 
 const cache = new Map();
 
-// Build one URL per server key using the same logic as player.html
 function buildUrls({ type, tmdbId, imdbId, season, episode }) {
     const s    = parseInt(season)  || 1;
     const e    = parseInt(episode) || 1;

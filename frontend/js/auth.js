@@ -26,7 +26,6 @@ async function retryWithBackoff(fn, maxRetries = 3, baseDelay = 1000) {
     }
 }
 
-// Check if user is logged in
 function isLoggedIn() {
     const user = localStorage.getItem('user');
     return !!user;
@@ -38,7 +37,6 @@ function getCurrentUser() {
     return user ? JSON.parse(user) : null;
 }
 
-// Check if current user is admin
 function isAdmin() {
     const user = getCurrentUser();
     return user && user.role === 'admin';
@@ -84,7 +82,6 @@ async function login(email, password) {
         // Store only user data (token is httpOnly cookie)
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Update navigation
         updateNavigation();
 
         return data;
@@ -129,7 +126,6 @@ async function register(username, email, password) {
         // Store only user data (token is httpOnly cookie)
         localStorage.setItem('user', JSON.stringify(data.user));
 
-        // Update navigation
         updateNavigation();
 
         return data;
@@ -167,7 +163,6 @@ async function getProfile() {
     }
 }
 
-// Update navigation based on auth status
 function updateNavigation() {
     const user = getCurrentUser();
 

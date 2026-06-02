@@ -168,7 +168,6 @@
                 i18n.t('adblocker.dont_show');
             modal.querySelector('[data-i18n="adblocker.dismiss"]').textContent =
                 i18n.t('adblocker.dismiss');
-            // Update buttons
             var actionsDiv = modal.querySelector('.adblocker-popup-actions');
             var found = false;
             for (var key in adblockLinks) {

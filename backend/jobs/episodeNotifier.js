@@ -58,7 +58,6 @@ async function run() {
 
     if (!users.length) return results;
 
-    // Build map: showId -> list of users who have it
     const showUserMap = new Map();
     for (const user of users) {
         for (const item of user.myList) {
@@ -84,7 +83,6 @@ async function run() {
 
             const key = episodeKey(ep);
 
-            // Send to each user who hasn't been notified for this episode yet
             for (const { user } of entries) {
                 const notifs = Array.isArray(user.tvNotifications) ? user.tvNotifications : [];
                 const existing = notifs.find(n => n.showId === showId);
@@ -99,7 +97,6 @@ async function run() {
                     });
                     results.emailsSent++;
 
-                    // Update lastEpisodeKey for this user+show
                     await User.updateOne(
                         { _id: user._id, 'tvNotifications.showId': showId },
                         { $set: { 'tvNotifications.$.lastEpisodeKey': key } }

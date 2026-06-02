@@ -85,7 +85,6 @@ class SpatialNavigation {
         const aCenter = { x: a.left + a.width / 2, y: a.top + a.height / 2 };
         const bCenter = { x: b.left + b.width / 2, y: b.top + b.height / 2 };
 
-        // Check if b is in the correct direction relative to a
         const isCorrectDirection = {
             up: bCenter.y < aCenter.y,
             down: bCenter.y > aCenter.y,

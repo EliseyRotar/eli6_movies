@@ -5,7 +5,6 @@
   var API_URL  = window.API_BASE_URL  || '';
   var TMDB_URL = window.TMDB_PROXY_URL || (API_URL ? API_URL + '/tmdb' : '');
 
-  // ── State ──────────────────────────────────────────────────────────────────
   var state = {
     filter:   'all',        // all | movie | tv | anime | progress
     sort:     'added-desc', // added-desc | added-asc | alpha-asc | alpha-desc | rating-desc | type
@@ -20,7 +19,6 @@
   var watchedMap     = {};  // "id:type" → progress (0-100)
   var spotlightItem  = null;
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -47,7 +45,6 @@
     return type === 'movie' ? 'MOVIE' : type === 'tv' ? 'TV' : 'ANIME';
   }
 
-  // ── API ────────────────────────────────────────────────────────────────────
   async function fetchMyList() {
     try {
       var r = await fetch(API_URL + '/user/profile', { credentials: 'include' });
@@ -102,7 +99,6 @@
     }
   }
 
-  // ── Mutations ──────────────────────────────────────────────────────────────
   async function removeItem(id, type) {
     try {
       await fetch(API_URL + '/user/mylist/' + id + '/' + type, { method: 'DELETE', credentials: 'include' });
@@ -139,7 +135,6 @@
     updateStats();
   }
 
-  // ── Filtering & sorting ────────────────────────────────────────────────────
   function getFiltered() {
     var items = allItems.slice();
 
@@ -177,7 +172,6 @@
     return items;
   }
 
-  // ── Stats ──────────────────────────────────────────────────────────────────
   function updateStats() {
     var movies = 0, shows = 0, anime = 0, inProg = 0;
     allItems.forEach(function (i) {
@@ -199,7 +193,6 @@
       el.textContent = parts.join(' · ');
     }
 
-    // Update chip counts
     var counts = { all: allItems.length, movie: movies, tv: shows, anime: anime, progress: inProg };
     document.querySelectorAll('.ml-chip[data-filter]').forEach(function (chip) {
       var badge = chip.querySelector('.ml-chip__count');
@@ -210,7 +203,6 @@
     });
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   function render() {
     var mount = document.getElementById('grid-mount');
     if (!mount) return;
@@ -243,7 +235,6 @@
     '</div>';
   }
 
-  // ── Grid ───────────────────────────────────────────────────────────────────
   function renderGrid(mount, items) {
     var grid = document.createElement('div');
     grid.className = 'ml-grid';
@@ -308,7 +299,6 @@
     return el;
   }
 
-  // ── List ───────────────────────────────────────────────────────────────────
   function renderList(mount, items) {
     var list = document.createElement('div');
     list.className = 'ml-list';
@@ -373,7 +363,6 @@
     return el;
   }
 
-  // ── Play ───────────────────────────────────────────────────────────────────
   function playItem(item, kw) {
     var type = itemType(item);
     var url  = 'player.html?type=' + type + '&id=' + item.id;
@@ -384,7 +373,6 @@
     window.location.href = url;
   }
 
-  // ── Bulk select ────────────────────────────────────────────────────────────
   function toggleSelect(key) {
     if (state.selected.has(key)) state.selected.delete(key);
     else state.selected.add(key);
@@ -417,7 +405,6 @@
     if (rmBtn) rmBtn.disabled = n === 0;
   }
 
-  // ── Randomizer ─────────────────────────────────────────────────────────────
   function pickRandom() {
     var items = getFiltered();
     if (!items.length) {
@@ -468,7 +455,6 @@
     document.body.style.overflow = '';
   }
 
-  // ── Controls wiring ────────────────────────────────────────────────────────
   function initControls() {
     var searchEl = document.getElementById('ml-search');
     var sortEl   = document.getElementById('ml-sort');
@@ -560,7 +546,6 @@
     });
   }
 
-  // ── Bootstrap ──────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', async function () {
     window.renderTopNav('mylist');
     window.renderBottomNav('mylist');

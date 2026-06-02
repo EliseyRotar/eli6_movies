@@ -45,7 +45,6 @@ router.get('/ru', async (req, res) => {
     try {
         let url = null;
 
-        // ── Kodik ──────────────────────────────────────────────────────────
         if (server === 'kodik') {
             const token = process.env.KODIK_TOKEN;
             if (!token) return res.status(503).json({ error: 'KODIK_TOKEN not configured' });
@@ -59,7 +58,6 @@ router.get('/ru', async (req, res) => {
             const sep = link.includes('?') ? '&' : '?';
             url = withHttps(link) + sep + `season=${s}&episode=${e}`;
 
-        // ── Bazon ──────────────────────────────────────────────────────────
         } else if (server === 'bazon') {
             const token = process.env.BAZON_TOKEN;
             if (!token) return res.status(503).json({ error: 'BAZON_TOKEN not configured' });
@@ -72,7 +70,6 @@ router.get('/ru', async (req, res) => {
             });
             url = withHttps(r.data?.results?.[0]?.link);
 
-        // ── Collaps ────────────────────────────────────────────────────────
         } else if (server === 'collaps') {
             const token = process.env.COLLAPS_TOKEN;
             if (!token) return res.status(503).json({ error: 'COLLAPS_TOKEN not configured' });
@@ -85,7 +82,6 @@ router.get('/ru', async (req, res) => {
             });
             url = withHttps(r.data?.results?.[0]?.iframe_url);
 
-        // ── Alloha ─────────────────────────────────────────────────────────
         } else if (server === 'alloha') {
             const token = process.env.ALLOHA_TOKEN;
             if (!token) return res.status(503).json({ error: 'ALLOHA_TOKEN not configured' });
@@ -98,7 +94,6 @@ router.get('/ru', async (req, res) => {
             });
             url = withHttps(r.data?.data?.iframe);
 
-        // ── HDVB ───────────────────────────────────────────────────────────
         } else if (server === 'hdvb') {
             const token = process.env.HDVB_TOKEN;
             if (!token) return res.status(503).json({ error: 'HDVB_TOKEN not configured' });
@@ -111,7 +106,6 @@ router.get('/ru', async (req, res) => {
             });
             url = withHttps(r.data?.[0]?.iframe_url);
 
-        // ── VideoCDN ───────────────────────────────────────────────────────
         } else if (server === 'videocdn') {
             const token = process.env.VIDEOCDN_TOKEN;
             if (!token) return res.status(503).json({ error: 'VIDEOCDN_TOKEN not configured' });

@@ -59,7 +59,6 @@ router.post('/register', async (req, res, next) => {
             event: 'register', ip: req.ip || '', userAgent: req.headers['user-agent'] || '',
         }).catch(() => {});
 
-        // Send email verification (non-blocking — failure doesn't affect registration)
         const verificationToken = crypto.randomBytes(32).toString('hex');
         user.verificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
         user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);

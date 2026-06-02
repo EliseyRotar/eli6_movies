@@ -36,7 +36,6 @@ router.get('/user/profile', auth, async (req, res) => {
     });
 });
 
-// Returns the profile picture separately so the myList sync call stays lean
 router.get('/user/profile-picture', auth, async (req, res) => {
     res.json({ profilePicture: req.user.profilePicture || '' });
 });

@@ -17,7 +17,6 @@
     },
   };
 
-  // ─── Build settings page ─────────────────────────────────────────────────
 
   function buildPage() {
     var main = document.getElementById("settings-main");
@@ -26,7 +25,6 @@
 
     var prefs = window.getPrefs();
 
-    // ── head ──
     var head = div("settings__head");
     var backBtn = el("button", "settings__back");
     backBtn.textContent = "← Account";
@@ -49,7 +47,6 @@
     head.appendChild(pageSub);
     main.appendChild(head);
 
-    // ── Section 1: Theme ──
     var themeSection = buildSection(
       "01 / LOOK",
       "Theme",
@@ -130,7 +127,6 @@
     themeSection.appendChild(themeCards);
     main.appendChild(themeSection);
 
-    // ── Section 2: Mode ──
     var modeSection = buildSection(
       "02 / BRIGHTNESS",
       "Dark or Light",
@@ -168,7 +164,6 @@
     modeSection.appendChild(modeCards);
     main.appendChild(modeSection);
 
-    // ── Section 3: Accent ──
     var accentSection = buildSection(
       "03 / COLOUR",
       "Accent",
@@ -194,7 +189,6 @@
     accentSection.appendChild(accentWrap);
     main.appendChild(accentSection);
 
-    // ── Section 4: Layout ──
     var layoutSection = buildSection(
       "04 / LAYOUT",
       "Density & Spacing",
@@ -230,7 +224,6 @@
 
     main.appendChild(layoutSection);
 
-    // ── Section 5: Presets ──
     var presetSection = buildSection(
       "05 / PRESETS",
       "Quick Presets",
@@ -264,7 +257,6 @@
     presetSection.appendChild(presetGrid);
     main.appendChild(presetSection);
 
-    // ── Footer actions ──
     var footerActions = div("settings__footer-actions");
     var doneBtn = el("button", "btn btn--primary");
     doneBtn.textContent = "Done — back to home";
@@ -281,7 +273,6 @@
     main.appendChild(footerActions);
   }
 
-  // ─── Section builder ─────────────────────────────────────────────────────
 
   function buildSection(eyebrow, title, sub) {
     var sect = div("settings__sect");
@@ -316,7 +307,6 @@
     return row;
   }
 
-  // ─── DOM helpers ─────────────────────────────────────────────────────────
 
   function el(tag, cls) {
     var e = document.createElement(tag);
@@ -325,7 +315,6 @@
   }
   function div(cls) { return el("div", cls); }
 
-  // ─── Boot ────────────────────────────────────────────────────────────────
 
   document.addEventListener("DOMContentLoaded", function () {
     renderTopNav("settings");

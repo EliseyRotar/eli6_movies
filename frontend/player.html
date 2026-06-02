@@ -2129,9 +2129,7 @@
             }
         }
 
-        // Function to switch tabs
         function switchTab(tab) {
-            // Hide all tab content
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -2452,13 +2450,13 @@
         let errorHandled = false;
         let failoverTimeout = null;
 
-        // ── Auto-failover state ───────────────────────────────────────────────
+
         let autoSwitchCount   = 0;     // how many auto-switches in current chain
         let videoActivityDet  = false; // received postMessage from current iframe
         let _pmHandler        = null;  // current postMessage handler reference
         const _CONTENT_KEY    = (type || 'movie') + ':' + id;
 
-        // ── Server cache (localStorage, 7-day TTL) ────────────────────────────
+
         const _SC = 'eli6.srvCache', _SC_TTL = 604800000;
         function _scLoad(k) {
             try {
@@ -2479,7 +2477,7 @@
             } catch(e) {}
         }
 
-        // ── Central auto-switch function ──────────────────────────────────────
+
         function _autoSwitch() {
             if (errorHandled) return;
             errorHandled = true;
@@ -2504,7 +2502,6 @@
             loadVideoPlayer();
         }
 
-        // Function to test iframe loading
         function testIframeLoading(url) {
             return new Promise((resolve, reject) => {
                 const testIframe = document.createElement('iframe');
@@ -2763,7 +2760,7 @@
             }
             videoIframe.parentNode.replaceChild(newIframe, videoIframe);
 
-            // ── Detach any previous postMessage listener ──────────────────────
+
             if (_pmHandler) { window.removeEventListener('message', _pmHandler); _pmHandler = null; }
             videoActivityDet = false;
 
@@ -3943,7 +3940,7 @@
         let watchTimer     = null;
         let _savedState    = null;
 
-        // ── Duration estimate ──────────────────────────────────────────────────
+
         function getEstimatedDuration() {
             if (type === 'movie' && contentData && contentData.runtime)
                 return contentData.runtime * 60;
@@ -3970,7 +3967,7 @@
                 : m + ':' + String(sec).padStart(2,'0');
         }
 
-        // ── Send progress to backend (keep-watching) ───────────────────────────
+
         function sendWatchProgress() {
             if (!localStorage.getItem('user') || !id || !type || !watchStartTime || !contentData) return;
             const dur = getEstimatedDuration();
@@ -3999,7 +3996,7 @@
             }).catch(function() {});
         }
 
-        // ── localStorage play state (server + season/ep + time) ───────────────
+
         const PS_KEY    = 'eli6.ps.' + type + '.' + id;
         const PS_EXPIRY = 90 * 24 * 60 * 60 * 1000;
 
@@ -4033,7 +4030,7 @@
             try { localStorage.setItem(PS_KEY, JSON.stringify(s)); } catch(e) {}
         }
 
-        // ── Resume banner ──────────────────────────────────────────────────────
+
         function showResumeBanner(state) {
             const banner  = document.getElementById('resumeBanner');
             const textEl  = document.getElementById('resumeBannerText');
@@ -4085,7 +4082,7 @@
             if (b) b.classList.remove('visible');
         }
 
-        // ── postMessage time events from embed players ─────────────────────────
+
         const ALLOWED_EMBED_ORIGINS = new Set([
             'https://vidsrc.fyi',
             'https://vixsrc.to',
