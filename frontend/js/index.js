@@ -153,13 +153,18 @@ async function initPage() {
   // Clear rows mount (keep watching re-renders)
   rowsMnt.innerHTML = '';
 
-  // Show loading skeleton for rows
   const loadingDiv = document.createElement('div');
   loadingDiv.className = 'e6-loading';
-  loadingDiv.innerHTML = '<div class="e6-spinner"></div><span>Loading…</span>';
+  const loadingSpan = document.createElement('span');
+  loadingSpan.textContent = 'Loading…';
+  loadingDiv.innerHTML = '<div class="e6-spinner"></div>';
+  loadingDiv.appendChild(loadingSpan);
   rowsMnt.appendChild(loadingDiv);
 
-  // Fetch all data in parallel
+  const warmTimer = setTimeout(function () {
+    loadingSpan.textContent = 'Server is warming up, hang on…';
+  }, 4000);
+
   const [trending, trendingTV, popular, upcoming, topRated, anime, keepWatching] = await Promise.all([
     fetchTMDBWithFallback('movie', 'trending',  lang),
     fetchTMDBWithFallback('tv',    'trending',  lang),
@@ -170,6 +175,7 @@ async function initPage() {
     fetchKeepWatching(),
   ]);
 
+  clearTimeout(warmTimer);
   rowsMnt.innerHTML = '';
 
   // Hero slider — first 7 from trending mix

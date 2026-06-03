@@ -9,3 +9,6 @@ window.TMDB_PROXY_URL = window.API_BASE_URL + '/tmdb';
     s.defer = true;
     document.head.appendChild(s);
 })();
+
+// ping backend on every page load so render wakes up before content fetches hit
+fetch(window.API_BASE_URL + '/health', { method: 'GET' }).catch(function () {});
