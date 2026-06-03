@@ -21,9 +21,19 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://eli6movies.vercel.app/live.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://eli6movies.vercel.app/search.html</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://eli6movies.vercel.app/mylist.html</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
   </url>
   <url>
     <loc>https://eli6movies.vercel.app/account.html</loc>
@@ -33,11 +43,16 @@
   <url>
     <loc>https://eli6movies.vercel.app/privacy.html</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.2</priority>
+    <priority>0.3</priority>
   </url>
   <url>
     <loc>https://eli6movies.vercel.app/terms.html</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.2</priority>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://eli6movies.vercel.app/dmca.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>

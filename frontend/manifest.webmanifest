@@ -1,25 +1,38 @@
 {
-  "name": "ELI6 Movies — Live Sports",
-  "short_name": "ELI6 Live",
-  "description": "Free live sports streams, scores, and schedules.",
-  "start_url": "/live.html",
+  "name": "ELI6 Movies",
+  "short_name": "ELI6",
+  "description": "Free streaming for movies, TV shows, anime, and live sports. Zero ads, zero sign-up.",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
-  "categories": ["sports", "entertainment"],
+  "categories": ["entertainment", "sports"],
+  "lang": "en",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/img/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/og-cover.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "ELI6 Movies homepage"
     }
   ],
   "shortcuts": [
-    { "name": "Live now", "url": "/live.html", "description": "Matches happening now" },
-    { "name": "Movies", "url": "/movies.html" },
-    { "name": "TV Shows", "url": "/tvshows.html" }
-  ]
+    { "name": "Movies", "url": "/movies.html", "description": "Browse movies" },
+    { "name": "TV Shows", "url": "/tvshows.html", "description": "Browse TV shows" },
+    { "name": "Anime", "url": "/anime.html", "description": "Browse anime" },
+    { "name": "Live Sports", "url": "/live.html", "description": "Live sports streams" }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

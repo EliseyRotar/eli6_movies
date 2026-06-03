@@ -10,12 +10,13 @@
     <meta property="og:site_name"   content="ELI6 Movies">
     <meta property="og:title"       content="ELI6 Movies - Watch Now">
     <meta property="og:description" content="Stream movies, TV shows and anime for free on ELI6 Movies.">
-    <meta property="og:image"       content="https://eli6movies.vercel.app/og-cover.jpg">
+    <meta property="og:image"       content="https://eli6movies.vercel.app/img/og-image.png">
     <meta property="og:url"         content="">
     <meta name="twitter:card"       content="summary_large_image">
     <meta name="twitter:title"      content="ELI6 Movies - Watch Now">
     <meta name="twitter:description" content="Stream movies, TV shows and anime for free on ELI6 Movies.">
-    <meta name="twitter:image"      content="https://eli6movies.vercel.app/og-cover.jpg">
+    <meta name="twitter:image"      content="https://eli6movies.vercel.app/img/og-image.png">
+    <link rel="manifest" href="/manifest.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -2096,6 +2097,17 @@
             setMeta('meta[name="twitter:image"]',      imageUrl);
         }
 
+        function injectJsonLd(schema) {
+            let el = document.getElementById('eli6-jsonld');
+            if (!el) {
+                el = document.createElement('script');
+                el.id = 'eli6-jsonld';
+                el.type = 'application/ld+json';
+                document.head.appendChild(el);
+            }
+            el.textContent = JSON.stringify(schema);
+        }
+
         function esc(s) {
             if (s == null) return '';
             const d = document.createElement('div');
@@ -2290,6 +2302,17 @@
             heroDescription.textContent = overview;
             document.title = title + ' — ELI6 Movies';
             updateOgTags(title + ' — ELI6 Movies', overview, image || '');
+            injectJsonLd({
+                '@context': 'https://schema.org',
+                '@type': 'TVSeries',
+                name: title,
+                description: overview,
+                image: image || undefined,
+                url: location.href,
+                genre: contentData.genres ? contentData.genres.map(g => g.name) : [],
+                datePublished: contentData.aired?.from ? contentData.aired.from.split('T')[0] : undefined,
+                numberOfEpisodes: contentData.episodes || undefined,
+            });
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = episodes;
@@ -2373,6 +2396,36 @@
                 ? `https://image.tmdb.org/t/p/w1280${contentData.backdrop_path}`
                 : (contentData.poster_path ? `https://image.tmdb.org/t/p/w500${contentData.poster_path}` : '');
             updateOgTags(title + ' — ELI6 Movies', overview, _ogImage);
+
+            const _posterUrl = contentData.poster_path ? `https://image.tmdb.org/t/p/w500${contentData.poster_path}` : _ogImage;
+            if (type === 'tv') {
+                injectJsonLd({
+                    '@context': 'https://schema.org',
+                    '@type': 'TVSeries',
+                    name: title,
+                    description: overview,
+                    image: _posterUrl,
+                    url: location.href,
+                    genre: contentData.genres ? contentData.genres.map(g => g.name) : [],
+                    datePublished: contentData.first_air_date || undefined,
+                    numberOfSeasons: contentData.number_of_seasons || undefined,
+                    numberOfEpisodes: contentData.number_of_episodes || undefined,
+                    aggregateRating: contentData.vote_average ? { '@type': 'AggregateRating', ratingValue: contentData.vote_average.toFixed(1), bestRating: '10', ratingCount: contentData.vote_count || 1 } : undefined,
+                });
+            } else {
+                injectJsonLd({
+                    '@context': 'https://schema.org',
+                    '@type': 'Movie',
+                    name: title,
+                    description: overview,
+                    image: _posterUrl,
+                    url: location.href,
+                    genre: contentData.genres ? contentData.genres.map(g => g.name) : [],
+                    datePublished: contentData.release_date || undefined,
+                    duration: contentData.runtime ? `PT${contentData.runtime}M` : undefined,
+                    aggregateRating: contentData.vote_average ? { '@type': 'AggregateRating', ratingValue: contentData.vote_average.toFixed(1), bestRating: '10', ratingCount: contentData.vote_count || 1 } : undefined,
+                });
+            }
 
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
