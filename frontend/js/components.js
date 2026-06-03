@@ -936,6 +936,7 @@
       { label: "Terms of Service", href: "terms.html" },
       { label: "Cookie Policy", href: "cookies.html" },
       { label: "DMCA", href: "dmca.html" },
+      { label: "Contact", href: "contact.html" },
     ];
     legalLinks.forEach(function (l) {
       const a = el("a"); a.href = l.href; a.textContent = l.label;

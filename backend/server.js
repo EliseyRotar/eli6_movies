@@ -20,6 +20,7 @@ const { router: trackRoutes } = require('./routes/track');
 const analyticsRoutes    = require('./routes/analytics');
 const passwordResetRoutes = require('./routes/passwordReset');
 const cronRoutes          = require('./routes/cron');
+const contactRoutes       = require('./routes/contact');
 const auth = require('./middleware/auth');
 
 const app = express();
@@ -86,6 +87,7 @@ app.use('/api', trackRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api', passwordResetRoutes);
 app.use('/api', cronRoutes);
+app.use('/api', contactRoutes);
 
 app.use(errorHandler);
 

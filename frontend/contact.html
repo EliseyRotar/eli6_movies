@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact — ELI6 Movies</title>
+  <meta name="description" content="Report a bug or send a suggestion to ELI6 Movies." />
+  <script>(function(){try{var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');document.documentElement.dataset.theme=p.theme||'pulse';document.documentElement.dataset.mode=p.mode||'dark';}catch(e){document.documentElement.dataset.theme='pulse';document.documentElement.dataset.mode='dark';}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+  <link rel="icon" href="favicon.ico" />
+  <style>
+    .contact-wrap {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 48px var(--pad-x) 80px;
+    }
+    .contact-eyebrow {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .contact-title {
+      font-family: var(--font-head);
+      font-weight: var(--head-weight);
+      font-size: clamp(28px, 5vw, 40px);
+      line-height: 1.15;
+      margin: 0 0 10px;
+    }
+    .contact-sub {
+      color: var(--fg-muted);
+      font-size: 15px;
+      margin: 0 0 36px;
+    }
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .contact-field {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .contact-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    .contact-label span {
+      color: var(--fg-muted);
+      font-weight: 400;
+      margin-left: 4px;
+    }
+    .contact-type-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .contact-type-pill {
+      padding: 7px 16px;
+      border-radius: var(--r-pill);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg-muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .contact-type-pill:hover { border-color: var(--accent); color: var(--fg); }
+    .contact-type-pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .contact-input, .contact-textarea {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      color: var(--fg);
+      font-size: 14px;
+      font-family: inherit;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 150ms ease;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .contact-input:focus, .contact-textarea:focus { border-color: var(--accent); }
+    .contact-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+    .contact-submit {
+      align-self: flex-start;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-pill);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 150ms ease;
+    }
+    .contact-submit:hover { opacity: .85; }
+    .contact-submit:disabled { opacity: .5; cursor: default; }
+    .contact-status {
+      padding: 14px 16px;
+      border-radius: var(--r-md);
+      font-size: 14px;
+      display: none;
+    }
+    .contact-status.ok  { background: #0d2b1a; border: 1px solid #1a5c35; color: #4ade80; }
+    .contact-status.err { background: #2b0d0d; border: 1px solid #5c1a1a; color: #f87171; }
+  </style>
+</head>
+<body>
+  <div id="topnav-mount"></div>
+
+  <main class="contact-wrap">
+    <div class="contact-eyebrow">Feedback</div>
+    <h1 class="contact-title">Report a bug or send a suggestion</h1>
+    <p class="contact-sub">Something broken? Got an idea? Drop a message and I'll look into it.</p>
+
+    <form class="contact-form" id="contactForm" novalidate>
+      <input type="text" name="hp" id="hp" style="display:none" tabindex="-1" autocomplete="off" />
+
+      <div class="contact-field">
+        <div class="contact-label">What is this about?</div>
+        <div class="contact-type-pills">
+          <button type="button" class="contact-type-pill active" data-type="bug">Bug report</button>
+          <button type="button" class="contact-type-pill" data-type="suggestion">Suggestion</button>
+          <button type="button" class="contact-type-pill" data-type="other">Other</button>
+        </div>
+      </div>
+
+      <div class="contact-field">
+        <label class="contact-label" for="message">Message</label>
+        <textarea class="contact-textarea" id="message" placeholder="Describe the bug or your idea in as much detail as you want…" required></textarea>
+      </div>
+
+      <div class="contact-field">
+        <label class="contact-label" for="email">Your email <span>(optional — only if you want a reply)</span></label>
+        <input class="contact-input" type="email" id="email" placeholder="you@example.com" />
+      </div>
+
+      <div class="contact-status" id="contactStatus"></div>
+
+      <button class="contact-submit" type="submit" id="contactSubmit">Send message</button>
+    </form>
+  </main>
+
+  <div id="footer-mount"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/theme.js" defer></script>
+  <script src="js/i18n.js" defer></script>
+  <script src="js/components.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.renderTopNav) renderTopNav('contact');
+      if (window.renderFooter) renderFooter();
+
+      var activeType = 'bug';
+      var pills = document.querySelectorAll('.contact-type-pill');
+      pills.forEach(function (pill) {
+        pill.addEventListener('click', function () {
+          pills.forEach(function (p) { p.classList.remove('active'); });
+          pill.classList.add('active');
+          activeType = pill.dataset.type;
+        });
+      });
+
+      document.getElementById('contactForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var message = document.getElementById('message').value.trim();
+        var email   = document.getElementById('email').value.trim();
+        var hp      = document.getElementById('hp').value;
+        var status  = document.getElementById('contactStatus');
+        var btn     = document.getElementById('contactSubmit');
+
+        if (!message) {
+          document.getElementById('message').focus();
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        status.style.display = 'none';
+
+        try {
+          var res = await fetch((window.API_BASE_URL || '') + '/api/contact', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: activeType, message: message, email: email, hp: hp }),
+          });
+          var data = await res.json();
+          if (data.ok) {
+            status.className = 'contact-status ok';
+            status.textContent = 'Got it — thanks for reaching out!';
+            status.style.display = 'block';
+            document.getElementById('message').value = '';
+            document.getElementById('email').value = '';
+            btn.textContent = 'Sent';
+          } else {
+            throw new Error(data.error || 'error');
+          }
+        } catch (_) {
+          status.className = 'contact-status err';
+          status.textContent = 'Something went wrong. Try again in a bit.';
+          status.style.display = 'block';
+          btn.disabled = false;
+          btn.textContent = 'Send message';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
