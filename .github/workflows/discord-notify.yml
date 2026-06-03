@@ -1,0 +1,59 @@
+name: Discord Update Notification
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Post to Discord updates channel
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_UPDATES_WEBHOOK }}
+        run: |
+          COMMIT_SHA="${{ github.sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          AUTHOR="${{ github.actor }}"
+          REPO="${{ github.repository }}"
+          COMMIT_URL="https://github.com/${REPO}/commit/${COMMIT_SHA}"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Pick color and label based on commit prefix
+          case "$COMMIT_MSG" in
+            feat:*|feat\(*) COLOR=5763719  ; BADGE="🆕 New Feature" ;;
+            fix:*|fix\(*)   COLOR=16776960 ; BADGE="🔧 Fix"         ;;
+            sec:*|sec\(*)   COLOR=15548997 ; BADGE="🔒 Security"    ;;
+            perf:*|perf\(*) COLOR=3066993  ; BADGE="⚡ Performance"  ;;
+            chore:*|docs:*) COLOR=9807270  ; BADGE="🧹 Chore"       ;;
+            *)               COLOR=5793266  ; BADGE="📦 Update"      ;;
+          esac
+
+          # Strip conventional commit prefix for the display title
+          TITLE=$(echo "$COMMIT_MSG" | sed 's/^[a-z]*([^)]*): //;s/^[a-z]*: //')
+
+          PAYLOAD=$(cat <<EOF
+          {
+            "embeds": [{
+              "title": "${BADGE}: ${TITLE}",
+              "url": "${COMMIT_URL}",
+              "color": ${COLOR},
+              "fields": [
+                { "name": "Commit", "value": "[\`${SHORT_SHA}\`](${COMMIT_URL})", "inline": true },
+                { "name": "Author", "value": "${AUTHOR}", "inline": true }
+              ],
+              "footer": { "text": "ELI6 Movies" },
+              "timestamp": "${TIMESTAMP}"
+            }]
+          }
+          EOF
+          )
+
+          curl -sf -X POST "$WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD"
