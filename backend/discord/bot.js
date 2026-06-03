@@ -2,6 +2,7 @@ const {
     Client, GatewayIntentBits, EmbedBuilder,
     AutoModerationRuleTriggerType, AutoModerationActionType,
 } = require('discord.js');
+const mongoose = require('mongoose');
 const DiscordXP = require('../models/DiscordXP');
 const { fetchTMDB } = require('../services/tmdbClient');
 
@@ -10,8 +11,10 @@ const LEVELUP_CH    = process.env.DISCORD_LEVELUP_CH   || '1511802515677642985';
 const REGULAR_ROLE  = process.env.DISCORD_REGULAR_ROLE || '1511802418533372084';
 const VERIFIED_ROLE = process.env.DISCORD_VERIFIED_ROLE|| '1511802416197144708';
 const VIP_ROLE      = process.env.DISCORD_VIP_ROLE     || '1511802420957544519';
+const STATUS_CH     = process.env.DISCORD_STATUS_CH    || '1511802446366642357';
 
-const SITE = 'https://eli6movies.vercel.app';
+const SITE    = 'https://eli6movies.vercel.app';
+const BACKEND = 'https://eli6movies.onrender.com';
 
 let GENERAL_CH = process.env.DISCORD_GENERAL_CH || null;
 let VERIFY_CH  = process.env.DISCORD_VERIFY_CH  || null;
@@ -89,6 +92,7 @@ function startBot(token) {
 
             await setupAutoMod(guild);
             scheduleWeeklyPoll(client);
+            startStatusMonitor(client);
         } catch (err) {
             console.error('[Discord ready]', err.message);
         }
@@ -310,6 +314,27 @@ function startBot(token) {
             });
         }
 
+        if (cmd === '!status') {
+            if (!lastStatus) return msg.reply('Status not available yet — check back in a minute.');
+            const s = lastStatus;
+            const icon = ok => ok ? '🟢' : '🔴';
+            const allOk = s.frontend && s.db && s.tmdb && s.anime;
+            const ago = Math.round((Date.now() - s.ts) / 1000);
+            return msg.reply({
+                embeds: [new EmbedBuilder()
+                    .setColor(allOk ? 0x3ba55c : 0xed4245)
+                    .setTitle(allOk ? '✅ All Systems Operational' : '⚠️ Partial Outage')
+                    .addFields(
+                        { name: `${icon(s.frontend)} Frontend`,   value: 'eli6movies.vercel.app',  inline: true },
+                        { name: `${icon(s.db)} Database`,         value: 'MongoDB',                inline: true },
+                        { name: `${icon(s.tmdb)} TMDB`,           value: 'Movie & TV metadata',    inline: true },
+                        { name: `${icon(s.anime)} Anime API`,     value: 'Jikan / MyAnimeList',    inline: true },
+                    )
+                    .setFooter({ text: `Last checked ${ago}s ago` })
+                    .setTimestamp(new Date(s.ts))],
+            });
+        }
+
         if (cmd === '!report')
             return msg.reply('Drop the title, type, and which server failed in <#1511802487961817139> and the team will look into it.');
 
@@ -324,6 +349,7 @@ function startBot(token) {
                     .addFields(
                         { name: '!watch <title>', value: 'Search and get a watch link',     inline: true },
                         { name: '!new',           value: 'Trending titles this week',        inline: true },
+                        { name: '!status',        value: 'Live service status',              inline: true },
                         { name: '!rank',          value: 'Your level and XP progress',       inline: true },
                         { name: '!leaderboard',   value: 'Top 10 most active members',       inline: true },
                         { name: '!link',          value: 'Link your ELI6 Movies account',    inline: true },
@@ -338,6 +364,113 @@ function startBot(token) {
     }
 
     client.login(token).catch(err => console.error('[Discord] Login failed:', err.message));
+}
+
+// ── Status monitor ────────────────────────────────────────────────────────────
+let lastStatus    = null;
+let statusMsgId   = null;
+let prevStatusKey = null; // compact string to detect changes
+
+async function httpCheck(url, timeout = 7000) {
+    try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), timeout);
+        const r = await fetch(url, { signal: ctrl.signal });
+        clearTimeout(timer);
+        return r.ok;
+    } catch {
+        return false;
+    }
+}
+
+function statusKey(s) {
+    return `${s.frontend ? 1 : 0}${s.db ? 1 : 0}${s.tmdb ? 1 : 0}${s.anime ? 1 : 0}`;
+}
+
+function buildStatusEmbed(s) {
+    const icon  = ok => ok ? '🟢' : '🔴';
+    const allOk = s.frontend && s.db && s.tmdb && s.anime;
+    return new EmbedBuilder()
+        .setColor(allOk ? 0x3ba55c : 0xed4245)
+        .setTitle(allOk ? '✅ All Systems Operational' : '🔴 Service Disruption')
+        .addFields(
+            { name: `${icon(s.frontend)} Frontend`,  value: 'eli6movies.vercel.app', inline: true },
+            { name: `${icon(s.db)} Database`,         value: 'MongoDB',               inline: true },
+            { name: `${icon(s.tmdb)} TMDB`,           value: 'Movie & TV metadata',   inline: true },
+            { name: `${icon(s.anime)} Anime API`,     value: 'Jikan / MyAnimeList',   inline: true },
+        )
+        .setFooter({ text: 'ELI6 Movies • Auto-updated every 5 min' })
+        .setTimestamp();
+}
+
+async function startStatusMonitor(client) {
+    const ch = await client.channels.fetch(STATUS_CH).catch(() => null);
+    if (!ch) { console.log('[Status] Channel not found'); return; }
+
+    // Find an existing status message posted by this bot
+    try {
+        const recent = await ch.messages.fetch({ limit: 20 });
+        const mine   = recent.find(m => m.author.id === client.user.id && m.embeds.length > 0);
+        if (mine) statusMsgId = mine.id;
+    } catch { /* ignore */ }
+
+    await runStatusCheck(ch);
+    setInterval(() => runStatusCheck(ch), 5 * 60 * 1000);
+}
+
+async function runStatusCheck(ch) {
+    const [frontendOk, tmdbOk, animeOk] = await Promise.all([
+        httpCheck(SITE),
+        httpCheck(`https://api.themoviedb.org/3/configuration?api_key=${process.env.TMDB_API_KEY}`),
+        httpCheck('https://api.jikan.moe/v4/anime?limit=1'),
+    ]);
+    const dbOk = mongoose.connection.readyState === 1;
+
+    const s = { frontend: frontendOk, db: dbOk, tmdb: tmdbOk, anime: animeOk, ts: Date.now() };
+    const key = statusKey(s);
+
+    // Detect changes for incident/recovery messages
+    if (prevStatusKey !== null && prevStatusKey !== key) {
+        await postIncidentMessage(ch, s, key);
+    }
+    prevStatusKey = key;
+    lastStatus    = s;
+
+    // Edit pinned embed or post new one
+    const embed = buildStatusEmbed(s);
+    if (statusMsgId) {
+        try {
+            const msg = await ch.messages.fetch(statusMsgId);
+            await msg.edit({ embeds: [embed] });
+            return;
+        } catch {
+            statusMsgId = null;
+        }
+    }
+    const msg = await ch.send({ embeds: [embed] }).catch(() => null);
+    if (msg) {
+        statusMsgId = msg.id;
+        await msg.pin().catch(() => {});
+    }
+}
+
+async function postIncidentMessage(ch, s, key) {
+    const allOk   = s.frontend && s.db && s.tmdb && s.anime;
+    const wasAllOk = prevStatusKey === '1111';
+    const icon    = ok => ok ? '🟢' : '🔴';
+    const lines   = [
+        `${icon(s.frontend)} Frontend`,
+        `${icon(s.db)} Database`,
+        `${icon(s.tmdb)} TMDB`,
+        `${icon(s.anime)} Anime API`,
+    ].join('  ·  ');
+
+    const embed = new EmbedBuilder()
+        .setColor(allOk ? 0x3ba55c : 0xed4245)
+        .setTitle(allOk ? '✅ All systems recovered' : '🚨 Incident detected')
+        .setDescription(lines)
+        .setTimestamp();
+    await ch.send({ embeds: [embed] }).catch(() => {});
 }
 
 // ── AutoMod ────────────────────────────────────────────────────────────────────

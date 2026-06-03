@@ -1,0 +1,85 @@
+name: Backend Health Monitor
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write   # needed to read/write repository variables
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check backend and notify Discord
+        env:
+          STATUS_WEBHOOK: ${{ secrets.DISCORD_STATUS_WEBHOOK }}
+          GH_TOKEN:       ${{ secrets.GITHUB_TOKEN }}
+          REPO:           ${{ github.repository }}
+        run: |
+          # ── Check backend health ──────────────────────────────────────────────
+          BACKEND_OK="true"
+          HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --max-time 15 \
+            "https://eli6movies.onrender.com/api/health" || echo "000")
+          if [ "$HTTP_CODE" != "200" ]; then
+            BACKEND_OK="false"
+          fi
+
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # ── Read previous state from GitHub Variable ──────────────────────────
+          PREV=$(curl -sf \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/variables/MONITOR_BACKEND_STATUS" \
+            2>/dev/null | python3 -c "import json,sys; print(json.load(sys.stdin).get('value','true'))" \
+            || echo "true")
+
+          echo "Previous: $PREV  Current: $BACKEND_OK"
+
+          # ── Only post to Discord if state changed ─────────────────────────────
+          if [ "$PREV" != "$BACKEND_OK" ]; then
+            if [ "$BACKEND_OK" = "false" ]; then
+              COLOR=15548997
+              TITLE="🚨 Backend Unreachable"
+              DESC="The API at eli6movies.onrender.com is not responding (HTTP $HTTP_CODE). Render may be restarting or down."
+            else
+              COLOR=3908956
+              TITLE="✅ Backend Recovered"
+              DESC="The API at eli6movies.onrender.com is back online and responding normally."
+            fi
+
+            PAYLOAD=$(python3 -c "
+import json, sys
+print(json.dumps({
+  'embeds': [{
+    'title': '$TITLE',
+    'description': '$DESC',
+    'color': $COLOR,
+    'footer': {'text': 'ELI6 Movies • External monitor'},
+    'timestamp': '$TIMESTAMP'
+  }]
+}))
+")
+            curl -sf -X POST "$STATUS_WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD" || true
+          fi
+
+          # ── Update state variable ─────────────────────────────────────────────
+          # Try PATCH first (update), fall back to POST (create)
+          curl -sf -X PATCH \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/variables/MONITOR_BACKEND_STATUS" \
+            -d "{\"name\":\"MONITOR_BACKEND_STATUS\",\"value\":\"$BACKEND_OK\"}" \
+            || \
+          curl -sf -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO/actions/variables" \
+            -d "{\"name\":\"MONITOR_BACKEND_STATUS\",\"value\":\"$BACKEND_OK\"}" \
+            || true
+
+          echo "Done. Backend: $BACKEND_OK"
