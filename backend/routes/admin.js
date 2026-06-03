@@ -4,6 +4,7 @@ const adminOnly = require('../middleware/adminOnly');
 const userService = require('../services/userService');
 const ActivityLog = require('../models/ActivityLog');
 const User = require('../models/User');
+const Contact = require('../models/Contact');
 const {
     validateEmail,
     validateUsername,
@@ -125,6 +126,27 @@ router.put('/admin/users/:id/role', async (req, res, next) => {
             message: 'ROLE_UPDATED',
             user: { _id: user._id, username: user.username, email: user.email, role: user.role },
         });
+    } catch (err) { next(err); }
+});
+
+router.get('/admin/feedback', async (req, res, next) => {
+    try {
+        const page  = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.min(100, parseInt(req.query.limit) || 50);
+        const skip  = (page - 1) * limit;
+        const filter = req.query.type ? { type: req.query.type } : {};
+        const [items, total] = await Promise.all([
+            Contact.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+            Contact.countDocuments(filter),
+        ]);
+        res.json({ items, total, page, pages: Math.ceil(total / limit) });
+    } catch (err) { next(err); }
+});
+
+router.delete('/admin/feedback/:id', async (req, res, next) => {
+    try {
+        await Contact.findByIdAndDelete(req.params.id);
+        res.json({ ok: true });
     } catch (err) { next(err); }
 });
 
