@@ -291,6 +291,22 @@
             color: #999;
         }
 
+        .quality-badge {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            vertical-align: middle;
+        }
+        .quality-badge--cam    { background: rgba(255,80,80,0.18);  color: #ff6b6b; border: 1px solid rgba(255,80,80,0.35); }
+        .quality-badge--soon   { background: rgba(160,100,255,0.18); color: #c084fc; border: 1px solid rgba(160,100,255,0.35); }
+        .quality-badge--web    { background: rgba(59,130,246,0.18);  color: #60a5fa; border: 1px solid rgba(59,130,246,0.35); }
+        .quality-badge--hd     { background: rgba(34,197,94,0.18);   color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
+        .quality-badge--airing { background: rgba(251,146,60,0.18);  color: #fb923c; border: 1px solid rgba(251,146,60,0.35); }
+
         .hero-duration {
             color: #999;
         }
@@ -1862,6 +1878,7 @@
                 <span class="hero-rating" id="heroRating">N/A</span>
                 <span class="hero-year" id="heroYear">N/A</span>
                 <span class="hero-duration" id="heroDuration">N/A</span>
+                <span id="heroQualityBadge"></span>
             </div>
             <p class="hero-description" id="heroDescription" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #e5e5e5 !important;">Loading content information...</p>
             <div class="hero-actions">
@@ -2007,6 +2024,66 @@
         const VIDSRC_API_URL = 'https://vidsrc.fyi/embed';
         const VIXSRC_API_URL = 'https://vixsrc.to';
         const AUTH_API_URL = window.API_BASE_URL || '';
+
+        async function renderQualityBadge() {
+            const el = document.getElementById('heroQualityBadge');
+            if (!el || !contentData) return;
+            el.innerHTML = '';
+
+            let label = '', cls = '';
+
+            if (type === 'tv' || type === 'anime') {
+                const s = contentData.status || '';
+                if (s === 'Returning Series' || s === 'In Production') {
+                    label = '⬤ Airing'; cls = 'airing';
+                } else if (s === 'Ended' || s === 'Canceled') {
+                    label = '✦ HD'; cls = 'hd';
+                }
+            } else {
+                const releaseDate = contentData.release_date || '';
+                if (!releaseDate) return;
+                const now    = Date.now();
+                const relMs  = new Date(releaseDate).getTime();
+                const daysSince = (now - relMs) / 86400000;
+
+                if (relMs > now) {
+                    label = '🎬 Coming Soon'; cls = 'soon';
+                } else if (daysSince <= 45) {
+                    label = '⚠ In Theaters'; cls = 'cam';
+                } else {
+                    // Check if physical/digital release exists
+                    try {
+                        const rdr = await fetch(TMDB_BASE_URL + '/movie/' + contentData.id + '/release_dates');
+                        if (rdr.ok) {
+                            const rd = await rdr.json();
+                            const results = rd.results || [];
+                            let hasPhysical = false;
+                            for (const country of results) {
+                                for (const r of (country.release_dates || [])) {
+                                    // type 4 = digital, type 5 = physical
+                                    if ((r.type === 4 || r.type === 5) && r.release_date) {
+                                        if (new Date(r.release_date).getTime() <= now) {
+                                            hasPhysical = true; break;
+                                        }
+                                    }
+                                }
+                                if (hasPhysical) break;
+                            }
+                            label = hasPhysical ? '✦ HD' : '🌐 WEB';
+                            cls   = hasPhysical ? 'hd'   : 'web';
+                        }
+                    } catch (e) {
+                        label = '🌐 WEB'; cls = 'web';
+                    }
+                }
+            }
+
+            if (!label) return;
+            const badge = document.createElement('span');
+            badge.className = 'quality-badge quality-badge--' + cls;
+            badge.textContent = label;
+            el.appendChild(badge);
+        }
 
         function updateOgTags(title, description, imageUrl) {
             const setMeta = (sel, val) => { const m = document.querySelector(sel); if (m && val) m.setAttribute('content', val); };
@@ -2300,6 +2377,7 @@
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = duration;
+            renderQualityBadge();
 
             // Set My List button data attribute with correct content info
             const addButton = document.getElementById('addButton');
