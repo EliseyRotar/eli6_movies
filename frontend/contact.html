@@ -113,6 +113,124 @@
     }
     .contact-status.ok  { background: #0d2b1a; border: 1px solid #1a5c35; color: #4ade80; }
     .contact-status.err { background: #2b0d0d; border: 1px solid #5c1a1a; color: #f87171; }
+
+    /* ── Discord card ── */
+    .dc-card {
+      position: relative;
+      background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+      border-radius: var(--r-lg, 16px);
+      padding: 28px 32px;
+      overflow: hidden;
+      margin-bottom: 28px;
+      box-shadow: 0 8px 48px rgba(88, 101, 242, 0.38), 0 2px 8px rgba(0,0,0,0.3);
+      text-decoration: none;
+      display: block;
+      transition: transform 200ms ease, box-shadow 200ms ease;
+    }
+    .dc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 56px rgba(88, 101, 242, 0.48), 0 4px 16px rgba(0,0,0,0.35);
+    }
+    .dc-card::before {
+      content: '';
+      position: absolute;
+      top: -60%;
+      right: -8%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.09) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .dc-card::after {
+      content: '';
+      position: absolute;
+      bottom: -40%;
+      left: -5%;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .dc-card__inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .dc-card__logo {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      fill: #fff;
+      opacity: 0.95;
+    }
+    .dc-card__body { flex: 1; min-width: 0; }
+    .dc-card__title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 5px;
+      letter-spacing: -0.01em;
+    }
+    .dc-card__desc {
+      font-size: 13px;
+      color: rgba(255,255,255,0.72);
+      margin: 0 0 12px;
+      line-height: 1.5;
+    }
+    .dc-card__stats {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+    .dc-stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3ba55c;
+      display: inline-block;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px rgba(59, 165, 92, 0.7);
+    }
+    .dc-card__cta {
+      flex-shrink: 0;
+      background: #fff;
+      color: #5865F2;
+      border-radius: var(--r-pill, 999px);
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .contact-or {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      color: var(--fg-muted);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .contact-or::before, .contact-or::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    @media (max-width: 500px) {
+      .dc-card { padding: 22px 20px; }
+      .dc-card__inner { gap: 14px; }
+      .dc-card__logo { width: 36px; height: 36px; }
+      .dc-card__cta { display: none; }
+      .dc-card__title { font-size: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -121,7 +239,26 @@
   <main class="contact-wrap">
     <div class="contact-eyebrow">Feedback</div>
     <h1 class="contact-title">Report a bug or send a suggestion</h1>
-    <p class="contact-sub">Something broken? Got an idea? Drop a message and I'll look into it.</p>
+    <p class="contact-sub">Something broken? Got an idea? Join the Discord for the fastest response, or drop a message below.</p>
+
+    <a class="dc-card" href="https://discord.gg/p8BsZgtT5k" target="_blank" rel="noopener">
+      <div class="dc-card__inner">
+        <svg class="dc-card__logo" viewBox="0 0 127.14 96.36" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+        </svg>
+        <div class="dc-card__body">
+          <div class="dc-card__title">Join the ELI6 Movies Community</div>
+          <div class="dc-card__desc">Chat with other fans, request titles, report sources, and get early updates.</div>
+          <div class="dc-card__stats">
+            <span class="dc-stat-dot"></span>
+            <span id="dcOnline">—</span> online &nbsp;·&nbsp; <span id="dcMembers">—</span> members
+          </div>
+        </div>
+        <div class="dc-card__cta">Join Discord</div>
+      </div>
+    </a>
+
+    <div class="contact-or">or send a message</div>
 
     <form class="contact-form" id="contactForm" novalidate>
       <input type="text" name="hp" id="hp" style="display:none" tabindex="-1" autocomplete="off" />
@@ -161,6 +298,16 @@
     document.addEventListener('DOMContentLoaded', function () {
       if (window.renderTopNav) renderTopNav('contact');
       if (window.renderFooter) renderFooter();
+
+      // Live Discord member count
+      fetch('https://discord.com/api/v10/invites/p8BsZgtT5k?with_counts=true')
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var online  = document.getElementById('dcOnline');
+          var members = document.getElementById('dcMembers');
+          if (online)  online.textContent  = (d.approximate_presence_count || 0).toLocaleString();
+          if (members) members.textContent = (d.approximate_member_count   || 0).toLocaleString();
+        }).catch(function () {});
 
       var activeType = 'bug';
       var pills = document.querySelectorAll('.contact-type-pill');
