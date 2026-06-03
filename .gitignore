@@ -72,14 +72,6 @@ Thumbs.db
 # Local infrastructure doc (contains live secrets — keep off GitHub)
 INFRASTRUCTURE.md
 
-# Analytics & admin — deployed via 'vercel' CLI but kept out of the public repo
-frontend/analytics.html
-frontend/admin_users.html
-frontend/js/s.js
-frontend/js/admin_users*.js
-backend/routes/analytics.js
-backend/routes/admin.js
-
 # Design handoff (local reference only)
 design_handoff_eli6_movies/
 account.html/
