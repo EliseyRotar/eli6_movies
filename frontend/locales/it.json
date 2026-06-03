@@ -323,13 +323,13 @@
         "ru": "Русский"
     },
     "adblocker": {
-        "title": "Migliora la tua esperienza: Installa un Adblocker",
-        "description": "Gli adblocker offrono un'esperienza più fluida e senza pubblicità e ti proteggono da annunci dannosi e tracker. Goditi lo streaming in sicurezza e senza virus!",
-        "download_recommended": "Scarica",
-        "download": "Scarica",
-        "learn_more": "Scopri di più",
+        "title": "Meglio con un adblocker",
+        "description": "I player video provengono da fonti di terze parti che possono mostrare pubblicità e reindirizzamenti. Il sito stesso non ne ha — è il player. Un adblocker elimina la maggior parte.",
+        "best_for": "Miglior opzione per il tuo browser:",
+        "get": "Installa",
+        "skip": "Salta",
         "dont_show": "Non mostrare più",
-        "dismiss": "Chiudi"
+        "dismiss": "Salta"
     },
     "addToMyList": "Aggiungi alla Mia Lista",
     "trendingTV": "Serie TV di Tendenza",

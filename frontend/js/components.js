@@ -1083,6 +1083,8 @@
       if (hasBlock) return;
 
       var rec = getAdBlockRec();
+      var i18n = window.i18n && window.i18n.t ? window.i18n : null;
+      function t(key, fallback) { return i18n ? i18n.t('common.adblocker.' + key, fallback) : fallback; }
 
       var overlay = el('div');
       overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:16px;';
@@ -1091,16 +1093,16 @@
       modal.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.6);';
       modal.innerHTML = [
         '<div style="font-size:38px;margin-bottom:14px;line-height:1">🛡️</div>',
-        '<h2 style="margin:0 0 8px;font-size:19px;font-weight:700;color:var(--fg)">Better with an adblocker</h2>',
-        '<p style="margin:0 0 16px;font-size:14px;color:var(--fg-muted);line-height:1.6">The video players are from third-party sources that can serve ads and redirects. The site itself has none — it\'s the player. An adblocker kills most of it.</p>',
-        '<p style="margin:0 0 20px;font-size:13px;color:var(--fg-muted)">Best option for your browser: <strong style="color:var(--fg)">' + rec.name + '</strong> — ' + rec.note + '</p>',
+        '<h2 style="margin:0 0 8px;font-size:19px;font-weight:700;color:var(--fg)">' + t('title', 'Better with an adblocker') + '</h2>',
+        '<p style="margin:0 0 16px;font-size:14px;color:var(--fg-muted);line-height:1.6">' + t('description', "The video players are from third-party sources that can serve ads and redirects. The site itself has none — it's the player. An adblocker kills most of it.") + '</p>',
+        '<p style="margin:0 0 20px;font-size:13px;color:var(--fg-muted)">' + t('best_for', 'Best option for your browser:') + ' <strong style="color:var(--fg)">' + rec.name + '</strong> — ' + rec.note + '</p>',
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">',
-        '<a id="ab-install" href="' + rec.url + '" target="_blank" rel="noopener noreferrer" style="flex:1;min-width:120px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:8px;text-align:center;font-size:14px;font-weight:700;text-decoration:none;display:block;">Get ' + rec.name + '</a>',
-        '<button id="ab-skip" style="flex:1;min-width:80px;padding:11px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">Skip</button>',
+        '<a id="ab-install" href="' + rec.url + '" target="_blank" rel="noopener noreferrer" style="flex:1;min-width:120px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:8px;text-align:center;font-size:14px;font-weight:700;text-decoration:none;display:block;">' + t('get', 'Get') + ' ' + rec.name + '</a>',
+        '<button id="ab-skip" style="flex:1;min-width:80px;padding:11px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">' + t('skip', 'Skip') + '</button>',
         '</div>',
         '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--fg-muted);user-select:none;">',
         '<input type="checkbox" id="ab-never" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;" />',
-        "Don't show this again",
+        t('dont_show', "Don't show this again"),
         '</label>',
       ].join('');
 

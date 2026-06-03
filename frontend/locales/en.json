@@ -323,13 +323,13 @@
         "ru": "Русский"
     },
     "adblocker": {
-        "title": "Enhance Your Experience: Install an Adblocker",
-        "description": "Adblockers provide a smoother, ad-free experience and protect you from malicious ads and trackers. Stay safe and virus-free while you stream!",
-        "download_recommended": "Download",
-        "download": "Download",
-        "learn_more": "Learn More",
-        "dont_show": "Don't show again",
-        "dismiss": "Dismiss"
+        "title": "Better with an adblocker",
+        "description": "The video players are from third-party sources that can serve ads and redirects. The site itself has none — it's the player. An adblocker kills most of it.",
+        "best_for": "Best option for your browser:",
+        "get": "Get",
+        "skip": "Skip",
+        "dont_show": "Don't show this again",
+        "dismiss": "Skip"
     },
     "addToMyList": "Add to My List",
     "trendingTV": "Trending TV",
