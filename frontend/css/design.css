@@ -187,6 +187,9 @@ html[data-theme="marquee"] .bottomnav {
 html[data-theme="marquee"] .bottomnav__item { font-family: var(--font-mono); }
 html[data-theme="marquee"] .bottomnav__item-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
 .bottomnav__item--active { color: var(--accent); }
+.bottomnav__item svg { display: block; }
+.topnav__icon-btn svg { display: block; }
+.topnav__search-wide svg { display: block; }
 
 /* hero */
 .hero {
@@ -810,6 +813,9 @@ html[data-theme="marquee"] .detail__title { letter-spacing: 0.02em; text-transfo
 .empty__icon { font-size: 48px; opacity: 0.4; margin-bottom: 16px; }
 .empty__title { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 24px; margin-bottom: 8px; }
 .empty__sub { color: var(--fg-muted); font-size: 14px; max-width: 320px; margin: 0 auto; }
+.empty__suggest { margin-top: 14px; font-size: 14px; color: var(--fg-muted); }
+.empty__suggest-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+.empty__suggest-link:hover { text-decoration: underline; }
 
 /* settings-page */
 .settings { padding-bottom: 40px; }

@@ -43,6 +43,15 @@
     { code: "ru", label: "Русский",  flag: "🇷🇺" },
   ];
 
+  var NAV_ICONS = {
+    home:     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+    film:     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="2" y1="17" x2="7" y2="17"/></svg>',
+    search:   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+    bookmark: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>',
+    user:     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    sliders:  '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
+  };
+
   function _getCurrentLang() {
     if (window.i18n && window.i18n.currentLanguage) return window.i18n.currentLanguage;
     var m = document.cookie.match(/(?:^|;\s*)eli6_language=([a-z]+)/);
@@ -93,15 +102,15 @@
     const right = el("div", "topnav__right");
 
     const searchWide = el("button", "topnav__search-wide");
-    searchWide.innerHTML = "<span>⌕</span><span>Search films, shows, anime…</span>";
+    searchWide.innerHTML = "<span>" + NAV_ICONS.search + "</span><span>Search films, shows, anime…</span>";
     searchWide.addEventListener("click", function () { window.location.href = "search.html"; });
 
     const searchMobile = el("button", "topnav__icon-btn topnav__icon-btn--mobile-search");
-    searchMobile.textContent = "⌕";
+    searchMobile.innerHTML = NAV_ICONS.search;
     searchMobile.addEventListener("click", function () { window.location.href = "search.html"; });
 
     const tweaksBtn = el("button", "topnav__icon-btn");
-    tweaksBtn.textContent = "✦";
+    tweaksBtn.innerHTML = NAV_ICONS.sliders;
     tweaksBtn.title = "Settings";
     tweaksBtn.addEventListener("click", function () { window.location.href = "settings.html"; });
 
@@ -173,11 +182,11 @@
     active = active || activePage();
 
     const items = [
-      { k: "home",    i: "⌂", l: "Home",    href: "index.html" },
-      { k: "movies",  i: "▶", l: "Movies",  href: "movies.html" },
-      { k: "search",  i: "⌕", l: "Search",  href: "search.html" },
-      { k: "mylist",  i: "♥", l: "List",    href: "mylist.html" },
-      { k: "account", i: "◉", l: "Profile", href: "account.html" },
+      { k: "home",    i: NAV_ICONS.home,     l: "Home",    href: "index.html" },
+      { k: "movies",  i: NAV_ICONS.film,     l: "Movies",  href: "movies.html" },
+      { k: "search",  i: NAV_ICONS.search,   l: "Search",  href: "search.html" },
+      { k: "mylist",  i: NAV_ICONS.bookmark, l: "List",    href: "mylist.html" },
+      { k: "account", i: NAV_ICONS.user,     l: "Profile", href: "account.html" },
     ];
 
     const nav = el("nav", "bottomnav");
@@ -190,7 +199,7 @@
       const btn = el("a", "bottomnav__item" + (isActive ? " bottomnav__item--active" : ""));
       btn.href = it.href;
 
-      const icon  = el("span");  icon.textContent = it.i;
+      const icon  = el("span");  icon.innerHTML = it.i;
       const label = el("span", "bottomnav__item-label"); label.textContent = it.l;
       btn.appendChild(icon);
       btn.appendChild(label);
@@ -585,6 +594,15 @@
         go(idx + 1);
       });
     }
+
+    var _swipeStartX = 0;
+    container.addEventListener("touchstart", function (e) {
+      _swipeStartX = e.touches[0].clientX;
+    }, { passive: true });
+    container.addEventListener("touchend", function (e) {
+      var dx = e.changedTouches[0].clientX - _swipeStartX;
+      if (Math.abs(dx) > 40) go(dx < 0 ? idx + 1 : idx - 1);
+    }, { passive: true });
 
     render(0);
     resetTimer();

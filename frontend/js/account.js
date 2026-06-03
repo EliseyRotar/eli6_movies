@@ -619,7 +619,7 @@
   function renderAuthForms(mount) {
     var wrap = div('acc__auth');
     var tabs = div();
-    tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border-radius:var(--r-pill);padding:4px;border:1px solid var(--border)';
+    tabs.style.cssText = 'display:flex;gap:4px;margin-bottom:28px;background:var(--surface);border-radius:var(--r-pill);padding:4px;border:1px solid var(--border);width:fit-content';
     var tabLogin = el('button', 'settings__seg-btn is-active');
     tabLogin.id = 'tab-login'; tabLogin.textContent = tr('account.signIn', 'Sign in');
     var tabReg = el('button', 'settings__seg-btn');

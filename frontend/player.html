@@ -2271,7 +2271,7 @@
                 : (contentData.release_date ? contentData.release_date.split('-')[0] : 'N/A');
             const genres = contentData.genres ? contentData.genres.map(g => g.name).join(', ') : 'N/A';
             const duration = type === 'tv'
-                ? (contentData.episode_run_time ? `${contentData.episode_run_time[0]}m` : 'N/A')
+                ? (contentData.episode_run_time && contentData.episode_run_time.length && contentData.episode_run_time[0] ? `${contentData.episode_run_time[0]}m` : 'N/A')
                 : (contentData.runtime ? `${contentData.runtime}m` : 'N/A');
             const backdropPath = contentData.backdrop_path
                 ? `https://image.tmdb.org/t/p/original${contentData.backdrop_path}`

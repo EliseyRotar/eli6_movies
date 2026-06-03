@@ -480,6 +480,40 @@
       '<div class="empty__sub">Try different keywords or check spelling.</div>';
     mount.appendChild(empty);
 
+    // try adjacent-char swaps + single-char deletions to find a close match
+    if (q.length >= 3 && activeFilter !== 'anime') {
+      var s = q.split('');
+      var candidates = [];
+      for (var i = 0; i < s.length - 1; i++) {
+        var c = s.slice(); var tmp = c[i]; c[i] = c[i+1]; c[i+1] = tmp;
+        candidates.push(c.join(''));
+      }
+      if (q.length <= 14) {
+        for (var i = 0; i < s.length; i++) {
+          candidates.push(s.filter(function(_, j) { return j !== i; }).join(''));
+        }
+      }
+      candidates = candidates.filter(function(c, i, arr) { return c !== q && arr.indexOf(c) === i; }).slice(0, 6);
+      Promise.all(candidates.map(function(c) {
+        return _doFetch(c, 1).then(function(r) { return { items: r.items }; }).catch(function() { return { items: [] }; });
+      })).then(function(results) {
+        var found = results.find(function(r) { return r.items.length > 0; });
+        if (!found || !mount.contains(empty)) return;
+        var title = (found.items[0].title || found.items[0].name || '').trim();
+        if (!title) return;
+        var suggest = document.createElement('div');
+        suggest.className = 'empty__suggest';
+        suggest.innerHTML = 'Did you mean: <a class="empty__suggest-link" href="#">' + title.replace(/</g, '&lt;') + '</a>?';
+        suggest.querySelector('a').addEventListener('click', function(e) {
+          e.preventDefault();
+          var inp = document.getElementById('search-input');
+          if (inp) { inp.value = title; inp.dispatchEvent(new Event('input')); }
+        });
+        var sub = empty.querySelector('.empty__sub');
+        if (sub) sub.insertAdjacentElement('afterend', suggest);
+      });
+    }
+
     _fetchTrending().then(function (data) {
       var movies = (data[0].results || []).slice(0, 10).map(_normMovie);
       if (movies.length) {
