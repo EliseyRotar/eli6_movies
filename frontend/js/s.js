@@ -47,21 +47,26 @@
     var activeMs    = 0;
     var visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
 
+    function flushDuration() {
+        if (visibleSince !== null) {
+            activeMs += Date.now() - visibleSince;
+            visibleSince = null;
+        }
+        var secs = Math.round(activeMs / 1000);
+        if (secs > 0) send({ type: 'dur', sid: sid(), path: location.pathname, dur: secs });
+    }
+
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') {
-            if (visibleSince !== null) {
-                activeMs += Date.now() - visibleSince;
-                visibleSince = null;
-            }
-            var secs = Math.round(activeMs / 1000);
-            if (secs > 0) {
-                send({ type: 'dur', sid: sid(), path: location.pathname, dur: secs });
-            }
+            flushDuration();
         } else {
-            // Tab became visible again — restart the visible timer
             visibleSince = Date.now();
         }
     });
+
+
+    // pagehide fires on tab-close in mobile Safari/Firefox where visibilitychange doesn't
+    window.addEventListener('pagehide', flushDuration);
 
     // Heartbeat every 30 s — keeps live count accurate
     setInterval(function () {

@@ -260,7 +260,8 @@ function countryFlag(code){
   try{return code.toUpperCase().replace(/./g,c=>String.fromCodePoint(0x1F1E6-65+c.charCodeAt(0)));}catch(_){return ''}
 }
 function trendHtml(curr, prev){
-  if(prev==null||prev===0) return '';
+  if(prev==null) return '';
+  if(prev===0) return curr>0?'<span class="kpi-trend up">↑ new</span>':'';
   const pct=Math.round(((curr-prev)/prev)*100);
   if(pct===0) return '<span class="kpi-trend neutral">→ 0%</span>';
   return pct>0

@@ -10,8 +10,7 @@ function cronAuth(req, res, next) {
     next();
 }
 
-// POST /api/cron/check-episodes
-// Called once daily by an external cron (e.g. cron-job.org) with header X-Cron-Secret
+// called daily by cron-job.org with X-Cron-Secret header
 router.post('/cron/check-episodes', cronAuth, async (req, res, next) => {
     try {
         const { run } = require('../jobs/episodeNotifier');

@@ -30,6 +30,8 @@ router.post('/admin/users', async (req, res, next) => {
         }
         const existing = await userService.findByEmail(email);
         if (existing) return res.status(400).json({ error: 'USER_EXISTS' });
+        const existingUsername = await userService.findByUsername(username.trim());
+        if (existingUsername) return res.status(400).json({ error: 'USER_EXISTS' });
         const safeRole = ['user', 'admin'].includes(role) ? role : 'user';
         const user = await userService.createUser({
             username: username.trim(),
@@ -47,6 +49,7 @@ router.delete('/admin/users/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!id) return res.status(400).json({ error: 'INVALID_ID' });
+        if (String(id) === String(req.user._id)) return res.status(400).json({ error: 'CANNOT_DELETE_SELF' });
         const deleted = await userService.deleteUser(id);
         if (!deleted) return res.status(404).json({ error: 'NOT_FOUND' });
         res.json({
@@ -100,7 +103,7 @@ router.put('/admin/users/:id/reset-password', async (req, res, next) => {
         const user = await userService.findById(id);
         if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
         user.password = await userService.hashPassword(newPassword);
-        user.sessions = []; // revoke all existing sessions for the target account
+        user.sessions = [];
         await user.save();
         res.json({
             message: 'PASSWORD_RESET',

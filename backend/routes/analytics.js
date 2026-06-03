@@ -35,8 +35,6 @@ router.get('/admin/analytics/live', (req, res) => {
     res.json({ total: anon + loggedIn, anon, loggedIn, sessions: recent.slice(0, 20) });
 });
 
-// GET /admin/analytics/overview?range=7d
-// Returns current + previous period for trend arrows, plus bounce rate and avg duration
 router.get('/admin/analytics/overview', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -52,20 +50,17 @@ router.get('/admin/analytics/overview', async (req, res, next) => {
             PageView.distinct('sessionId', { createdAt: { $gte: from } }).then(r => r.length),
             prevFrom ? PageView.distinct('sessionId', { createdAt: { $gte: prevFrom, $lt: from } }).then(r => r.length) : Promise.resolve(null),
             PageView.distinct('userId', { createdAt: { $gte: from }, userId: { $ne: null } }).then(r => r.length),
-            // avg duration
             PageView.aggregate([
                 { $match: { createdAt: { $gte: from }, duration: { $gt: 0, $lt: 7200 } } },
                 { $group: { _id: null, avg: { $avg: '$duration' } } },
             ]),
-            // bounce rate: sessions with only 1 pageview
+            // bounce = sessions with 1 pageview
             PageView.aggregate([
                 { $match: { createdAt: { $gte: from } } },
                 { $group: { _id: '$sessionId', count: { $sum: 1 } } },
                 { $group: { _id: null, total: { $sum: 1 }, bounced: { $sum: { $cond: [{ $eq: ['$count', 1] }, 1, 0] } } } },
             ]),
-            // new registrations this period
             ActivityLog.countDocuments({ event: 'register', createdAt: { $gte: from } }),
-            // new registrations prev period
             prevFrom ? ActivityLog.countDocuments({ event: 'register', createdAt: { $gte: prevFrom, $lt: from } }) : Promise.resolve(null),
         ];
 
@@ -83,7 +78,6 @@ router.get('/admin/analytics/overview', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/daily?range=7d
 router.get('/admin/analytics/daily', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -102,7 +96,6 @@ router.get('/admin/analytics/daily', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/pages?range=7d
 router.get('/admin/analytics/pages', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -122,7 +115,6 @@ router.get('/admin/analytics/pages', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/countries?range=7d
 router.get('/admin/analytics/countries', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -136,7 +128,6 @@ router.get('/admin/analytics/countries', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/cities?range=7d
 router.get('/admin/analytics/cities', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -150,7 +141,6 @@ router.get('/admin/analytics/cities', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/devices?range=7d
 router.get('/admin/analytics/devices', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -163,7 +153,6 @@ router.get('/admin/analytics/devices', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/browsers?range=7d
 router.get('/admin/analytics/browsers', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -177,7 +166,6 @@ router.get('/admin/analytics/browsers', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/os?range=7d
 router.get('/admin/analytics/os', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -191,7 +179,6 @@ router.get('/admin/analytics/os', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/referrers?range=7d
 router.get('/admin/analytics/referrers', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -205,7 +192,6 @@ router.get('/admin/analytics/referrers', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/campaigns?range=7d
 router.get('/admin/analytics/campaigns', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -224,7 +210,6 @@ router.get('/admin/analytics/campaigns', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/hourly?range=7d  — 24-slot traffic distribution
 router.get('/admin/analytics/hourly', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -241,7 +226,6 @@ router.get('/admin/analytics/hourly', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// GET /admin/analytics/user-growth?range=7d
 router.get('/admin/analytics/user-growth', async (req, res, next) => {
     try {
         const from = getFrom(req.query.range);
@@ -257,9 +241,6 @@ router.get('/admin/analytics/user-growth', async (req, res, next) => {
     } catch (err) { next(err); }
 });
 
-// POST /admin/analytics/migrate — one-time fix for historical data
-// • Nulls out self-referrers (eli6movies.vercel.app stored in old records)
-// • Re-runs geo lookup for any records that have a real (non-private) IP but no country
 router.post('/admin/analytics/migrate', async (req, res, next) => {
     try {
         const { geoLookup } = require('../utils/geoip');
@@ -274,7 +255,7 @@ router.post('/admin/analytics/migrate', async (req, res, next) => {
         // 2) Geo-enrich records that have a real IP but no country (batched, max 500)
         const orphans = await PageView.find({
             country: null,
-            ip: { $exists: true, $ne: null, $ne: '' },
+            ip: { $exists: true, $nin: [null, ''] },
         }).select('_id ip').limit(500).lean();
 
         let geoFixed = 0;

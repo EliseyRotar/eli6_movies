@@ -240,7 +240,6 @@ router.put('/user/update', auth, async (req, res) => {
     try {
         const { username, email } = req.body || {};
 
-        // Require current password for sensitive field changes
         if (username || email) {
             const { currentPassword } = req.body || {};
             if (!currentPassword) {

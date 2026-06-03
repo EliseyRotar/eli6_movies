@@ -8,7 +8,7 @@ let allUsers = [];
 let filteredUsers = [];
 let currentPage = 1;
 const USERS_PER_PAGE = 10;
-const API_BASE = window.API_BASE_URL || 'https://streaming.ecolens.me/api';
+const API_BASE = window.API_BASE_URL || 'https://eli6movies.onrender.com/api';
 
 function getCurrentUser() {
     const user = localStorage.getItem('user');
@@ -438,6 +438,7 @@ window.changeRole = changeRole;
 window.deleteUser = deleteUser;
 window.addUserModal = addUserModal;
 window.bulkDeleteModal = bulkDeleteModal;
+window.bulkDeleteConfirmed = bulkDeleteConfirmed;
 window.toggleSelectAll = toggleSelectAll;
 window.loadUsers = loadUsers;
 window.updateStats = updateStats;

@@ -122,7 +122,7 @@ router.post('/data', optionalAuth, (req, res) => {
             } else if (type === 'dur' && dur > 0) {
                 await PageView.findOneAndUpdate(
                     { sessionId: sid, path: safePath },
-                    { $set: { duration: Math.min(Number(dur) || 0, 86400) } },
+                    { $max: { duration: Math.min(Number(dur) || 0, 86400) } },
                     { sort: { createdAt: -1 } }
                 );
             }

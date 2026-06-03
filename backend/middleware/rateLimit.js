@@ -22,7 +22,6 @@ const pickBucket = (path) => {
 };
 
 function rateLimit(req, res, next) {
-    if (req.path.startsWith('/api/admin')) return next();
     const bucketKey = pickBucket(req.path);
     const bucket = BUCKETS[bucketKey] || BUCKETS.api;
     const now = Date.now();

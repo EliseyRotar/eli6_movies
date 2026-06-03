@@ -7,7 +7,6 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const FROM_EMAIL   = process.env.MAIL_FROM || 'ELI6 Movies <onboarding@resend.dev>';
 const APP_URL      = process.env.APP_URL || 'https://eli6movies.vercel.app';
 
-// Fetch details + latest aired episode for a TV show from TMDB
 async function fetchShowInfo(tmdbId) {
     try {
         const { data } = await axios.get(
@@ -51,7 +50,6 @@ function newEpisodeEmail(username, show, ep) {
 async function run() {
     const results = { checked: 0, emailsSent: 0, errors: [] };
 
-    // Collect all unique TV show IDs across all verified users' myLists
     const users = await User.find({ emailVerified: true, 'myList.0': { $exists: true } })
         .select('username email myList tvNotifications')
         .lean();
@@ -86,7 +84,7 @@ async function run() {
             for (const { user } of entries) {
                 const notifs = Array.isArray(user.tvNotifications) ? user.tvNotifications : [];
                 const existing = notifs.find(n => n.showId === showId);
-                if (existing && existing.lastEpisodeKey === key) continue; // already notified
+                if (existing && existing.lastEpisodeKey === key) continue;
 
                 try {
                     await resend.emails.send({
