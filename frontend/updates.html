@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Updates — ELI6 Movies</title>
+  <meta name="description" content="What's new on ELI6 Movies — changelog and release notes." />
+  <script>(function(){try{var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');document.documentElement.dataset.theme=p.theme||'pulse';document.documentElement.dataset.mode=p.mode||'dark';}catch(e){document.documentElement.dataset.theme='pulse';document.documentElement.dataset.mode='dark';}})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Major+Mono+Display&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/design.css" />
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <style>
+    .updates-page {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 100px 24px 80px;
+    }
+
+    .updates-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    .updates-title {
+      font-size: 2.4rem;
+      font-weight: 700;
+      color: var(--text-primary, #fff);
+      margin-bottom: 8px;
+      line-height: 1.15;
+    }
+
+    .updates-subtitle {
+      font-size: 16px;
+      color: var(--text-secondary, #999);
+      margin-bottom: 56px;
+    }
+
+    .release {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 52px;
+    }
+
+    .release::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      bottom: -52px;
+      width: 2px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .release:last-child::before {
+      display: none;
+    }
+
+    .release-dot {
+      position: absolute;
+      left: -5px;
+      top: 8px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(0,0,0,0.8), 0 0 0 5px color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .release-dot.minor {
+      background: rgba(255,255,255,0.3);
+      box-shadow: none;
+    }
+
+    .release-header {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .release-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-secondary, #999);
+      font-weight: 400;
+    }
+
+    .release-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: color-mix(in srgb, var(--accent) 15%, transparent);
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    }
+
+    .entry-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .entry {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      font-size: 15px;
+      color: var(--text-primary, #e5e5e5);
+      line-height: 1.5;
+    }
+
+    .entry-badge {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    .badge-new    { background: #1a3a2a; color: #46d369; border: 1px solid #2a5a3a; }
+    .badge-fix    { background: #2a2a1a; color: #f4b942; border: 1px solid #4a4a1a; }
+    .badge-sec    { background: #2a1a1a; color: #e05252; border: 1px solid #4a2a2a; }
+    .badge-perf   { background: #1a2a3a; color: #5ba3f5; border: 1px solid #2a3a5a; }
+
+    .entry-text {
+      flex: 1;
+    }
+
+    .entry-text strong {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+      .updates-title { font-size: 1.8rem; }
+      .updates-page { padding: 80px 16px 100px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="topnav-mount"></div>
+
+  <main class="updates-page">
+    <div class="updates-eyebrow">Changelog</div>
+    <h1 class="updates-title">What's new</h1>
+    <p class="updates-subtitle">Every update since launch, most recent first.</p>
+
+    <!-- June 3, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">June 3, 2026</span>
+        <span class="release-tag">latest</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Vercel Edge Middleware</strong> — when you share a link to a movie or show, Discord, Twitter, Telegram, and Google now see the real title, description, and poster image instead of a generic placeholder</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>JSON-LD structured data</strong> — Movie and TVSeries schema injected on the player page, helps Google understand what's on the page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Source quality badge</strong> — player hero now shows CAM, WEB, HD, or AIRING based on TMDB release dates so you know what quality to expect before watching</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Trakt.tv scrobbling</strong> — connect your Trakt account in Settings and everything you watch automatically syncs to your Trakt history</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text"><strong>Player auto-resume</strong> — fixed black screen when resuming; timestamp is now applied correctly to the video URL and cleared after use so it doesn't stick across episodes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text"><strong>Adblocker popup</strong> — dismissed permanently on any close action, no longer required a separate "never show again" checkbox</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Adblocker prompt</strong> — detects whether you're on desktop or mobile and shows the right install instructions (uBlock Origin vs Brave/Firefox Focus)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Italian and Russian</strong> — adblocker prompt and player UI translated into IT and RU, joining the existing multi-language support</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Contact / Feedback page</strong> — added to the top nav; messages save to the database so nothing gets lost even if email fails</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Favicon, anime API endpoint, and cold start "warming up" message improvements</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- June 2, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">June 2, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Live sports</strong> — new Live page with real-time scores, match schedule, favorites, date picker, league filter, sport icons, and theater mode. Sources: Streamed.pk and EmbedSportex</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Live sports PWA</strong> — installable as a standalone app on Android and desktop</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Live sports i18n</strong> — Russian and Italian translations added to the live page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Live page: team banner images, sport gradient cards, mobile layout, source switching, and several security issues</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>UTM redirect links</strong> — <code>/go/freemediaheckyeah</code>, <code>/go/anime</code>, and others for tracking traffic from community posts</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-perf">perf</span>
+          <span class="entry-text">Analytics: added <code>utm_content</code> dimension to campaign tracking; campaign table now shows all-time data</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- June 1, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">June 1, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>90-day sessions</strong> — stay logged in for 3 months without being kicked out</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Episode notifications</strong> — follow a TV show and get an email when a new episode drops</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Tiered TMDB cache</strong> — popular content cached longer, reduces API calls and speeds up page loads</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Clean URLs</strong> — <code>/watch/movie/550</code> instead of <code>/player.html?type=movie&amp;id=550</code></span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 31, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 31, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Smart server auto-failover</strong> — player detects when a source fails via postMessage and silently switches to the next one. Last working server is remembered per title</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Profile picture upload</strong> — change your avatar directly from the account page (powered by Cloudinary)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>My List redesign</strong> — filters by type, sort by date/title, search, bulk remove, and a randomizer button that picks something to watch</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Analytics dashboard redesign</strong> — trend charts, hourly heatmap, UTM campaign builder, CSV export, OS/city/user growth charts</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>15 player improvements</strong> — lazy tab loading, sticky player bar, watch progress bar, share button, report broken button, reload button</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Search overhaul</strong> — typeahead suggestions, people search (actors/directors), multi-source results, search history pills</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Coming soon badge</strong> — titles not yet released show a "Coming Soon" badge and the Watch button is disabled</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">Fixed 8 security vulnerabilities identified in code review — rate limit bypass, admin route exposure, and others</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">My List: 8 bugs fixed including login gate, visible toasts, and correct error messages</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 30, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 30, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Password reset and email verification</strong> — forgot password flow via email, plus verify-your-email on signup</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>UTM campaign tracking</strong> — analytics tracks where visitors come from (Reddit, Lemmy, etc.) and shows it in the dashboard</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>10 player improvements</strong> — real cast credits, episode list, ratings, load more button, keyboard shortcuts, search history</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-perf">perf</span>
+          <span class="entry-text">Fetch timeouts on all API calls — sleeping Render backend now triggers the retry UI immediately instead of hanging</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Crash loop on Render caused by <code>ua-parser-js</code> — replaced with inline UA parser</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 2026 — early features -->
+    <div class="release">
+      <div class="release-dot minor"></div>
+      <div class="release-header">
+        <span class="release-date">May 2026</span>
+        <span class="release-tag">launch</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Multi-language UI</strong> — English, Italian, and Russian throughout the entire interface</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Multiple themes</strong> — Pulse, Noir, Marquee, and more with dark/light modes and accent color picker</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>User accounts</strong> — optional signup; required only for My List, Keep Watching, and episode notifications</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Keep Watching</strong> — automatically picks up where you left off across sessions and devices</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>10+ embed servers</strong> — vidsrc, embed.su, autoembed, vidlink, and more, with automatic failover if one source doesn't work</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Android TV and spatial navigation</strong> — d-pad/remote control support for TV browsers</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Mobile-first layout</strong> — bottom navigation bar, swipe gestures on hero, responsive design throughout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">TMDB API key moved to backend proxy — no longer exposed in frontend source code</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text"><strong>Site launched</strong> — movies, TV shows, and anime. Free, no sign-up required, zero ads</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+
+  <div id="bottomnav-mount"></div>
+
+  <script src="js/config.js" defer></script>
+  <script src="js/theme.js" defer></script>
+  <script src="js/components.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.renderTopNav) window.renderTopNav('updates');
+      if (window.renderBottomNav) window.renderBottomNav('updates');
+    });
+  </script>
+</body>
+</html>

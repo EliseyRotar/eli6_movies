@@ -74,6 +74,7 @@
       { k: "live",    label: "Live",     href: "live.html" },
       { k: "mylist",  label: "My List",  href: "mylist.html" },
       { k: "contact", label: "Feedback", href: "contact.html" },
+      { k: "updates", label: "Updates",  href: "updates.html" },
     ];
 
     const nav = el("nav", "topnav");
@@ -938,6 +939,7 @@
       { label: "Cookie Policy", href: "cookies.html" },
       { label: "DMCA", href: "dmca.html" },
       { label: "Contact", href: "contact.html" },
+      { label: "Updates", href: "updates.html" },
     ];
     legalLinks.forEach(function (l) {
       const a = el("a"); a.href = l.href; a.textContent = l.label;
