@@ -21,8 +21,9 @@
         var src  = p.get('utm_source');
         var med  = p.get('utm_medium');
         var camp = p.get('utm_campaign');
+        var cont = p.get('utm_content');
         if (src) {
-            var stored = { src: src, med: med, camp: camp };
+            var stored = { src: src, med: med, camp: camp, cont: cont };
             try { sessionStorage.setItem('_utms', JSON.stringify(stored)); } catch (_) {}
             return stored;
         }
@@ -39,7 +40,7 @@
     // Page view
     send({
         type: 'pv', sid: sid(), path: location.pathname, ref: ref,
-        utm_source: utms.src || null, utm_medium: utms.med || null, utm_campaign: utms.camp || null,
+        utm_source: utms.src || null, utm_medium: utms.med || null, utm_campaign: utms.camp || null, utm_content: utms.cont || null,
     });
 
     // Fixes the "8 minutes on page" problem where hidden/background time was counted.

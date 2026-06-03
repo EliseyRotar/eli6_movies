@@ -95,6 +95,7 @@ router.post('/data', optionalAuth, (req, res) => {
                 const utmSource   = typeof body.utm_source   === 'string' ? body.utm_source.slice(0, 100)   : null;
                 const utmMedium   = typeof body.utm_medium   === 'string' ? body.utm_medium.slice(0, 100)   : null;
                 const utmCampaign = typeof body.utm_campaign === 'string' ? body.utm_campaign.slice(0, 100) : null;
+                const utmContent  = typeof body.utm_content  === 'string' ? body.utm_content.slice(0, 100)  : null;
                 const [geo, parsed] = await Promise.all([geoLookup(ip), Promise.resolve(parseUA(ua))]);
                 await PageView.create({
                     sessionId:   sid,
@@ -113,6 +114,7 @@ router.post('/data', optionalAuth, (req, res) => {
                     utmSource,
                     utmMedium,
                     utmCampaign,
+                    utmContent,
                 });
             } else if (type === 'hb') {
                 activeSessions.set(sid, { lastSeen: Date.now(), userId, username, path: safePath });

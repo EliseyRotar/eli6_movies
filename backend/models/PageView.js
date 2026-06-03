@@ -18,6 +18,7 @@ const schema = new mongoose.Schema({
     utmSource:   { type: String, default: null },
     utmMedium:   { type: String, default: null },
     utmCampaign: { type: String, default: null },
+    utmContent:  { type: String, default: null },
     createdAt:   { type: Date, default: Date.now, index: true },
 });
 

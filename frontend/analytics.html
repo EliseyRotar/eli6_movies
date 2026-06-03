@@ -509,7 +509,7 @@ async function loadLists(){
     api('/admin/analytics/browsers?range='+currentRange),
     api('/admin/analytics/os?range='+currentRange),
     api('/admin/analytics/referrers?range='+currentRange),
-    api('/admin/analytics/campaigns?range='+currentRange),
+    api('/admin/analytics/campaigns?range=all'),
   ]);
 
   renderList('listPages', pages,
@@ -536,13 +536,14 @@ async function loadLists(){
   const campsEl=document.getElementById('campaignsBody');
   if(campsEl){
     if(!campaigns.length){
-      campsEl.innerHTML='<tr><td colspan="5" class="empty">No campaign traffic yet — share a UTM link to see data here.</td></tr>';
+      campsEl.innerHTML='<tr><td colspan="6" class="empty">No campaign traffic yet — share a UTM link to see data here.</td></tr>';
     }else{
       campsEl.innerHTML=campaigns.map(r=>`
         <tr>
           <td><span class="badge">${esc(r._id.source)}</span></td>
           <td style="color:var(--muted)">${esc(r._id.medium||'—')}</td>
           <td style="color:var(--muted)">${esc(r._id.campaign||'—')}</td>
+          <td style="color:var(--muted)">${esc(r._id.content||'—')}</td>
           <td style="font-weight:700;color:var(--accent)">${fmt(r.sessions)}</td>
           <td>${fmt(r.views)}</td>
         </tr>`).join('');
@@ -858,12 +859,12 @@ function renderShell(){
       </div>
       <div class="table-card" style="padding:18px">
         <div class="table-head">
-          <div class="chart-title" style="margin:0">Campaign Traffic <span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:6px">utm_source / utm_medium / utm_campaign</span></div>
+          <div class="chart-title" style="margin:0">Campaign Traffic <span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:6px">utm_source / utm_medium / utm_campaign / utm_content — all time</span></div>
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th>Sessions</th><th>Views</th></tr></thead>
-            <tbody id="campaignsBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+            <thead><tr><th>Source</th><th>Medium</th><th>Campaign</th><th>Content</th><th>Sessions</th><th>Views</th></tr></thead>
+            <tbody id="campaignsBody"><tr><td colspan="6" class="empty">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>

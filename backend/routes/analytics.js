@@ -212,7 +212,7 @@ router.get('/admin/analytics/campaigns', async (req, res, next) => {
         const data = await PageView.aggregate([
             { $match: { createdAt: { $gte: from }, utmSource: { $nin: [null, ''] } } },
             { $group: {
-                _id:      { source: '$utmSource', medium: '$utmMedium', campaign: '$utmCampaign' },
+                _id:      { source: '$utmSource', medium: '$utmMedium', campaign: '$utmCampaign', content: '$utmContent' },
                 views:    { $sum: 1 },
                 sessions: { $addToSet: '$sessionId' },
             }},
