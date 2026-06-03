@@ -23,6 +23,7 @@ const cronRoutes          = require('./routes/cron');
 const contactRoutes       = require('./routes/contact');
 const traktRoutes = require('./routes/trakt');
 const auth = require('./middleware/auth');
+const { startBot } = require('./discord/bot');
 
 const app = express();
 // Render.com runs behind multiple internal proxy hops (all 10.x.x.x).
@@ -106,6 +107,7 @@ if (require.main === module) {
             await connectDB();
             // eslint-disable-next-line no-console
             console.log('MongoDB connected');
+            startBot(process.env.DISCORD_TOKEN);
         } catch (err) {
             const delay = Math.min(attempt * 5000, 60000);
             // eslint-disable-next-line no-console
