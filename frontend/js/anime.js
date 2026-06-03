@@ -19,18 +19,19 @@
 
   async function fetchAnimeAPI() {
     try {
-      var r = await fetch('https://animeapi.skin/trending');
+      var apiBase = window.API_BASE_URL || '';
+      var r = await fetch(apiBase + '/anime/trending');
       if (!r.ok) throw new Error();
       var data = await r.json();
       return (data || []).map(function (a) {
         return {
-          id:          a.slug,
-          title:       a.title_en || a.title_jp || a.slug,
-          poster_path: a.poster_url,
-          overview:    a.description || '',
-          vote_average: a.score,
-          kind:        'anime',
-          link_url:    a.link_url,
+          id:           a.id,
+          title:        a.title,
+          poster_path:  a.poster_path,
+          overview:     a.overview || '',
+          vote_average: a.vote_average,
+          kind:         'anime',
+          link_url:     a.link_url || null,
         };
       });
     } catch (e) { return []; }

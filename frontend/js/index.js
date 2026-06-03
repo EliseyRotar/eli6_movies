@@ -84,14 +84,14 @@ async function fetchAnimeContent() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     return (data || []).map(a => ({
-      id:             a.slug,
-      name:           a.title_en || a.title_jp || a.slug,
-      poster_path:    a.poster_url,
-      overview:       a.description || '',
-      vote_average:   a.score,
-      first_air_date: a.aired || '',
+      id:             a.id,
+      name:           a.title,
+      poster_path:    a.poster_path,
+      overview:       a.overview || '',
+      vote_average:   a.vote_average,
+      first_air_date: a.first_air_date || '',
       kind:           'anime',
-      link_url:       a.link_url,
+      link_url:       a.link_url || null,
     }));
   } catch (e) { return []; }
 }
