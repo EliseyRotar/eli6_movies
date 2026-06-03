@@ -73,6 +73,7 @@
       { k: "anime",   label: "Anime",    href: "anime.html" },
       { k: "live",    label: "Live",     href: "live.html" },
       { k: "mylist",  label: "My List",  href: "mylist.html" },
+      { k: "contact", label: "Feedback", href: "contact.html" },
     ];
 
     const nav = el("nav", "topnav");

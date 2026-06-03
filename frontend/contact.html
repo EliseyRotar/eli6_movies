@@ -190,7 +190,7 @@
         status.style.display = 'none';
 
         try {
-          var res = await fetch((window.API_BASE_URL || '') + '/api/contact', {
+          var res = await fetch((window.API_BASE_URL || '') + '/contact', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: activeType, message: message, email: email, hp: hp }),
