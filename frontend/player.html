@@ -1917,7 +1917,7 @@
                     <div class="resume-banner" id="resumeBanner" role="status" aria-live="polite">
                         <span class="resume-banner__text" id="resumeBannerText"></span>
                         <button class="resume-banner__btn" id="resumeApplyBtn" onclick="applyResume()" style="display:none">▶ Resume</button>
-                        <button class="resume-banner__skip" onclick="dismissResume()">Start over</button>
+                        <button class="resume-banner__skip" id="resumeSkipBtn" onclick="dismissResume()">Start over</button>
                         <button class="resume-banner__close" onclick="dismissResume()" aria-label="Dismiss">×</button>
                     </div>
 
@@ -2072,6 +2072,7 @@
             // Auto-load the video player on page load
             loadVideoPlayer();
             isVideoPlaying = true;
+            setTimeout(function() { traktScrobble('start'); }, 3000);
 
             // Show resume banner if there's something to restore
             if (_savedState) showResumeBanner(_savedState);
@@ -2736,6 +2737,14 @@
                 }
             }
 
+            // Inject start timestamp so the embed seeks automatically — consume once only
+            if (_savedState && _savedState.time >= 60 && videoUrl && videoUrl !== 'about:blank') {
+                var _t = Math.round(_savedState.time);
+                var _sep = videoUrl.includes('?') ? '&' : '?';
+                videoUrl += _sep + (currentServer === 'vidlink' ? 'startFrom=' : 't=') + _t;
+                _savedState = null;
+            }
+
             playerLoading.style.display = 'none';
             videoIframe.style.display = 'block';
 
@@ -3281,7 +3290,9 @@
             });
 
             // Reload the iframe in place
+            traktScrobble('stop');
             loadVideoPlayer();
+            setTimeout(function() { traktScrobble('start'); }, 3000);
             if (typeof updateOverlayDropdowns === 'function') updateOverlayDropdowns();
             if (typeof updateNextEpisodeBtnOverlay === 'function') updateNextEpisodeBtnOverlay();
 
@@ -3939,6 +3950,7 @@
         let watchStartTime = null;
         let watchTimer     = null;
         let _savedState    = null;
+        let _resumeTimer   = null;
 
 
         function getEstimatedDuration() {
@@ -4052,12 +4064,27 @@
 
             if (!needsResume && (!state.time || state.time < 60)) return;
 
-            textEl.innerHTML = parts.length
-                ? 'Last watched: <strong>' + parts.join(' · ') + '</strong>'
-                : 'Continue where you left off?';
-            if (resumeBtn) resumeBtn.style.display = needsResume ? '' : 'none';
-            banner.classList.add('visible');
-            setTimeout(function() { dismissResume(); }, 14000);
+            if (_resumeTimer) { clearTimeout(_resumeTimer); _resumeTimer = null; }
+
+            if (needsResume) {
+                textEl.innerHTML = parts.length
+                    ? 'Last watched: <strong>' + parts.join(' · ') + '</strong>'
+                    : 'Continue where you left off?';
+                if (resumeBtn) resumeBtn.style.display = '';
+                var skipBtn2 = document.getElementById('resumeSkipBtn');
+                if (skipBtn2) skipBtn2.style.display = '';
+                banner.classList.add('visible');
+                _resumeTimer = setTimeout(function() { dismissResume(); }, 14000);
+            } else {
+                // time-only restore — URL already handled seeking, just notify briefly
+                var timeStr = state.time >= 60 ? '~' + formatTimeSec(state.time) : '';
+                textEl.innerHTML = timeStr ? 'Resuming from <strong>' + timeStr + '</strong>' : 'Resuming…';
+                if (resumeBtn) resumeBtn.style.display = 'none';
+                var skipBtn = document.getElementById('resumeSkipBtn');
+                if (skipBtn) skipBtn.style.display = 'none';
+                banner.classList.add('visible');
+                _resumeTimer = setTimeout(function() { dismissResume(); }, 4000);
+            }
         }
 
         function applyResume() {
@@ -4078,8 +4105,11 @@
         }
 
         function dismissResume() {
+            if (_resumeTimer) { clearTimeout(_resumeTimer); _resumeTimer = null; }
             const b = document.getElementById('resumeBanner');
             if (b) b.classList.remove('visible');
+            var skipBtn = document.getElementById('resumeSkipBtn');
+            if (skipBtn) skipBtn.style.display = '';
         }
 
 
@@ -4121,7 +4151,38 @@
         window.addEventListener('beforeunload', function() {
             sendWatchProgress();
             savePlayState();
+            traktScrobble('stop');
         });
+
+        // Trakt scrobbling — only fires when user is logged in
+        function traktScrobble(action) {
+            if (!localStorage.getItem('user')) return;
+            if (!AUTH_API_URL || type === 'anime') return;
+            if (!contentData) return;
+            const imdb_id = contentData.external_ids && contentData.external_ids.imdb_id;
+            const tmdb_id = parseInt(id);
+            const title   = type === 'tv' ? contentData.name : contentData.title;
+            const year    = type === 'tv'
+                ? (contentData.first_air_date || '').slice(0, 4)
+                : (contentData.release_date   || '').slice(0, 4);
+            const dur  = getEstimatedDuration();
+            const base = (_savedState && _savedState.time) ? _savedState.time : 0;
+            const elapsed = watchStartTime ? (Date.now() - watchStartTime) / 1000 : 0;
+            const progress = dur > 0 ? Math.max(0, Math.min(100, Math.round(((base + elapsed) / dur) * 100))) : 0;
+            const payload = {
+                action, mediaType: type, imdb_id, tmdb_id, title,
+                year: year || undefined, progress,
+                season:  type === 'tv' ? _currentSeason()  : undefined,
+                episode: type === 'tv' ? _currentEpisode() : undefined,
+            };
+            fetch(AUTH_API_URL + '/trakt/scrobble', {
+                method:      'POST',
+                headers:     { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body:        JSON.stringify(payload),
+                keepalive:   action === 'stop',
+            }).catch(function() {});
+        }
 
         function getTMDBLang() {
             return window.i18n ? window.i18n.getTMDBLanguage() : 'en-US';

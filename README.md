@@ -11,7 +11,8 @@
 - **10+ embed servers** with automatic failover — if one source doesn't play, it tries the next
 - **Source quality badge** — shows CAM / WEB / HD / AIRING based on release dates (TMDB)
 - **User accounts** — optional; required only for My List and episode notifications
-- **My List & Keep Watching** — pick up where you left off
+- **My List & Keep Watching** — pick up where you left off, with auto-resume
+- **Trakt.tv scrobbling** — connect your Trakt account and watched items sync automatically
 - **Episode notifications** — get an email when a new episode of a show you follow drops
 - **Multi-language UI** — English, Italian, Russian
 - **Mobile-first** — bottom navigation, responsive layout, Android TV / spatial nav support
@@ -89,6 +90,16 @@ cd eli6_movies
 | `RESEND_API_KEY` | API key from [resend.com](https://resend.com) |
 | `MAIL_FROM` | e.g. `ELI6 Movies <you@yourdomain.com>` |
 | `CRON_SECRET` | any random string (protects the cron endpoint) |
+
+**Optional — for Trakt.tv scrobbling:**
+
+| Variable | Value |
+|----------|-------|
+| `TRAKT_CLIENT_ID` | from [trakt.tv/oauth/applications](https://trakt.tv/oauth/applications) |
+| `TRAKT_CLIENT_SECRET` | from the same Trakt app page |
+| `TRAKT_REDIRECT_URI` | `https://your-vercel-url.vercel.app/trakt-callback.html` |
+
+> To set up: create a new app at trakt.tv/oauth/applications, set the redirect URI to your Vercel URL + `/trakt-callback.html`, and add your Vercel origin in the CORS origins field.
 
 **Optional — for profile picture uploads:**
 
@@ -214,6 +225,11 @@ eli6_movies/
 | `GET` | `/api/tmdb/*` | — | Proxied TMDB requests (cached) |
 | `GET` | `/api/check-servers` | — | Embed provider health |
 | `POST` | `/api/cron/check-episodes` | Cron-Secret header | Episode notifier trigger |
+| `GET` | `/api/trakt/auth-url` | JWT | Returns Trakt OAuth URL |
+| `POST` | `/api/trakt/callback` | JWT | Exchange OAuth code for tokens |
+| `GET` | `/api/trakt/status` | JWT | Trakt connection status |
+| `DELETE` | `/api/trakt/disconnect` | JWT | Disconnect Trakt |
+| `POST` | `/api/trakt/scrobble` | JWT | Proxy scrobble to Trakt |
 
 ---
 

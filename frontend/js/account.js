@@ -1068,6 +1068,64 @@
     secSection.appendChild(secCard);
     acc.appendChild(secSection);
 
+    // Trakt.tv integration
+    var traktSection = div('acc__section');
+    traktSection.appendChild(makeSectionHead('05b', 'Connected apps'));
+    var traktCard = div('acc__prefs');
+    traktCard.style.padding = '20px 24px';
+    var traktRow = div(); traktRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;';
+    var traktInfo = div();
+    var traktLabel = div('acc__pref-label'); traktLabel.textContent = 'Trakt.tv';
+    var traktHint = div('acc__pref-hint'); traktHint.textContent = 'Auto-mark watched on Trakt when you finish something.';
+    traktInfo.appendChild(traktLabel); traktInfo.appendChild(traktHint);
+    var traktBtn = el('button', 'btn btn--outline');
+    traktBtn.textContent = 'Connect';
+    traktBtn.style.flexShrink = '0';
+    traktRow.appendChild(traktInfo); traktRow.appendChild(traktBtn);
+    traktCard.appendChild(traktRow);
+    traktSection.appendChild(traktCard);
+    acc.appendChild(traktSection);
+
+    // Load Trakt status
+    fetch(API_URL + '/trakt/status', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        if (d.connected) {
+          traktBtn.textContent = 'Disconnect';
+          traktBtn.className = 'btn btn--ghost';
+          traktHint.textContent = 'Connected as @' + d.username + ' — scrobbling is active.';
+          traktBtn.onclick = function () {
+            traktBtn.disabled = true;
+            fetch(API_URL + '/trakt/disconnect', { method: 'DELETE', credentials: 'include' })
+              .then(function () {
+                traktBtn.textContent = 'Connect'; traktBtn.className = 'btn btn--outline'; traktBtn.disabled = false;
+                traktHint.textContent = 'Auto-mark watched on Trakt when you finish something.';
+                showToast('Trakt disconnected');
+              }).catch(function () { traktBtn.disabled = false; });
+          };
+        } else {
+          traktBtn.onclick = function () {
+            fetch(API_URL + '/trakt/auth-url', { credentials: 'include' })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (!d.url) { showToast('Trakt not configured on this server', 'error'); return; }
+                var popup = window.open(d.url, 'trakt_oauth', 'width=520,height=640,menubar=no,toolbar=no');
+                window.addEventListener('message', function handler(ev) {
+                  if (ev.origin !== window.location.origin) return;
+                  if (ev.data && ev.data.type === 'trakt_connected') {
+                    window.removeEventListener('message', handler);
+                    traktBtn.textContent = 'Disconnect'; traktBtn.className = 'btn btn--ghost';
+                    traktHint.textContent = 'Connected as @' + ev.data.username + ' — scrobbling is active.';
+                    showToast('Trakt connected!');
+                    if (popup && !popup.closed) popup.close();
+                  }
+                });
+              }).catch(function () { showToast('Could not reach server', 'error'); });
+          };
+        }
+      }).catch(function () {});
+
     var devSection = div('acc__section');
     var devList = div('acc__devices');
     var otherCount = sessions.filter(function (s) { return s.jti !== currentJti; }).length;

@@ -21,6 +21,7 @@ const analyticsRoutes    = require('./routes/analytics');
 const passwordResetRoutes = require('./routes/passwordReset');
 const cronRoutes          = require('./routes/cron');
 const contactRoutes       = require('./routes/contact');
+const traktRoutes = require('./routes/trakt');
 const auth = require('./middleware/auth');
 
 const app = express();
@@ -88,6 +89,7 @@ app.use('/api', analyticsRoutes);
 app.use('/api', passwordResetRoutes);
 app.use('/api', cronRoutes);
 app.use('/api', contactRoutes);
+app.use('/api', traktRoutes);
 
 app.use(errorHandler);
 

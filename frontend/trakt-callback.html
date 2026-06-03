@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Connecting Trakt…</title>
+  <script>(function(){var p=JSON.parse(localStorage.getItem('eli6.prefs')||'{}');document.documentElement.dataset.theme=p.theme||'pulse';document.documentElement.dataset.mode=p.mode||'dark';})();</script>
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    body { font-family: sans-serif; background: var(--bg,#0a0a0a); color: var(--fg,#fff); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+    .msg { text-align: center; }
+    .msg p { font-size: 15px; color: var(--fg-muted, #888); margin-top: 10px; }
+  </style>
+</head>
+<body>
+<div class="msg">
+  <div id="status">Connecting to Trakt…</div>
+  <p id="sub"></p>
+</div>
+<script src="js/config.js"></script>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var code  = params.get('code');
+  var error = params.get('error');
+  var status = document.getElementById('status');
+  var sub    = document.getElementById('sub');
+
+  if (error || !code) {
+    status.textContent = 'Connection cancelled.';
+    sub.textContent = 'You can close this tab.';
+    return;
+  }
+
+  fetch((window.API_BASE_URL || '') + '/trakt/callback', {
+    method:      'POST',
+    headers:     { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body:        JSON.stringify({ code: code }),
+  })
+  .then(function (r) { return r.json(); })
+  .then(function (d) {
+    if (d.connected) {
+      status.textContent = 'Trakt connected!';
+      sub.textContent = '@' + d.username + ' — you can close this tab.';
+      if (window.opener) {
+        window.opener.postMessage({ type: 'trakt_connected', username: d.username }, window.location.origin);
+        setTimeout(function () { window.close(); }, 1500);
+      }
+    } else {
+      status.textContent = 'Connection failed.';
+      sub.textContent = d.error || 'Please try again.';
+    }
+  })
+  .catch(function () {
+    status.textContent = 'Connection failed.';
+    sub.textContent = 'Please try again.';
+  });
+})();
+</script>
+</body>
+</html>

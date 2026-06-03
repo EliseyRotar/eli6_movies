@@ -107,6 +107,10 @@ const userSchema = new mongoose.Schema(
             ],
             default: [],
         },
+        traktAccessToken:  { type: String, default: null },
+        traktRefreshToken: { type: String, default: null },
+        traktTokenExpiry:  { type: Date,   default: null },
+        traktUsername:     { type: String, default: null },
         role: {
             type: String,
             enum: ['user', 'admin'],
