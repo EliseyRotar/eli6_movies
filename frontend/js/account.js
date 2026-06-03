@@ -1022,7 +1022,7 @@
           else { if (navigator.clipboard) navigator.clipboard.writeText(window.location.origin); showToast('Link copied!'); }
         }},
       { icon: '?', label: 'Help & support', sub: 'FAQs, contact',
-        onClick: function () { window.open('mailto:pi_arduino@proton.me?subject=ELI6%20Movies%20Support', '_blank'); } },
+        onClick: function () { window.open('mailto:eli6movies@proton.me?subject=ELI6%20Movies%20Support', '_blank'); } },
     ].forEach(function (q) {
       var tile = el('button', 'acc__quick-tile');
       var icon = div('acc__quick-icon'); icon.textContent = q.icon;

@@ -48,7 +48,7 @@ router.post('/contact', contactLimit, async (req, res) => {
   <div style="background:#1a1a1a;border-radius:6px;padding:16px;white-space:pre-wrap;font-size:14px;line-height:1.6">${safeMessage}</div>
 </div>`;
 
-    sendEmail({ to: 'pi_arduino@proton.me', subject, html }).catch((err) => {
+    sendEmail({ to: 'eli6movies@proton.me', subject, html }).catch((err) => {
         // eslint-disable-next-line no-console
         console.error('[contact] email failed:', err.message);
     });
