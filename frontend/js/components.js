@@ -1100,17 +1100,13 @@
         '<a id="ab-install" href="' + rec.url + '" target="_blank" rel="noopener noreferrer" style="flex:1;min-width:120px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:8px;text-align:center;font-size:14px;font-weight:700;text-decoration:none;display:block;">' + t('get', 'Get') + ' ' + rec.name + '</a>',
         '<button id="ab-skip" style="flex:1;min-width:80px;padding:11px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">' + t('skip', 'Skip') + '</button>',
         '</div>',
-        '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--fg-muted);user-select:none;">',
-        '<input type="checkbox" id="ab-never" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;" />',
-        t('dont_show', "Don't show this again"),
-        '</label>',
       ].join('');
 
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
 
       function dismiss() {
-        try { if (document.getElementById('ab-never').checked) localStorage.setItem(KEY, '1'); } catch (e) {}
+        try { localStorage.setItem(KEY, '1'); } catch (e) {}
         overlay.style.transition = 'opacity 180ms ease';
         overlay.style.opacity = '0';
         setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 190);
@@ -1118,7 +1114,7 @@
 
       document.getElementById('ab-skip').addEventListener('click', dismiss);
       document.getElementById('ab-install').addEventListener('click', function () {
-        try { if (document.getElementById('ab-never').checked) localStorage.setItem(KEY, '1'); } catch (e) {}
+        try { localStorage.setItem(KEY, '1'); } catch (e) {}
       });
       overlay.addEventListener('click', function (e) { if (e.target === overlay) dismiss(); });
     });
