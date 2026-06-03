@@ -1083,8 +1083,79 @@
     traktBtn.style.flexShrink = '0';
     traktRow.appendChild(traktInfo); traktRow.appendChild(traktBtn);
     traktCard.appendChild(traktRow);
+
+    // Discord link row inside "Connected apps"
+    var dcDivider = div(); dcDivider.style.cssText = 'height:1px;background:var(--border);margin:14px -24px;';
+    var dcRow = div(); dcRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:16px;';
+    var dcInfo = div();
+    var dcLabel = div('acc__pref-label'); dcLabel.textContent = 'Discord';
+    var dcHint  = div('acc__pref-hint');  dcHint.textContent  = 'Link your account to get the ⭐ VIP role when Trakt is connected.';
+    dcInfo.appendChild(dcLabel); dcInfo.appendChild(dcHint);
+    var dcBtn = el('button', 'btn btn--outline');
+    dcBtn.textContent = 'Link'; dcBtn.style.flexShrink = '0';
+    dcRow.appendChild(dcInfo); dcRow.appendChild(dcBtn);
+
+    var dcCodeWrap = div(); dcCodeWrap.style.cssText = 'margin-top:14px;display:none;';
+    var dcCodeLbl  = div('acm__label'); dcCodeLbl.textContent = 'Run !link in Discord, then enter the code:';
+    var dcCodeInput = el('input', 'acm__input');
+    dcCodeInput.placeholder = 'XXXXXX'; dcCodeInput.maxLength = 6;
+    dcCodeInput.style.cssText = 'text-transform:uppercase;letter-spacing:4px;font-size:20px;font-weight:700;text-align:center;margin-top:6px;';
+    var dcCodeConfirm = el('button', 'btn btn--primary');
+    dcCodeConfirm.textContent = 'Link Discord'; dcCodeConfirm.style.cssText = 'margin-top:8px;width:100%;';
+    dcCodeWrap.appendChild(dcCodeLbl); dcCodeWrap.appendChild(dcCodeInput); dcCodeWrap.appendChild(dcCodeConfirm);
+
+    traktCard.appendChild(dcDivider);
+    traktCard.appendChild(dcRow);
+    traktCard.appendChild(dcCodeWrap);
     traktSection.appendChild(traktCard);
     acc.appendChild(traktSection);
+
+    // Load Discord status
+    fetch(API_URL + '/user/discord-status', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d) return;
+        if (d.linked) {
+          dcBtn.textContent = 'Unlink'; dcBtn.className = 'btn btn--ghost';
+          dcHint.textContent = 'Linked as @' + d.discordUsername + ' — VIP role active when Trakt is connected.';
+          dcBtn.onclick = function () {
+            dcBtn.disabled = true;
+            fetch(API_URL + '/user/link-discord', { method: 'DELETE', credentials: 'include' })
+              .then(function () {
+                dcBtn.textContent = 'Link'; dcBtn.className = 'btn btn--outline'; dcBtn.disabled = false;
+                dcHint.textContent = 'Link your account to get the ⭐ VIP role when Trakt is connected.';
+                showToast('Discord unlinked');
+              }).catch(function () { dcBtn.disabled = false; });
+          };
+        } else {
+          dcBtn.onclick = function () {
+            dcCodeWrap.style.display = dcCodeWrap.style.display === 'none' ? 'block' : 'none';
+            if (dcCodeWrap.style.display === 'block') dcCodeInput.focus();
+          };
+          dcCodeConfirm.onclick = function () {
+            var code = dcCodeInput.value.trim().toUpperCase();
+            if (code.length !== 6) { showToast('Enter the 6-character code', 'error'); return; }
+            dcCodeConfirm.disabled = true;
+            fetch(API_URL + '/user/link-discord', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ code: code }),
+            }).then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (d.linked) {
+                  dcBtn.textContent = 'Unlink'; dcBtn.className = 'btn btn--ghost';
+                  dcHint.textContent = 'Linked as @' + d.discordUsername + ' — VIP role active when Trakt is connected.';
+                  dcCodeWrap.style.display = 'none'; dcCodeInput.value = '';
+                  showToast('Discord linked!');
+                  dcBtn.onclick = null;
+                } else {
+                  showToast(d.error === 'INVALID_OR_EXPIRED_CODE' ? 'Code expired — run !link again' : 'Could not link Discord', 'error');
+                  dcCodeConfirm.disabled = false;
+                }
+              }).catch(function () { showToast('Could not reach server', 'error'); dcCodeConfirm.disabled = false; });
+          };
+        }
+      }).catch(function () {});
 
     // Load Trakt status
     fetch(API_URL + '/trakt/status', { credentials: 'include' })

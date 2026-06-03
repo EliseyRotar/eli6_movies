@@ -73,6 +73,12 @@ router.post('/trakt/callback', auth, async (req, res) => {
         req.user.traktTokenExpiry  = new Date(Date.now() + tokens.expires_in * 1000);
         req.user.traktUsername     = me.username || null;
         await req.user.save();
+
+        if (req.user.discordId) {
+            const { assignVipRole } = require('../discord/bot');
+            assignVipRole(req.user.discordId).catch(() => {});
+        }
+
         res.json({ connected: true, username: req.user.traktUsername });
     } catch (e) {
         res.status(500).json({ error: 'TRAKT_CALLBACK_FAILED' });

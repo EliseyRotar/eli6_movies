@@ -350,4 +350,38 @@ router.delete('/user/delete', auth, async (req, res) => {
     }
 });
 
+// ── Discord account linking ────────────────────────────────────────────────────
+router.get('/user/discord-status', auth, (req, res) => {
+    res.json({ linked: !!req.user.discordId, discordUsername: req.user.discordUsername || null });
+});
+
+router.post('/user/link-discord', auth, async (req, res) => {
+    const { code } = req.body || {};
+    if (!code || typeof code !== 'string') return res.status(400).json({ error: 'MISSING_CODE' });
+
+    const { pendingLinks, assignVipRole } = require('../discord/bot');
+    const entry = pendingLinks.get(code.trim().toUpperCase());
+    if (!entry || entry.expires < Date.now()) {
+        return res.status(400).json({ error: 'INVALID_OR_EXPIRED_CODE' });
+    }
+    pendingLinks.delete(code.trim().toUpperCase());
+
+    req.user.discordId       = entry.discordId;
+    req.user.discordUsername = entry.username;
+    await req.user.save();
+
+    if (req.user.traktAccessToken) {
+        assignVipRole(entry.discordId).catch(() => {});
+    }
+
+    res.json({ linked: true, discordUsername: entry.username });
+});
+
+router.delete('/user/link-discord', auth, async (req, res) => {
+    req.user.discordId       = null;
+    req.user.discordUsername = null;
+    await req.user.save();
+    res.json({ unlinked: true });
+});
+
 module.exports = router;

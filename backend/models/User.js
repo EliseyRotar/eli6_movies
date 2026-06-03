@@ -111,6 +111,8 @@ const userSchema = new mongoose.Schema(
         traktRefreshToken: { type: String, default: null },
         traktTokenExpiry:  { type: Date,   default: null },
         traktUsername:     { type: String, default: null },
+        discordId:         { type: String, default: null },
+        discordUsername:   { type: String, default: null },
         role: {
             type: String,
             enum: ['user', 'admin'],
