@@ -1008,20 +1008,136 @@
   }
 
 
+  function getAdBlockRec() {
+    var ua = navigator.userAgent;
+    var isIOS     = /iPhone|iPad|iPod/i.test(ua);
+    var isAndroid = /Android/i.test(ua);
+    var isFirefox = /Firefox|FxiOS/i.test(ua);
+    var isEdge    = /Edg\//i.test(ua);
+    var isSafari  = /Safari/i.test(ua) && !/Chrome/i.test(ua) && !isFirefox;
+
+    if (isIOS) return {
+      name: 'AdGuard',
+      note: 'content blocker for iOS Safari',
+      url:  'https://apps.apple.com/app/adguard-adblock-and-privacy/id1047223162',
+    };
+    if (isAndroid && isFirefox) return {
+      name: 'uBlock Origin',
+      note: 'Firefox for Android add-on',
+      url:  'https://addons.mozilla.org/en-US/android/addon/ublock-origin/',
+    };
+    if (isAndroid) return {
+      name: 'Brave',
+      note: 'browser with built-in blocking',
+      url:  'https://play.google.com/store/apps/details?id=com.brave.browser',
+    };
+    if (isFirefox) return {
+      name: 'uBlock Origin',
+      note: 'best Firefox extension',
+      url:  'https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/',
+    };
+    if (isEdge) return {
+      name: 'uBlock Origin',
+      note: 'Edge extension',
+      url:  'https://microsoftedge.microsoft.com/addons/detail/ublock-origin/odfafepnkmbhccpbejgmiehpchacaeak',
+    };
+    if (isSafari) return {
+      name: 'AdGuard for Safari',
+      note: 'Safari extension',
+      url:  'https://apps.apple.com/app/adguard-for-safari/id1440147259',
+    };
+    return {
+      name: 'uBlock Origin',
+      note: 'best Chrome extension',
+      url:  'https://chrome.google.com/webstore/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm',
+    };
+  }
+
+  function detectAdBlock() {
+    return new Promise(function (resolve) {
+      var bait = document.createElement('div');
+      bait.className = 'ad adsbox ad-placement doubleclick adsbygoogle textad';
+      bait.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none;opacity:0;';
+      document.body.appendChild(bait);
+      setTimeout(function () {
+        var blocked = false;
+        try {
+          var cs = window.getComputedStyle(bait);
+          blocked = bait.offsetParent === null ||
+                    bait.offsetHeight === 0 ||
+                    bait.offsetWidth  === 0 ||
+                    cs.display === 'none' ||
+                    cs.visibility === 'hidden';
+        } catch (e) {}
+        if (bait.parentNode) bait.parentNode.removeChild(bait);
+        resolve(blocked);
+      }, 200);
+    });
+  }
+
+  function renderAdBlockPrompt() {
+    var KEY = 'eli6.adblock_seen';
+    try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+
+    detectAdBlock().then(function (hasBlock) {
+      if (hasBlock) return;
+
+      var rec = getAdBlockRec();
+
+      var overlay = el('div');
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.65);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:16px;';
+
+      var modal = el('div');
+      modal.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:28px 24px;max-width:380px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.6);';
+      modal.innerHTML = [
+        '<div style="font-size:38px;margin-bottom:14px;line-height:1">🛡️</div>',
+        '<h2 style="margin:0 0 8px;font-size:19px;font-weight:700;color:var(--fg)">Better with an adblocker</h2>',
+        '<p style="margin:0 0 16px;font-size:14px;color:var(--fg-muted);line-height:1.6">The video players are from third-party sources that can serve ads and redirects. The site itself has none — it\'s the player. An adblocker kills most of it.</p>',
+        '<p style="margin:0 0 20px;font-size:13px;color:var(--fg-muted)">Best option for your browser: <strong style="color:var(--fg)">' + rec.name + '</strong> — ' + rec.note + '</p>',
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">',
+        '<a id="ab-install" href="' + rec.url + '" target="_blank" rel="noopener noreferrer" style="flex:1;min-width:120px;padding:11px 14px;background:var(--accent);color:#fff;border-radius:8px;text-align:center;font-size:14px;font-weight:700;text-decoration:none;display:block;">Get ' + rec.name + '</a>',
+        '<button id="ab-skip" style="flex:1;min-width:80px;padding:11px 14px;background:var(--surface);color:var(--fg);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;font-family:inherit;">Skip</button>',
+        '</div>',
+        '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--fg-muted);user-select:none;">',
+        '<input type="checkbox" id="ab-never" style="width:14px;height:14px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;" />',
+        "Don't show this again",
+        '</label>',
+      ].join('');
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      function dismiss() {
+        try { if (document.getElementById('ab-never').checked) localStorage.setItem(KEY, '1'); } catch (e) {}
+        overlay.style.transition = 'opacity 180ms ease';
+        overlay.style.opacity = '0';
+        setTimeout(function () { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); }, 190);
+      }
+
+      document.getElementById('ab-skip').addEventListener('click', dismiss);
+      document.getElementById('ab-install').addEventListener('click', function () {
+        try { if (document.getElementById('ab-never').checked) localStorage.setItem(KEY, '1'); } catch (e) {}
+      });
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) dismiss(); });
+    });
+  }
+
   Object.assign(window, {
-    renderTopNav:      renderTopNav,
-    renderBottomNav:   renderBottomNav,
-    makePoster:        makePoster,
-    makeRow:           makeRow,
-    makeHeroSlider:    makeHeroSlider,
-    openDetailModal:   openDetailModal,
-    renderFooter:      renderFooter,
-    showToast:         showToast,
-    renderCookieBanner: renderCookieBanner,
+    renderTopNav:        renderTopNav,
+    renderBottomNav:     renderBottomNav,
+    makePoster:          makePoster,
+    makeRow:             makeRow,
+    makeHeroSlider:      makeHeroSlider,
+    openDetailModal:     openDetailModal,
+    renderFooter:        renderFooter,
+    showToast:           showToast,
+    renderCookieBanner:  renderCookieBanner,
+    renderAdBlockPrompt: renderAdBlockPrompt,
   });
 
   document.addEventListener("DOMContentLoaded", function () {
     renderCookieBanner();
+    renderAdBlockPrompt();
     document.addEventListener("click", function() {
       document.querySelectorAll(".topnav__lang-menu--open").forEach(function(m) { m.classList.remove("topnav__lang-menu--open"); });
     });
