@@ -360,16 +360,34 @@
             "title": "Sport",
             "subtitle": "Partite in diretta e programma di oggi — calcio, NBA, NFL, F1 e altro."
         },
-        "search": { "placeholder": "Cerca partite, leghe, sport…" },
-        "tabs": { "all": "Tutti" },
+        "search": { "placeholder": "Cerca partite, leghe, sport…", "clear": "Cancella ricerca" },
+        "tabs": { "all": "Tutti", "favorites": "Le mie squadre", "label": "Sport" },
+        "date": { "label": "Data partita", "yesterday": "Ieri", "today": "Oggi", "tomorrow": "Domani" },
+        "league": { "label": "Lega", "all": "Tutte le leghe" },
+        "fav": { "add": "Aggiungi ai preferiti", "remove": "Rimuovi dai preferiti" },
+        "vote": { "up": "Questo stream funziona", "down": "Questo stream è rotto" },
+        "status": {
+            "live": "Live",
+            "ht": "INT",
+            "ft": "FT",
+            "upcoming": "Prossima",
+            "postponed": "Rinviata",
+            "cancelled": "Annullata"
+        },
         "sections": {
             "liveNow": "In Diretta",
-            "todaySchedule": "Programma di Oggi"
+            "todaySchedule": "Programma di Oggi",
+            "favorites": "Le mie squadre"
         },
-        "time": { "liveNow": "In diretta" },
+        "time": {
+            "liveNow": "In diretta",
+            "inMins": "tra {n}m",
+            "inHrs": "tra {h}h {m}m"
+        },
         "empty": {
             "noResults": "Nessun risultato per",
             "noMatches": "Nessuna partita in programma adesso.",
+            "noFavorites": "Nessuna partita oggi per le tue squadre preferite.",
             "fetching": "Caricamento partite in diretta…"
         },
         "refresh": {
@@ -382,7 +400,12 @@
             "noStreams": "Nessuno streaming trovato per questa partita.",
             "noAvailable": "Nessuno streaming disponibile.",
             "sources": "Fonti:",
-            "fallbackTitle": "Diretta Live"
+            "fallbackTitle": "Diretta Live",
+            "theater": "Modalità cinema (F)",
+            "close": "Chiudi (Esc)",
+            "blocked": "URL streaming bloccato per sicurezza.",
+            "matchFinished": "Questa partita è finita.",
+            "watchHighlights": "Guarda gli highlights su YouTube"
         },
         "categories": {
             "football": "Calcio",
@@ -405,7 +428,8 @@
         },
         "streams": {
             "watch": "Guarda",
-            "streams": "stream"
+            "streams": "stream",
+            "finished": "Terminata"
         }
     }
 }

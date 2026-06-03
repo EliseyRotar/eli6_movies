@@ -360,16 +360,34 @@
             "title": "Sports",
             "subtitle": "Live matches and today's schedule — football, NBA, NFL, F1, and more."
         },
-        "search": { "placeholder": "Search matches, leagues, sports…" },
-        "tabs": { "all": "All" },
+        "search": { "placeholder": "Search matches, leagues, sports…", "clear": "Clear search" },
+        "tabs": { "all": "All", "favorites": "My Teams", "label": "Sport" },
+        "date": { "label": "Match date", "yesterday": "Yesterday", "today": "Today", "tomorrow": "Tomorrow" },
+        "league": { "label": "League", "all": "All leagues" },
+        "fav": { "add": "Add to favorites", "remove": "Remove from favorites" },
+        "vote": { "up": "This stream works", "down": "This stream is broken" },
+        "status": {
+            "live": "Live",
+            "ht": "HT",
+            "ft": "FT",
+            "upcoming": "Upcoming",
+            "postponed": "Postponed",
+            "cancelled": "Cancelled"
+        },
         "sections": {
             "liveNow": "Live Now",
-            "todaySchedule": "Today's Schedule"
+            "todaySchedule": "Today's Schedule",
+            "favorites": "My Teams"
         },
-        "time": { "liveNow": "Live now" },
+        "time": {
+            "liveNow": "Live now",
+            "inMins": "in {n}m",
+            "inHrs": "in {h}h {m}m"
+        },
         "empty": {
             "noResults": "No matches found for",
             "noMatches": "No matches scheduled right now.",
+            "noFavorites": "No matches for your favorite teams today.",
             "fetching": "Fetching live matches…"
         },
         "refresh": {
@@ -382,7 +400,12 @@
             "noStreams": "No streams found for this match.",
             "noAvailable": "No streams available.",
             "sources": "Sources:",
-            "fallbackTitle": "Live Stream"
+            "fallbackTitle": "Live Stream",
+            "theater": "Theater mode (F)",
+            "close": "Close (Esc)",
+            "blocked": "Stream URL blocked for safety.",
+            "matchFinished": "This match has ended.",
+            "watchHighlights": "Watch highlights on YouTube"
         },
         "categories": {
             "football": "Football",
@@ -405,7 +428,8 @@
         },
         "streams": {
             "watch": "Watch",
-            "streams": "streams"
+            "streams": "streams",
+            "finished": "Finished"
         }
     }
 }

@@ -24,6 +24,12 @@
 
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/design.css" />
+
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ELI6 Live" />
 </head>
 <body>
   <div class="app">
@@ -35,7 +41,9 @@
       <p class="pagehead__sub" data-i18n="live.page.subtitle">Live matches and today's schedule — football, NBA, NFL, F1, and more.</p>
     </div>
 
+    <div id="live-date-mount"></div>
     <div id="sport-tabs-mount"></div>
+    <div id="live-league-mount"></div>
     <div id="live-search-mount"></div>
     <div id="live-refresh-mount"></div>
     <div id="matches-mount"></div>
