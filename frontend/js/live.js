@@ -3,9 +3,11 @@
 
   // === CONSTANTS ===
   var STREAMED = 'https://streamed.pk/api';
+  var STREAMED_ORIGIN = 'https://streamed.pk';
   var ESX = 'https://api.embedsportex.site/api';
   var ESX_ORIGIN = 'https://api.embedsportex.site';
   var TSDB = 'https://www.thesportsdb.com/api/v1/json/123';
+  var DADDY = 'https://daddylive.eu';
 
   // Sports where team lookups make sense (skip tennis, fight, motor — no team banners)
   var TEAM_SPORTS = { football: 1, basketball: 1, 'american-football': 1, hockey: 1, baseball: 1, cricket: 1, rugby: 1, volleyball: 1 };
@@ -55,6 +57,7 @@
   // Iframe host allowlist (defense-in-depth on top of CSP frame-src)
   var IFRAME_HOST_ALLOW = [
     /(^|\.)streamed\.pk$/i,
+    /(^|\.)embedsports\.top$/i,
     /(^|\.)embedsportex\.site$/i,
     /(^|\.)embedme\.top$/i,
     /(^|\.)embed\.su$/i,
@@ -70,7 +73,8 @@
     /(^|\.)apiplayer\.ru$/i,
     /(^|\.)vaplayer\.ru$/i,
     /(^|\.)youtube(?:-nocookie)?\.com$/i,
-    /(^|\.)daddylive\.eu$/i,
+    /(^|\.)daddylive\.(eu|nl)$/i,
+    /(^|\.)daddylives\.sbs$/i,
     /(^|\.)dlhd\.(pk|link)$/i,
     /(^|\.)westream\.(su|top)$/i,
   ];
@@ -202,6 +206,50 @@
     'darts': '🎯', 'other': '📺',
   };
 
+  // === LANGUAGE DETECTION (for stream source labels) ===
+  // Heuristic: parse channel/server names → {flag, code, name}.
+  // 'code' is ISO-639-1 (or 'multi' for European feeds). Used to group sources in the player modal.
+  var LANG_HINTS = [
+    { rx: /\b(tnt|abc|nbc|fox(?!ports)|espn|peacock|cbs|usa network|nfl network|nba tv)\b/i, code: 'en-us', flag: '🇺🇸', name: 'English (US)' },
+    { rx: /\b(tsn|sportsnet|cbc)\b/i, code: 'en-ca', flag: '🇨🇦', name: 'English (CA)' },
+    { rx: /\b(sky ?sports?|sky ?go|bbc|bt ?sport|itv|tnt sports?(?: uk)?)\b/i, code: 'en-gb', flag: '🇬🇧', name: 'English (UK)' },
+    { rx: /\b(fox ?sports? (?:au|australia)|kayo|stan ?sport|main ?event)\b/i, code: 'en-au', flag: '🇦🇺', name: 'English (AU)' },
+    { rx: /\b(bein(?: ?sports?)?(?: arabic)?|ssc|al ?jazeera|al ?kass|arab|abu ?dhabi)\b/i, code: 'ar', flag: '🇸🇦', name: 'Arabic' },
+    { rx: /\b(movistar|la ?liga|dazn ?(?:es|spain)?|cosmote|gol ?espana)\b/i, code: 'es', flag: '🇪🇸', name: 'Spanish' },
+    { rx: /\b(globo|sport ?tv brasil|esporte ?interativo|premiere|combate|cazetv|sportv)\b/i, code: 'pt-br', flag: '🇧🇷', name: 'Portuguese (BR)' },
+    { rx: /\b(rai|sky ?italia|dazn ?it(?:alia)?|mediaset)\b/i, code: 'it', flag: '🇮🇹', name: 'Italian' },
+    { rx: /\b(canal\+|rmc|bein ?sports? ?fr|eurosport ?(?:france|fr)|tf1|france ?\d|l ?equipe)\b/i, code: 'fr', flag: '🇫🇷', name: 'French' },
+    { rx: /\b(sport ?(?:1|2|3)? ?(?:de|deutschland|german)|sky ?(?:de|deutsch))\b/i, code: 'de', flag: '🇩🇪', name: 'German' },
+    { rx: /\b(sport ?tv|eleven ?sports?(?: pt|portugal)?)\b/i, code: 'pt', flag: '🇵🇹', name: 'Portuguese' },
+    { rx: /\b(match ?tv|nashe ?futbol|tv ?match)\b/i, code: 'ru', flag: '🇷🇺', name: 'Russian' },
+    { rx: /\b(tv4|viaplay ?(?:se|sweden)?|c ?more)\b/i, code: 'sv', flag: '🇸🇪', name: 'Swedish' },
+    { rx: /\b(nos|ziggo|fox sports nl|ne[d|t]er)\b/i, code: 'nl', flag: '🇳🇱', name: 'Dutch' },
+    { rx: /\b(j ?sport|wowow|nhk|fuji ?tv|gaora|sky ?perfectv)\b/i, code: 'ja', flag: '🇯🇵', name: 'Japanese' },
+    { rx: /\b(cctv|sport ?5|migu|pp ?sport)\b/i, code: 'zh', flag: '🇨🇳', name: 'Chinese' },
+    { rx: /\b(spor ?smart|s ?sport|tivibu|bein ?turk|trt ?spor)\b/i, code: 'tr', flag: '🇹🇷', name: 'Turkish' },
+    { rx: /\b(polsat ?sport|tvp ?sport)\b/i, code: 'pl', flag: '🇵🇱', name: 'Polish' },
+    { rx: /\bnova ?sport(?: cz)?\b/i, code: 'cs', flag: '🇨🇿', name: 'Czech' },
+    { rx: /\b(setanta ?(?:ireland|ire)|virgin ?media)\b/i, code: 'en-ie', flag: '🇮🇪', name: 'English (IE)' },
+    { rx: /\beuro(?: ?sports?)?\b/i, code: 'multi', flag: '🇪🇺', name: 'Multi-EU' },
+  ];
+  // detect language from a label string (server name / channel name / streamed.pk language field)
+  function detectLang(label) {
+    if (!label) return null;
+    // streamed.pk often returns explicit "English", "English - Fox Sports 507" etc.
+    var plain = label.split(/[-–|()]/)[0].trim().toLowerCase();
+    var exact = { english: 'en', spanish: 'es', italian: 'it', french: 'fr', german: 'de',
+      portuguese: 'pt', arabic: 'ar', russian: 'ru', dutch: 'nl', polish: 'pl',
+      japanese: 'ja', chinese: 'zh', turkish: 'tr', swedish: 'sv' };
+    if (exact[plain]) {
+      var hint = LANG_HINTS.find(function (h) { return h.code === exact[plain] || h.code.indexOf(exact[plain] + '-') === 0; });
+      return hint || { code: exact[plain], flag: '🌐', name: plain.charAt(0).toUpperCase() + plain.slice(1) };
+    }
+    for (var i = 0; i < LANG_HINTS.length; i++) {
+      if (LANG_HINTS[i].rx.test(label)) return LANG_HINTS[i];
+    }
+    return null;
+  }
+
   // === STATE ===
   var currentSport = 'all';
   var currentLeague = 'all';
@@ -226,6 +274,8 @@
 
   var favorites = loadJSON('eli6.live.favorites', []);       // array of team names (lowercase)
   var sourceVotes = loadJSON('eli6.live.sourceVotes', {});   // url → { up:n, down:n }
+  var savedReminders = loadJSON('eli6.live.reminders', {});  // matchKey → { ts, title }
+  var preferredLang = (function () { try { return localStorage.getItem('eli6.live.preferredLang') || ''; } catch (e) { return ''; } })();
 
   // === FAVORITES ===
   function isFavoriteTeam(teamName) {
@@ -289,7 +339,14 @@
 
       var mapped = (Array.isArray(all) ? all : []).map(function (m) {
         var cat = m.category || 'other';
+        // streamed.pk returns posters as relative paths like "/api/images/proxy/xxx.webp"
+        // — prefix the origin so they don't 404 against our own host.
+        var poster = m.poster;
+        if (poster && typeof poster === 'string' && poster.charAt(0) === '/') {
+          poster = STREAMED_ORIGIN + poster;
+        }
         return Object.assign({}, m, {
+          poster: poster,
           isLive: liveIds ? liveIds.has(m.id) : (m.isLive || false),
           provider: 'streamed',
           category: CAT_NORMALIZE[cat] || cat,
@@ -354,22 +411,104 @@
     } catch (e) { return []; }
   }
 
+  // strip common club/team noise so streamed.pk titles align with TSDB events
+  function normalizeTeamName(s) {
+    return (s || '')
+      .toLowerCase()
+      .replace(/\bfc\b|\bcf\b|\bsc\b|\bafc\b|\bac\b|\bbk\b|\bii\b/g, '')
+      .replace(/\bunited\b/g, 'utd')
+      .replace(/\bcity\b/g, '')
+      .replace(/\bu\d{1,2}\b/g, '')
+      .replace(/\b(women|women's|w|fem)\b/g, '')
+      .replace(/\b(reserves|youth|academy)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
   function normalizeTitle(title) {
     var s = (title || '').toLowerCase()
       .replace(/\./g, '')
-      .replace(/[^\w\s]/g, '')
+      .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    var m = s.match(/^(.+?)\s+vs\.?\s+(.+)$/);
+    var m = s.match(/^(.+?)\s+vs?\s+(.+)$/);
     if (m) {
-      var teams = [m[1].trim(), m[2].trim()].sort();
+      var teams = [normalizeTeamName(m[1]), normalizeTeamName(m[2])].sort();
       return teams.join('|');
     }
     return s;
   }
 
+  // DaddyLive: thousands of country-named TV channels (Sky Sport DE, beIN Arabic, Movistar LaLiga, …)
+  // Their /api/events groups today's matches with a `channels[]` array per event — we surface those
+  // channels as additional language-tagged sources rather than as separate cards (would be very
+  // noisy). New cards are only added when no existing match title matches.
+  var DADDY_SPORT_MAP = {
+    'soccer': 'football', 'football': 'football',
+    'basketball': 'basketball', 'nba': 'basketball',
+    'tennis': 'tennis', 'baseball': 'baseball', 'mlb': 'baseball',
+    'ice hockey': 'hockey', 'nhl': 'hockey', 'hockey': 'hockey',
+    'american football': 'american-football', 'nfl': 'american-football',
+    'motor sports': 'motorsports', 'motorsports': 'motorsports',
+    'f1': 'motorsports', 'formula 1': 'motorsports', 'motogp': 'motorsports',
+    'rugby': 'rugby', 'cricket': 'cricket', 'volleyball': 'volleyball',
+    'boxing': 'fight', 'mma': 'fight', 'ufc': 'fight', 'fight': 'fight',
+    'golf': 'golf', 'darts': 'darts',
+  };
+  function _daddyCatFromString(str) {
+    var s = (str || '').toLowerCase();
+    var keys = Object.keys(DADDY_SPORT_MAP);
+    for (var i = 0; i < keys.length; i++) if (s.indexOf(keys[i]) !== -1) return DADDY_SPORT_MAP[keys[i]];
+    return 'other';
+  }
+  async function fetchDaddy() {
+    try {
+      var ctrl = new AbortController();
+      var timer = setTimeout(function () { ctrl.abort(); }, 8000);
+      var r = await fetch(DADDY + '/api/events', { signal: ctrl.signal });
+      clearTimeout(timer);
+      if (!r.ok) return [];
+      var data = await r.json();
+      if (!Array.isArray(data)) return [];
+      var out = [];
+      data.forEach(function (day) {
+        var cats = day.categories || {};
+        Object.keys(cats).forEach(function (catName) {
+          var arr = cats[catName];
+          if (!Array.isArray(arr)) return;
+          var cat = _daddyCatFromString(catName);
+          arr.forEach(function (ev) {
+            var title = ev.event || '';
+            if (!title) return;
+            // event strings often look like "Football : Real Madrid vs Barcelona" → strip prefix
+            var clean = title.replace(/^[^:]+:\s*/, '').trim();
+            var channels = Array.isArray(ev.channels) ? ev.channels.filter(function (c) {
+              return c && c.url && /^https:\/\/(daddylive\.(eu|nl)|daddylives\.sbs|dlhd\.(pk|link))/.test(c.url);
+            }) : [];
+            if (!channels.length) return;
+            out.push({
+              id: 'daddy-' + (ev.event || Math.random()).slice(0, 80),
+              title: clean,
+              category: cat,
+              league: '',
+              poster: null,
+              date: 0, // daddy doesn't expose epoch — treat as live; cards will say "Live now"
+              isLive: /^live\b/i.test(ev.time || '') || true,
+              provider: 'daddy',
+              channels: channels,
+            });
+          });
+        });
+      });
+      return out;
+    } catch (e) { return []; }
+  }
+
   async function loadMatches() {
-    var [streamedData, esxData] = await Promise.all([fetchStreamed(currentDate), fetchESX()]);
+    var [streamedData, esxData, daddyData] = await Promise.all([
+      fetchStreamed(currentDate),
+      fetchESX(),
+      currentDate === 'today' ? fetchDaddy() : Promise.resolve([]),
+    ]);
     var seenNorm = new Set(streamedData.map(function (m) { return normalizeTitle(m.title); }));
     var esxNew = esxData.filter(function (m) {
       var norm = normalizeTitle(m.title);
@@ -377,7 +516,22 @@
       seenNorm.add(norm);
       return true;
     });
-    allMatches = streamedData.concat(esxNew);
+    // For DaddyLive, attach channels to existing matches when titles match.
+    // Otherwise treat as a new live card (only if at least one channel left after dedupe).
+    var daddyNew = [];
+    daddyData.forEach(function (d) {
+      var norm = normalizeTitle(d.title);
+      var existing = streamedData.find(function (m) { return normalizeTitle(m.title) === norm; }) ||
+                     esxNew.find(function (m) { return normalizeTitle(m.title) === norm; });
+      if (existing) {
+        // Augment with daddy channels so the source picker shows language-tagged options.
+        existing._daddyChannels = (existing._daddyChannels || []).concat(d.channels);
+      } else if (!seenNorm.has(norm)) {
+        daddyNew.push(d);
+        seenNorm.add(norm);
+      }
+    });
+    allMatches = streamedData.concat(esxNew).concat(daddyNew);
     return allMatches;
   }
 
@@ -452,7 +606,15 @@
       if (!r.ok) return [];
       var streams = await r.json();
       if (!Array.isArray(streams)) return [];
-      streams.sort(function (a, b) { return (b.hd ? 1 : 0) - (a.hd ? 1 : 0); });
+      // Stable sort: HD first, then by viewer count, then by streamNo so ordering
+      // doesn't flap between refreshes (was jumping the active source mid-watch).
+      streams.sort(function (a, b) {
+        var hd = (b.hd ? 1 : 0) - (a.hd ? 1 : 0);
+        if (hd) return hd;
+        var v = (b.viewers || 0) - (a.viewers || 0);
+        if (v) return v;
+        return (a.streamNo || 0) - (b.streamNo || 0);
+      });
       return streams;
     } catch (e) { return []; }
   }
@@ -676,6 +838,13 @@
       if (_searchDebounce) clearTimeout(_searchDebounce);
       _searchDebounce = setTimeout(function () {
         searchQuery = input.value;
+        // Searching should look across all sports — narrow sport tab + search is confusing.
+        if (searchQuery && currentSport !== 'all' && currentSport !== '__fav') {
+          currentSport = 'all';
+          currentLeague = 'all';
+          renderTabs();
+          renderLeagueFilter();
+        }
         renderMatches();
       }, 150);
     });
@@ -917,10 +1086,12 @@
 
       // bell reminder button
       var matchKey = m.id || normalizeTitle(m.title);
+      var hasReminder = !!(reminders[matchKey] || savedReminders[matchKey]);
       var bellBtn = document.createElement('button');
-      bellBtn.className = 'match-card__act-btn match-card__bell' + (reminders[matchKey] ? ' match-card__bell--active' : '');
-      bellBtn.innerHTML = reminders[matchKey] ? BELL_ACTIVE_SVG : BELL_SVG;
-      bellBtn.setAttribute('aria-label', reminders[matchKey] ? lt('live.remind.cancel', 'Cancel reminder') : lt('live.remind.set', 'Remind me'));
+      bellBtn.className = 'match-card__act-btn match-card__bell' + (hasReminder ? ' match-card__bell--active' : '');
+      bellBtn.innerHTML = hasReminder ? BELL_ACTIVE_SVG : BELL_SVG;
+      bellBtn._matchKey = matchKey;
+      bellBtn.setAttribute('aria-label', hasReminder ? lt('live.remind.cancel', 'Cancel reminder') : lt('live.remind.set', 'Remind me'));
       bellBtn.title = bellBtn.getAttribute('aria-label');
       bellBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleReminder(m, bellBtn); });
       actGroup.appendChild(bellBtn);
@@ -983,11 +1154,54 @@
 
   // === REMINDER ===
 
+  function _fireReminderNotif(title) {
+    var body = lt('live.remind.starting', 'Starting soon on eli6 Sports');
+    var icon = '/img/favicon.svg';
+    // Prefer service worker notification (survives tab close), fall back to plain Notification.
+    if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then(function (reg) {
+        try { reg.showNotification(title, { body: body, icon: icon, tag: 'live-reminder' }); }
+        catch (e) { try { new Notification(title, { body: body, icon: icon }); } catch (_) {} }
+      });
+    } else {
+      try { new Notification(title, { body: body, icon: icon }); } catch (e) {}
+    }
+  }
+
+  function _scheduleReminderTimer(key, kickoffTs, title) {
+    var delay = kickoffTs - Date.now() - 5 * 60000; // 5 min before kickoff
+    if (delay < 0) delay = 0;
+    if (reminders[key]) clearTimeout(reminders[key]);
+    reminders[key] = setTimeout(function () {
+      delete reminders[key];
+      delete savedReminders[key];
+      saveJSON('eli6.live.reminders', savedReminders);
+      _fireReminderNotif(title || lt('live.remind.match', 'Match'));
+      // Refresh UI if the card is still on screen
+      try { renderMatches(); } catch (e) {}
+    }, delay);
+  }
+
+  function restoreReminders() {
+    var now = Date.now();
+    Object.keys(savedReminders).forEach(function (key) {
+      var r = savedReminders[key];
+      if (!r || !r.ts) { delete savedReminders[key]; return; }
+      // Drop reminders whose kickoff was more than 30 min ago
+      if (r.ts < now - 30 * 60000) { delete savedReminders[key]; return; }
+      _scheduleReminderTimer(key, r.ts, r.title);
+    });
+    saveJSON('eli6.live.reminders', savedReminders);
+  }
+
   function toggleReminder(m, btn) {
     var key = m.id || normalizeTitle(m.title);
-    if (reminders[key]) {
-      clearTimeout(reminders[key]);
+    var hasReminder = !!(reminders[key] || savedReminders[key]);
+    if (hasReminder) {
+      if (reminders[key]) clearTimeout(reminders[key]);
       delete reminders[key];
+      delete savedReminders[key];
+      saveJSON('eli6.live.reminders', savedReminders);
       btn.classList.remove('match-card__bell--active');
       btn.innerHTML = BELL_SVG;
       btn.setAttribute('aria-label', lt('live.remind.set', 'Remind me'));
@@ -996,25 +1210,10 @@
       return;
     }
     var notifSupported = ('Notification' in window);
-    function _scheduleReminder() {
-      var delay = m.date - Date.now() - 5 * 60000; // 5 min before kickoff
-      if (delay < 0) delay = 0;
-      reminders[key] = setTimeout(function () {
-        delete reminders[key];
-        var allBells = document.querySelectorAll('.match-card__bell');
-        allBells.forEach(function (b) {
-          if (b._matchKey === key) {
-            b.classList.remove('match-card__bell--active');
-            b.innerHTML = BELL_SVG;
-          }
-        });
-        try {
-          new Notification((m.title || lt('live.remind.match', 'Match')), {
-            body: lt('live.remind.starting', 'Starting soon on eli6 Sports'),
-            icon: '/favicon.png',
-          });
-        } catch (e) {}
-      }, delay);
+    function _commit() {
+      savedReminders[key] = { ts: m.date, title: m.title || '' };
+      saveJSON('eli6.live.reminders', savedReminders);
+      _scheduleReminderTimer(key, m.date, m.title);
       btn._matchKey = key;
       btn.classList.add('match-card__bell--active');
       btn.innerHTML = BELL_ACTIVE_SVG;
@@ -1023,10 +1222,10 @@
       if (window.showToast) window.showToast(lt('live.remind.set', 'Reminder set!'));
     }
     if (notifSupported && Notification.permission === 'granted') {
-      _scheduleReminder();
+      _commit();
     } else if (notifSupported && Notification.permission !== 'denied') {
       Notification.requestPermission().then(function (perm) {
-        if (perm === 'granted') _scheduleReminder();
+        if (perm === 'granted') _commit();
         else if (window.showToast) window.showToast(lt('live.remind.denied', 'Enable notifications to use reminders'));
       });
     } else {
@@ -1293,24 +1492,44 @@
       return;
     }
 
+    // Helper: build extra source rows from augmented DaddyLive channels (if any)
+    function _extraDaddySources(m) {
+      var ch = m && m._daddyChannels;
+      if (!Array.isArray(ch) || !ch.length) return [];
+      return ch.map(function (c) {
+        var nm = c.channel_name || ('Channel ' + c.channel_id);
+        return { label: nm, url: c.url, hd: /\bhd\b/i.test(nm), language: '', viewers: 0, raw: nm };
+      });
+    }
+
     if (match.provider === 'streamed' && Array.isArray(match.sources) && match.sources.length) {
       var results = await Promise.all(
         match.sources.map(async function (src) {
           var streams = await getStreamEmbed(src.source, src.id);
           return streams.map(function (s) {
-            var label = src.source.charAt(0).toUpperCase() + src.source.slice(1);
-            if (streams.length > 1) label += ' ' + (s.hd ? 'HD' : 'SD');
-            return { label: label, url: s.embedUrl, hd: s.hd };
+            var srcName = src.source.charAt(0).toUpperCase() + src.source.slice(1);
+            var langStr = (s.language || '').trim();
+            // Build label: prefer language, else source name + HD/SD
+            var label = langStr || srcName;
+            if (!langStr && streams.length > 1) label += ' ' + (s.hd ? 'HD' : 'SD');
+            return { label: label, url: s.embedUrl, hd: !!s.hd, language: langStr, viewers: s.viewers || 0, raw: srcName };
           });
         })
       );
       if (seq !== _openPlayerSeq) return;
-      var sources = results.flat().filter(function (s) { return s.url; });
+      var sources = results.flat().filter(function (s) { return s.url; }).concat(_extraDaddySources(match));
       renderSources(sourcesEl, loading, sources);
     } else if (match.provider === 'esx' && Array.isArray(match.iframes) && match.iframes.length) {
       if (seq !== _openPlayerSeq) return;
       var sources = match.iframes.map(function (f, i) {
-        return { label: f.server || ('Stream ' + (i + 1)), url: f.url, hd: /fhd|hd/i.test(f.server || '') };
+        var srv = f.server || ('Stream ' + (i + 1));
+        return { label: srv, url: f.url, hd: /fhd|hd/i.test(srv), language: '', viewers: 0, raw: srv };
+      }).concat(_extraDaddySources(match));
+      renderSources(sourcesEl, loading, sources);
+    } else if (match.provider === 'daddy' && Array.isArray(match.channels) && match.channels.length) {
+      if (seq !== _openPlayerSeq) return;
+      var sources = match.channels.map(function (ch) {
+        return { label: ch.channel_name || ('Channel ' + ch.channel_id), url: ch.url, hd: /\bhd\b/i.test(ch.channel_name || ''), language: '', viewers: 0, raw: ch.channel_name || '' };
       });
       renderSources(sourcesEl, loading, sources);
     } else {
@@ -1336,8 +1555,8 @@
     }
 
     var fr = document.createElement('iframe');
-    fr.allowFullscreen = true;
     fr.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
+    fr.setAttribute('allowfullscreen', '');
     fr.addEventListener('load', function () {
       if (loadingEl) loadingEl.style.display = 'none';
     });
@@ -1352,50 +1571,120 @@
       loading.textContent = lt('live.player.noAvailable', 'No streams available.');
       return;
     }
-    var sorted = sortSourcesByVotes(sources);
-    loading.style.display = 'none';
-    spawnIframe(sorted[0].url);
 
-    sorted.forEach(function (src, i) {
-      var box = document.createElement('div');
-      box.className = 'live-src-box';
-
-      var btn = document.createElement('button');
-      btn.className = 'live-src-btn' + (i === 0 ? ' live-src-btn--active' : '') + (src.hd ? ' live-src-btn--hd' : '');
-      var score = voteScore(src.url);
-      var scoreLabel = score !== 0 ? ' (' + (score > 0 ? '+' + score : score) + ')' : '';
-      btn.textContent = src.label + scoreLabel;
-      btn.addEventListener('click', function () {
-        wrap.querySelectorAll('.live-src-btn').forEach(function (b) { b.classList.remove('live-src-btn--active'); });
-        btn.classList.add('live-src-btn--active');
-        spawnIframe(src.url);
-      });
-
-      var voteUp = document.createElement('button');
-      voteUp.className = 'live-src-vote live-src-vote--up';
-      voteUp.textContent = '👍';
-      voteUp.title = lt('live.vote.up', 'This stream works');
-      voteUp.setAttribute('aria-label', voteUp.title);
-      voteUp.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'up'); updateBtnLabel(); });
-
-      var voteDown = document.createElement('button');
-      voteDown.className = 'live-src-vote live-src-vote--down';
-      voteDown.textContent = '👎';
-      voteDown.title = lt('live.vote.down', 'This stream is broken');
-      voteDown.setAttribute('aria-label', voteDown.title);
-      voteDown.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'down'); updateBtnLabel(); });
-
-      function updateBtnLabel() {
-        var sc = voteScore(src.url);
-        var lbl = sc !== 0 ? ' (' + (sc > 0 ? '+' + sc : sc) + ')' : '';
-        btn.textContent = src.label + lbl;
-      }
-
-      box.appendChild(btn);
-      box.appendChild(voteUp);
-      box.appendChild(voteDown);
-      wrap.appendChild(box);
+    // Attach detected language to each source (from explicit field or label heuristic).
+    sources.forEach(function (s) {
+      s._lang = detectLang(s.language || s.label || s.raw);
     });
+
+    // Build a language filter bar above the source buttons.
+    var langs = {};
+    sources.forEach(function (s) {
+      if (!s._lang) return;
+      var c = s._lang.code;
+      if (!langs[c]) langs[c] = { code: c, flag: s._lang.flag, name: s._lang.name, count: 0 };
+      langs[c].count++;
+    });
+    var langKeys = Object.keys(langs);
+
+    // Pick initial language: persisted preference if it exists in this match's sources, else any
+    var initialLang = (preferredLang && langs[preferredLang]) ? preferredLang : 'all';
+
+    var filterBar = document.createElement('div');
+    filterBar.className = 'live-src-langbar';
+    var visibleSources;
+
+    function renderFilteredSources() {
+      // Remove existing source boxes (keep the filter bar)
+      Array.prototype.slice.call(wrap.querySelectorAll('.live-src-box')).forEach(function (n) { n.remove(); });
+      visibleSources = sortSourcesByVotes(initialLang === 'all'
+        ? sources
+        : sources.filter(function (s) { return s._lang && s._lang.code === initialLang; }));
+      if (!visibleSources.length) {
+        // No source for this language → fall back to all
+        visibleSources = sortSourcesByVotes(sources);
+      }
+      loading.style.display = 'none';
+      spawnIframe(visibleSources[0].url);
+      visibleSources.forEach(function (src, i) {
+        var box = document.createElement('div');
+        box.className = 'live-src-box';
+
+        var btn = document.createElement('button');
+        btn.className = 'live-src-btn' + (i === 0 ? ' live-src-btn--active' : '') + (src.hd ? ' live-src-btn--hd' : '');
+        function paint() {
+          var score = voteScore(src.url);
+          var scoreLabel = score !== 0 ? ' (' + (score > 0 ? '+' + score : score) + ')' : '';
+          var flag = src._lang ? src._lang.flag + ' ' : '';
+          btn.textContent = flag + src.label + scoreLabel;
+        }
+        paint();
+        btn.addEventListener('click', function () {
+          wrap.querySelectorAll('.live-src-btn').forEach(function (b) { b.classList.remove('live-src-btn--active'); });
+          btn.classList.add('live-src-btn--active');
+          spawnIframe(src.url);
+        });
+
+        var voteUp = document.createElement('button');
+        voteUp.className = 'live-src-vote live-src-vote--up';
+        voteUp.textContent = '👍';
+        voteUp.title = lt('live.vote.up', 'This stream works');
+        voteUp.setAttribute('aria-label', voteUp.title);
+        voteUp.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'up'); paint(); });
+
+        var voteDown = document.createElement('button');
+        voteDown.className = 'live-src-vote live-src-vote--down';
+        voteDown.textContent = '👎';
+        voteDown.title = lt('live.vote.down', 'This stream is broken');
+        voteDown.setAttribute('aria-label', voteDown.title);
+        voteDown.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'down'); paint(); });
+
+        box.appendChild(btn);
+        box.appendChild(voteUp);
+        box.appendChild(voteDown);
+        wrap.appendChild(box);
+      });
+    }
+
+    // Render the language filter bar only if we have ≥2 detected languages
+    if (langKeys.length >= 2) {
+      var lbl = document.createElement('span');
+      lbl.className = 'live-src-langbar__label';
+      lbl.textContent = '🌐 ' + lt('live.lang.label', 'Language:');
+      filterBar.appendChild(lbl);
+
+      var allBtn = document.createElement('button');
+      allBtn.className = 'live-src-langpill' + (initialLang === 'all' ? ' live-src-langpill--active' : '');
+      allBtn.textContent = lt('live.lang.all', 'All') + ' (' + sources.length + ')';
+      allBtn.addEventListener('click', function () {
+        initialLang = 'all';
+        try { localStorage.removeItem('eli6.live.preferredLang'); } catch (e) {}
+        preferredLang = '';
+        filterBar.querySelectorAll('.live-src-langpill').forEach(function (b) { b.classList.remove('live-src-langpill--active'); });
+        allBtn.classList.add('live-src-langpill--active');
+        renderFilteredSources();
+      });
+      filterBar.appendChild(allBtn);
+
+      langKeys.forEach(function (code) {
+        var L = langs[code];
+        var btn = document.createElement('button');
+        btn.className = 'live-src-langpill' + (initialLang === code ? ' live-src-langpill--active' : '');
+        btn.textContent = L.flag + ' ' + L.name + ' (' + L.count + ')';
+        btn.addEventListener('click', function () {
+          initialLang = code;
+          try { localStorage.setItem('eli6.live.preferredLang', code); } catch (e) {}
+          preferredLang = code;
+          filterBar.querySelectorAll('.live-src-langpill').forEach(function (b) { b.classList.remove('live-src-langpill--active'); });
+          btn.classList.add('live-src-langpill--active');
+          renderFilteredSources();
+        });
+        filterBar.appendChild(btn);
+      });
+      wrap.appendChild(filterBar);
+    }
+
+    renderFilteredSources();
   }
 
   function closePlayer() {
@@ -1424,6 +1713,7 @@
     renderSearch();
     renderRefreshBar();
     showSkeleton();
+    restoreReminders();
 
     await Promise.all([loadMatches(), refreshLiveScores()]);
     renderTabs();
