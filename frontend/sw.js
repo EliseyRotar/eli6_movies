@@ -1,6 +1,8 @@
 // ELI6 Movies — minimal app-shell service worker
-// Stale-while-revalidate for our own static assets; network-only for API + iframes.
-var CACHE_NAME = 'eli6-shell-v1';
+// Network-first for our own JS/CSS/JSON so feature shipping isn't blocked by
+// the previous-visit cache; cache-only fallback if the user is offline.
+// HTML and other shell files still use stale-while-revalidate for fast nav.
+var CACHE_NAME = 'eli6-shell-v2';
 var SHELL_ASSETS = [
   '/live.html',
   '/css/theme.css',
@@ -59,7 +61,23 @@ self.addEventListener('fetch', function (event) {
 
   if (!isShellAsset) return;
 
-  // Stale-while-revalidate
+  // Network-first for JS / CSS / JSON so new deploys ship without a 2nd reload;
+  // stale-while-revalidate for the HTML shell and other assets.
+  var isCodeAsset = url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.json');
+
+  if (isCodeAsset) {
+    event.respondWith(
+      caches.open(CACHE_NAME).then(function (cache) {
+        return fetch(req).then(function (resp) {
+          if (resp && resp.status === 200) cache.put(req, resp.clone());
+          return resp;
+        }).catch(function () { return cache.match(req); });
+      })
+    );
+    return;
+  }
+
+  // Stale-while-revalidate (HTML shell, manifest, svg, etc.)
   event.respondWith(
     caches.open(CACHE_NAME).then(function (cache) {
       return cache.match(req).then(function (cached) {
