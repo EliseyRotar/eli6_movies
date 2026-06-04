@@ -287,27 +287,47 @@
   // === LANGUAGE DETECTION (for stream source labels) ===
   // Heuristic: parse channel/server names → {flag, code, name}.
   // 'code' is ISO-639-1 (or 'multi' for European feeds). Used to group sources in the player modal.
+  //
+  // IMPORTANT: country-suffix matchers MUST run before the generic provider
+  // ones. "beIN Sports 2 France" should be French, not Arabic — so we look
+  // for "France"/"FR" before falling through to the generic "bein" rule.
   var LANG_HINTS = [
-    { rx: /\b(tnt|abc|nbc|fox(?!ports)|espn|peacock|cbs|usa network|nfl network|nba tv)\b/i, code: 'en-us', flag: '🇺🇸', name: 'English (US)' },
-    { rx: /\b(tsn|sportsnet|cbc)\b/i, code: 'en-ca', flag: '🇨🇦', name: 'English (CA)' },
-    { rx: /\b(sky ?sports?|sky ?go|bbc|bt ?sport|itv|tnt sports?(?: uk)?)\b/i, code: 'en-gb', flag: '🇬🇧', name: 'English (UK)' },
-    { rx: /\b(fox ?sports? (?:au|australia)|kayo|stan ?sport|main ?event)\b/i, code: 'en-au', flag: '🇦🇺', name: 'English (AU)' },
-    { rx: /\b(bein(?: ?sports?)?(?: arabic)?|ssc|al ?jazeera|al ?kass|arab|abu ?dhabi)\b/i, code: 'ar', flag: '🇸🇦', name: 'Arabic' },
-    { rx: /\b(movistar|la ?liga|dazn ?(?:es|spain)?|cosmote|gol ?espana)\b/i, code: 'es', flag: '🇪🇸', name: 'Spanish' },
-    { rx: /\b(globo|sport ?tv brasil|esporte ?interativo|premiere|combate|cazetv|sportv)\b/i, code: 'pt-br', flag: '🇧🇷', name: 'Portuguese (BR)' },
-    { rx: /\b(rai|sky ?italia|dazn ?it(?:alia)?|mediaset)\b/i, code: 'it', flag: '🇮🇹', name: 'Italian' },
-    { rx: /\b(canal\+|rmc|bein ?sports? ?fr|eurosport ?(?:france|fr)|tf1|france ?\d|l ?equipe)\b/i, code: 'fr', flag: '🇫🇷', name: 'French' },
-    { rx: /\b(sport ?(?:1|2|3)? ?(?:de|deutschland|german)|sky ?(?:de|deutsch))\b/i, code: 'de', flag: '🇩🇪', name: 'German' },
-    { rx: /\b(sport ?tv|eleven ?sports?(?: pt|portugal)?)\b/i, code: 'pt', flag: '🇵🇹', name: 'Portuguese' },
-    { rx: /\b(match ?tv|nashe ?futbol|tv ?match)\b/i, code: 'ru', flag: '🇷🇺', name: 'Russian' },
-    { rx: /\b(tv4|viaplay ?(?:se|sweden)?|c ?more)\b/i, code: 'sv', flag: '🇸🇪', name: 'Swedish' },
-    { rx: /\b(nos|ziggo|fox sports nl|ne[d|t]er)\b/i, code: 'nl', flag: '🇳🇱', name: 'Dutch' },
-    { rx: /\b(j ?sport|wowow|nhk|fuji ?tv|gaora|sky ?perfectv)\b/i, code: 'ja', flag: '🇯🇵', name: 'Japanese' },
-    { rx: /\b(cctv|sport ?5|migu|pp ?sport)\b/i, code: 'zh', flag: '🇨🇳', name: 'Chinese' },
-    { rx: /\b(spor ?smart|s ?sport|tivibu|bein ?turk|trt ?spor)\b/i, code: 'tr', flag: '🇹🇷', name: 'Turkish' },
+    // --- country-suffix matchers (run first so they beat provider-name fallbacks) ---
+    { rx: /\b(france|french|fr)\b/i, code: 'fr', flag: '🇫🇷', name: 'French' },
+    { rx: /\b(germany|german|deutsch|de)\b/i, code: 'de', flag: '🇩🇪', name: 'German' },
+    { rx: /\b(italy|italia|italian|it)\b/i, code: 'it', flag: '🇮🇹', name: 'Italian' },
+    { rx: /\b(spain|spanish|espana|es)\b/i, code: 'es', flag: '🇪🇸', name: 'Spanish' },
+    { rx: /\b(brazil|brasil|br|portugu[êe]s)\b/i, code: 'pt-br', flag: '🇧🇷', name: 'Portuguese (BR)' },
+    { rx: /\b(portugal|pt)\b/i, code: 'pt', flag: '🇵🇹', name: 'Portuguese' },
+    { rx: /\b(arabic|arab|al jazeera|al kass|saudi|abu dhabi|ssc)\b/i, code: 'ar', flag: '🇸🇦', name: 'Arabic' },
+    { rx: /\b(russia|russian|ru)\b/i, code: 'ru', flag: '🇷🇺', name: 'Russian' },
+    { rx: /\b(turkey|turkish|tr)\b/i, code: 'tr', flag: '🇹🇷', name: 'Turkish' },
+    { rx: /\b(poland|polish|polski|pl)\b/i, code: 'pl', flag: '🇵🇱', name: 'Polish' },
+    { rx: /\b(sweden|swedish|sv|svensk)\b/i, code: 'sv', flag: '🇸🇪', name: 'Swedish' },
+    { rx: /\b(netherland|dutch|nederland|nl)\b/i, code: 'nl', flag: '🇳🇱', name: 'Dutch' },
+    { rx: /\b(japan|japanese|jp|ja)\b/i, code: 'ja', flag: '🇯🇵', name: 'Japanese' },
+    { rx: /\b(china|chinese|zh|cn)\b/i, code: 'zh', flag: '🇨🇳', name: 'Chinese' },
+    { rx: /\b(czech|cz|cesk)\b/i, code: 'cs', flag: '🇨🇿', name: 'Czech' },
+    { rx: /\b(ireland|irish|ire|ie)\b/i, code: 'en-ie', flag: '🇮🇪', name: 'English (IE)' },
+    { rx: /\b(australia|australian|au|aussie|kayo|stan ?sport)\b/i, code: 'en-au', flag: '🇦🇺', name: 'English (AU)' },
+    { rx: /\b(canada|canadian|ca|tsn|sportsnet|cbc)\b/i, code: 'en-ca', flag: '🇨🇦', name: 'English (CA)' },
+    { rx: /\b(usa|united states|us|nfl network|nba tv|cfl\+|peacock|cbs|nbc|espn)\b/i, code: 'en-us', flag: '🇺🇸', name: 'English (US)' },
+    { rx: /\b(uk|britain|british|bbc|itv|bt ?sport|sky ?(?:sports?|go))\b/i, code: 'en-gb', flag: '🇬🇧', name: 'English (UK)' },
+    // --- generic provider names (fallback when no country marker was present) ---
+    { rx: /\b(tnt|abc|fox(?!ports)|usa network)\b/i, code: 'en-us', flag: '🇺🇸', name: 'English (US)' },
+    { rx: /\bbein\b/i, code: 'ar', flag: '🇸🇦', name: 'Arabic' },
+    { rx: /\b(movistar|la ?liga|dazn)\b/i, code: 'es', flag: '🇪🇸', name: 'Spanish' },
+    { rx: /\b(globo|sport ?tv|esporte|premiere|combate|cazetv|sportv)\b/i, code: 'pt-br', flag: '🇧🇷', name: 'Portuguese (BR)' },
+    { rx: /\b(rai|mediaset)\b/i, code: 'it', flag: '🇮🇹', name: 'Italian' },
+    { rx: /\b(canal\+|rmc|tf1|l ?equipe)\b/i, code: 'fr', flag: '🇫🇷', name: 'French' },
+    { rx: /\b(match ?tv|nashe)\b/i, code: 'ru', flag: '🇷🇺', name: 'Russian' },
+    { rx: /\b(tv4|viaplay|c ?more)\b/i, code: 'sv', flag: '🇸🇪', name: 'Swedish' },
+    { rx: /\b(nos|ziggo|fox sports nl)\b/i, code: 'nl', flag: '🇳🇱', name: 'Dutch' },
+    { rx: /\b(j ?sport|wowow|nhk|fuji ?tv|gaora)\b/i, code: 'ja', flag: '🇯🇵', name: 'Japanese' },
+    { rx: /\b(cctv|migu|pp ?sport)\b/i, code: 'zh', flag: '🇨🇳', name: 'Chinese' },
+    { rx: /\b(spor ?smart|tivibu|trt ?spor)\b/i, code: 'tr', flag: '🇹🇷', name: 'Turkish' },
     { rx: /\b(polsat ?sport|tvp ?sport)\b/i, code: 'pl', flag: '🇵🇱', name: 'Polish' },
-    { rx: /\bnova ?sport(?: cz)?\b/i, code: 'cs', flag: '🇨🇿', name: 'Czech' },
-    { rx: /\b(setanta ?(?:ireland|ire)|virgin ?media)\b/i, code: 'en-ie', flag: '🇮🇪', name: 'English (IE)' },
+    { rx: /\bnova ?sport\b/i, code: 'cs', flag: '🇨🇿', name: 'Czech' },
     { rx: /\beuro(?: ?sports?)?\b/i, code: 'multi', flag: '🇪🇺', name: 'Multi-EU' },
   ];
   // detect language from a label string (server name / channel name / streamed.pk language field)
@@ -502,22 +522,32 @@
   function normalizeTeamName(s) {
     return (s || '')
       .toLowerCase()
-      .replace(/\bfc\b|\bcf\b|\bsc\b|\bafc\b|\bac\b|\bbk\b|\bii\b/g, '')
+      // strip accents/diacritics ("Côte" → "cote", "Bayern München" → "bayern munchen")
+      .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+      .replace(/\bfc\b|\bcf\b|\bsc\b|\bafc\b|\bac\b|\bbk\b|\bii\b|\bcd\b|\bkc\b/g, '')
       .replace(/\bunited\b/g, 'utd')
       .replace(/\bcity\b/g, '')
       .replace(/\bu\d{1,2}\b/g, '')
-      .replace(/\b(women|women's|w|fem)\b/g, '')
-      .replace(/\b(reserves|youth|academy)\b/g, '')
+      .replace(/\b(women|womens|w|fem)\b/g, '')
+      .replace(/\b(reserves|reserve|res|youth|academy|ii|b|junior|jr)\b/g, '')
+      // cricket format suffixes: "Somerset t20" → "somerset"
+      .replace(/\b(t20|odi|test|t10)\b/g, '')
+      // common nation-name variants
+      .replace(/\bcote d ivoire\b/g, 'ivory coast')
+      .replace(/\b(n |northern )ireland\b/g, 'northern ireland')
+      .replace(/\bgb\b|\bgreat britain\b/g, 'uk')
       .replace(/\s+/g, ' ')
       .trim();
   }
   function normalizeTitle(title) {
     var s = (title || '').toLowerCase()
-      .replace(/\./g, '')
+      .normalize('NFKD').replace(/[̀-ͯ]/g, '')
+      .replace(/\./g, ' ')
       .replace(/[^\w\s]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
-    var m = s.match(/^(.+?)\s+vs?\s+(.+)$/);
+    // Tolerate "vs", "vs.", "v" between teams
+    var m = s.match(/^(.+?)\s+(?:vs?|v)\s+(.+)$/);
     if (m) {
       var teams = [normalizeTeamName(m[1]), normalizeTeamName(m[2])].sort();
       return teams.join('|');
