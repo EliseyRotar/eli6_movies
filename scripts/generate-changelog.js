@@ -91,6 +91,42 @@ function findLastReleaseDate(html) {
   return all[all.length - 1];
 }
 
+// Read the cursor (last-processed commit SHA) from updates.html if present.
+// Marker form: <!-- changelog-cursor: abc1234 -->
+const CURSOR_RE = /<!-- changelog-cursor: ([a-f0-9]{7,40}) -->/;
+function readCursor(html) {
+  const m = CURSOR_RE.exec(html);
+  return m ? m[1] : null;
+}
+function writeCursor(html, sha) {
+  if (CURSOR_RE.test(html)) {
+    return html.replace(CURSOR_RE, `<!-- changelog-cursor: ${sha} -->`);
+  }
+  // Place the cursor right after the subtitle so it sits with the changelog body.
+  const anchor = '<p class="updates-subtitle">Every update since launch, most recent first.</p>';
+  return html.replace(anchor, `${anchor}\n    <!-- changelog-cursor: ${sha} -->`);
+}
+
+function gitHeadSha() {
+  return execSync(`git -C "${ROOT}" rev-parse HEAD`, { encoding: 'utf8' }).trim();
+}
+
+// Returns commits in `range` (e.g. "abc1234..HEAD") or all commits if range is null.
+function gitLogRange(range) {
+  // Use a unique separator that won't appear in commit messages.
+  const SEP = '<<<COMMITSEP>>>';
+  const FIELDSEP = '<<<FIELD>>>';
+  const rangeArg = range || '';
+  const cmd = `git -C "${ROOT}" log ${rangeArg} --no-merges --pretty=format:"%H${FIELDSEP}%ci${FIELDSEP}%s${FIELDSEP}%b${SEP}"`;
+  let out;
+  try { out = execSync(cmd, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }); }
+  catch (e) { console.error('git log failed:', e.message); process.exit(2); }
+  return out.split(SEP).map(s => s.trim()).filter(Boolean).map(line => {
+    const [hash, ciDate, subject, body] = line.split(FIELDSEP);
+    return { hash, ciDate, subject: (subject||'').trim(), body: (body||'').trim() };
+  });
+}
+
 function gitLogSince(sinceIso) {
   // Use a unique separator that won't appear in commit messages.
   const SEP = '<<<COMMITSEP>>>';
@@ -248,14 +284,20 @@ if (!fs.existsSync(UPDATES_HTML)) {
 
 const original = fs.readFileSync(UPDATES_HTML, 'utf8');
 const existingDates = findAllReleaseDates(original);
+const cursor = readCursor(original);
 
-let sinceIso, commits;
+let commits;
 if (BACKFILL_ALL) {
   // Walk every commit since the repo started, then filter out any date that
   // already has a release block — preserves hand-written summaries.
-  sinceIso = '1970-01-01';
   console.error('Backfill mode: walking full git history, skipping dates that already have a release block.');
   console.error(`Already-covered dates (${existingDates.size}): ${[...existingDates].sort().join(', ')}`);
+  commits = gitLogSince('1970-01-01').filter(c => !isSkippable(c));
+} else if (cursor && !SINCE_OVERRIDE) {
+  // Cursor-based: process every commit since the cursor SHA. This is the
+  // precise way — works even when multiple commits land on the same day.
+  console.error(`Cursor: ${cursor}; collecting commits in ${cursor}..HEAD`);
+  commits = gitLogRange(`${cursor}..HEAD`).filter(c => !isSkippable(c));
 } else {
   const lastIso = SINCE_OVERRIDE || findLastReleaseDate(original);
   if (!lastIso) {
@@ -265,12 +307,10 @@ if (BACKFILL_ALL) {
   // Commits AFTER the last release date — same day already covered.
   const sinceDate = new Date(lastIso + 'T00:00:00Z');
   sinceDate.setUTCDate(sinceDate.getUTCDate() + 1);
-  sinceIso = sinceDate.toISOString().slice(0, 10);
-  console.error(`Last release date in updates.html: ${lastIso}`);
-  console.error(`Collecting commits since: ${sinceIso}`);
+  const sinceIso = sinceDate.toISOString().slice(0, 10);
+  console.error(`Last release date in updates.html: ${lastIso}; no cursor — falling back to --since ${sinceIso}`);
+  commits = gitLogSince(sinceIso).filter(c => !isSkippable(c));
 }
-
-commits = gitLogSince(sinceIso).filter(c => !isSkippable(c));
 
 if (!commits.length) {
   console.error('No new commits to add. Nothing to do.');
@@ -286,65 +326,116 @@ for (const c of commits) {
   byDay.get(day).push(c);
 }
 
+if (!byDay.size && !BACKFILL_ALL) {
+  // In cursor mode we still want to advance the cursor even if no entries were
+  // added (e.g. all new commits were skippable). Otherwise we'd reprocess
+  // them every run.
+  const newCursor = gitHeadSha();
+  if (cursor !== newCursor) {
+    const updated = writeCursor(original, newCursor);
+    if (DRY) { process.stdout.write(updated); process.exit(0); }
+    fs.writeFileSync(UPDATES_HTML, updated);
+    console.error(`No user-facing commits. Cursor advanced ${cursor || '(none)'} → ${newCursor}.`);
+    process.exit(0);
+  }
+  console.error('Nothing to do.');
+  process.exit(0);
+}
 if (!byDay.size) {
   console.error('All dates with commits are already represented in updates.html. Nothing to do.');
   process.exit(0);
 }
 
-// Process newest day first; within day, keep the chronological commit order.
+// Process newest day first; within day, newest commit first
 const orderedDays = [...byDay.keys()].sort().reverse();
-for (const d of orderedDays) byDay.get(d).reverse();   // newest-commit first within the day
-
-// In backfill mode we never override the "latest" tag — the newest existing
-// block keeps it. In normal mode the new top block becomes "latest".
-const newBlocks = orderedDays.map((d, i) =>
-  releaseBlockHtml(d, byDay.get(d), !BACKFILL_ALL && i === 0)
-);
+for (const d of orderedDays) byDay.get(d).reverse();
 
 let html = BACKFILL_ALL ? original : stripLatestTag(original);
-let insertAt;
+const newCursor = gitHeadSha();
 
-if (BACKFILL_ALL) {
-  // Slot the new (old-dated) blocks right BEFORE the "May 2026" launch sentinel
-  // so the existing hand-written newer entries stay at the top and the catch-all
-  // launch block stays at the very bottom.
-  const launchMarker = '<span class="release-date">May 2026</span>';
-  const launchIdx = html.indexOf(launchMarker);
-  if (launchIdx !== -1) {
-    // Walk back to the start of the <!-- ... --> comment that precedes the launch block.
-    const blockStart = html.lastIndexOf('<div class="release">', launchIdx);
-    const commentStart = html.lastIndexOf('<!--', blockStart);
-    insertAt = (commentStart !== -1 && blockStart - commentStart < 200) ? commentStart : blockStart;
-  } else {
-    // No sentinel — insert right before </main>
-    insertAt = html.indexOf('</main>');
-    if (insertAt === -1) {
-      console.error('Cannot find insertion point. Aborting.');
-      process.exit(2);
-    }
-  }
-} else {
-  const anchor = '<p class="updates-subtitle">Every update since launch, most recent first.</p>';
-  const idx = html.indexOf(anchor);
-  if (idx === -1) {
-    console.error('Could not find subtitle anchor. Aborting to avoid corrupting the page.');
-    process.exit(2);
-  }
-  insertAt = idx + anchor.length;
+// Build entry HTML for each commit grouped by day.
+const newEntriesByDay = new Map();
+for (const d of orderedDays) {
+  newEntriesByDay.set(d, byDay.get(d).map(entryHtml).join('\n'));
 }
 
-const prefix = html.slice(0, insertAt);
-const suffix = html.slice(insertAt);
-const joined = newBlocks.join('\n');
-const merged = BACKFILL_ALL
-  ? (prefix + joined + '\n' + suffix.replace(/^\s+/, '    '))
-  : (prefix + '\n\n' + joined + suffix.replace(/^\n+/, '\n'));
+// Splits days into: ones whose block already exists (append into it) and
+// ones we need to create from scratch.
+const daysToAppend = orderedDays.filter(d => existingDates.has(d));
+const daysToCreate = orderedDays.filter(d => !existingDates.has(d));
+
+// 1) Append into existing day-blocks (the common case: today's block already
+//    exists, just add the new <li>s to its <ul>).
+for (const d of daysToAppend) {
+  const dateText = formatDateText(d);
+  const entries = newEntriesByDay.get(d);
+  // Match the block by its date text; capture everything up to the closing
+  // </ul> of that block.
+  const re = new RegExp(
+    `(<span class="release-date">${dateText.replace(/[.*+?^${}()|[\\\]\\\\]/g, '\\\\$&')}</span>[\\s\\S]*?<ul class="entry-list">)([\\s\\S]*?)(\\n\\s*</ul>)`
+  );
+  if (!re.test(html)) {
+    console.error(`Warning: existing block for ${dateText} not found by regex; falling back to new-block insert.`);
+    daysToCreate.unshift(d);
+    continue;
+  }
+  html = html.replace(re, (m, head, body, tail) => `${head}${body}\n${entries}${tail}`);
+}
+
+// 2) Create new blocks for new days. In normal mode (not backfill), prepend at
+//    the top so newest is first; the new top block gets the "latest" tag.
+if (daysToCreate.length) {
+  const newBlocks = daysToCreate.map((d, i) =>
+    releaseBlockHtml(d, byDay.get(d), !BACKFILL_ALL && i === 0)
+  );
+
+  let insertAt;
+  if (BACKFILL_ALL) {
+    // Slot the new (old-dated) blocks right BEFORE the "May 2026" launch sentinel
+    // so the existing hand-written newer entries stay at the top and the catch-all
+    // launch block stays at the very bottom.
+    const launchMarker = '<span class="release-date">May 2026</span>';
+    const launchIdx = html.indexOf(launchMarker);
+    if (launchIdx !== -1) {
+      const blockStart = html.lastIndexOf('<div class="release">', launchIdx);
+      const commentStart = html.lastIndexOf('<!--', blockStart);
+      insertAt = (commentStart !== -1 && blockStart - commentStart < 200) ? commentStart : blockStart;
+    } else {
+      insertAt = html.indexOf('</main>');
+      if (insertAt === -1) { console.error('Cannot find insertion point. Aborting.'); process.exit(2); }
+    }
+  } else {
+    // Normal mode: insert after subtitle (or after the cursor comment if present)
+    const cursorMatch = CURSOR_RE.exec(html);
+    if (cursorMatch) {
+      insertAt = cursorMatch.index + cursorMatch[0].length;
+    } else {
+      const anchor = '<p class="updates-subtitle">Every update since launch, most recent first.</p>';
+      const idx = html.indexOf(anchor);
+      if (idx === -1) {
+        console.error('Could not find subtitle anchor. Aborting to avoid corrupting the page.');
+        process.exit(2);
+      }
+      insertAt = idx + anchor.length;
+    }
+  }
+
+  const prefix = html.slice(0, insertAt);
+  const suffix = html.slice(insertAt);
+  const joined = newBlocks.join('\n');
+  html = BACKFILL_ALL
+    ? (prefix + joined + '\n' + suffix.replace(/^\s+/, '    '))
+    : (prefix + '\n\n' + joined + suffix.replace(/^\n+/, '\n'));
+}
+
+// 3) Advance the cursor to HEAD so we won't reprocess these commits next run.
+if (!BACKFILL_ALL) html = writeCursor(html, newCursor);
 
 if (DRY) {
-  process.stdout.write(merged);
-  console.error(`\n[dry-run] Would add ${commits.length} commits across ${orderedDays.length} days.`);
+  process.stdout.write(html);
+  console.error(`\n[dry-run] Would add ${commits.length} commits across ${orderedDays.length} days (${daysToAppend.length} appended, ${daysToCreate.length} new).`);
   process.exit(0);
 }
 
-fs.writeFileSync(UPDATES_HTML, merged);
-console.error(`Updated ${UPDATES_HTML} — added ${commits.length} commits across ${orderedDays.length} days.`);
+fs.writeFileSync(UPDATES_HTML, html);
+console.error(`Updated ${UPDATES_HTML} — added ${commits.length} commits across ${orderedDays.length} days (${daysToAppend.length} appended, ${daysToCreate.length} new). Cursor → ${newCursor}.`);
