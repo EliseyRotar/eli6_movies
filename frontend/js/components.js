@@ -219,8 +219,9 @@
     mount.innerHTML = "";
     mount.appendChild(nav);
 
-    // Re-render on theme change so logo updates
+    // Re-render on theme change so logo updates, and on lang change so translated labels update
     document.addEventListener("eli6.themeChanged", function () { renderTopNav(active); }, { once: true });
+    document.addEventListener("eli6.langChanged",  function () { renderTopNav(active); }, { once: true });
   }
 
 
