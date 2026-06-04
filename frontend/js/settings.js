@@ -310,6 +310,43 @@
     contentPrefSection.appendChild(genreGrid);
     main.appendChild(contentPrefSection);
 
+    // --- Content Language section ---
+    var CONTENT_LANGS = [
+      { code: "en-US", label: "English (US)" },
+      { code: "es-ES", label: "Español" },
+      { code: "fr-FR", label: "Français" },
+      { code: "de-DE", label: "Deutsch" },
+      { code: "it-IT", label: "Italiano" },
+      { code: "pt-BR", label: "Português (BR)" },
+      { code: "ru-RU", label: "Русский" },
+      { code: "ja-JP", label: "日本語" },
+      { code: "ko-KR", label: "한국어" },
+      { code: "zh-CN", label: "中文 (简体)" },
+      { code: "hi-IN", label: "हिन्दी" },
+      { code: "ar-SA", label: "العربية" },
+    ];
+    var langSection = buildSection(
+      "07 / LANGUAGE",
+      "Content Language",
+      "Language for titles, descriptions, and metadata from TMDB. Separate from the UI language."
+    );
+    var savedContentLang = localStorage.getItem('eli6.contentLang') || 'en-US';
+    var langSelect = el("select", "settings__lang-select");
+    langSelect.style.cssText = "margin-top:14px;padding:10px 14px;border-radius:var(--r-md);border:1.5px solid var(--border);background:var(--card);color:var(--fg);font-size:14px;cursor:pointer;min-width:200px;";
+    CONTENT_LANGS.forEach(function(l) {
+      var opt = el("option");
+      opt.value = l.code;
+      opt.textContent = l.label;
+      if (l.code === savedContentLang) opt.selected = true;
+      langSelect.appendChild(opt);
+    });
+    langSelect.addEventListener("change", function() {
+      localStorage.setItem('eli6.contentLang', langSelect.value);
+      showToast("Content language saved — reload the home page to apply");
+    });
+    langSection.appendChild(langSelect);
+    main.appendChild(langSection);
+
     var footerActions = div("settings__footer-actions");
     var doneBtn = el("button", "btn btn--primary");
     doneBtn.textContent = "Done — back to home";

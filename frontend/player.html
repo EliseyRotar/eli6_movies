@@ -312,6 +312,22 @@
             color: #999;
         }
 
+        .genre-chip {
+            display: inline-block;
+            padding: 3px 11px;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.02em;
+            transition: border-color 0.15s, color 0.15s;
+        }
+        .genre-chip:hover {
+            border-color: rgba(255,255,255,0.6);
+            color: #fff;
+        }
+
         .hero-description {
             font-size: 18px !important;
             line-height: 1.6 !important;
@@ -1876,11 +1892,13 @@
         <div class="hero-content" style="display: block !important; visibility: visible !important; opacity: 1 !important;">
             <div class="video-title-scroll" style="display: block !important; visibility: visible !important;"><span class="video-title" id="heroTitle" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #fff !important;">Loading...</span></div>
             <div class="hero-meta" style="display: flex !important; visibility: visible !important; opacity: 1 !important; justify-content: center !important;">
+                <span id="heroMatchPct" style="display:none;background:#46d369;color:#000;font-size:12px;font-weight:700;padding:2px 9px;border-radius:4px;margin-right:8px;letter-spacing:0.04em;"></span>
                 <span class="hero-rating" id="heroRating">N/A</span>
                 <span class="hero-year" id="heroYear">N/A</span>
                 <span class="hero-duration" id="heroDuration">N/A</span>
                 <span id="heroQualityBadge"></span>
             </div>
+            <div id="heroGenres" style="display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:10px 0 4px;"></div>
             <p class="hero-description" id="heroDescription" style="display: block !important; visibility: visible !important; opacity: 1 !important; color: #e5e5e5 !important;">Loading content information...</p>
             <div class="hero-actions">
                 <button class="btn btn--primary" onclick="playContent()">
@@ -2339,6 +2357,7 @@
             document.getElementById('heroRating').textContent = rating;
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = episodes;
+            _renderHeroGenres((contentData.genres || []).map(function(g) { return { id: g.mal_id, name: g.name }; }));
 
             // Set My List button data attribute with correct content info
             const addButton = document.getElementById('addButton');
@@ -2383,6 +2402,33 @@
             `;
             document.getElementById('detailedOverview').innerHTML = detailedOverviewHTML;
             if (window.i18n && window.i18n.translateStaticContent) window.i18n.translateStaticContent();
+        }
+
+        function _calcMatchPct(genres) {
+            const saved = JSON.parse(localStorage.getItem('eli6.genres') || '[]');
+            if (!saved.length || !genres || !genres.length) return null;
+            const ids = genres.map(function(g) { return g.id; });
+            const hits = ids.filter(function(id) { return saved.includes(id); }).length;
+            return Math.round((hits / Math.max(ids.length, 1)) * 100);
+        }
+
+        function _renderHeroGenres(genres) {
+            const el = document.getElementById('heroGenres');
+            if (!el || !genres || !genres.length) return;
+            el.innerHTML = genres.slice(0, 5).map(function(g) {
+                return '<span class="genre-chip">' + esc(g.name) + '</span>';
+            }).join('');
+
+            const matchEl = document.getElementById('heroMatchPct');
+            if (matchEl) {
+                const pct = _calcMatchPct(genres);
+                if (pct !== null && pct > 0) {
+                    matchEl.textContent = pct + '% match';
+                    matchEl.style.display = '';
+                } else {
+                    matchEl.style.display = 'none';
+                }
+            }
         }
 
         // Update content information
@@ -2454,6 +2500,7 @@
             document.getElementById('heroYear').textContent = year;
             document.getElementById('heroDuration').textContent = duration;
             renderQualityBadge();
+            _renderHeroGenres(contentData.genres || []);
 
             // Set My List button data attribute with correct content info
             const addButton = document.getElementById('addButton');

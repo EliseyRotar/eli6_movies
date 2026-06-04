@@ -109,6 +109,28 @@ async function fetchForYou(lang) {
   } catch (e) { return []; }
 }
 
+async function fetchTMDBExtra(mediaType, category, lang) {
+  try {
+    const ep = '/' + mediaType + '/' + category;
+    const url = TMDB_BASE_URL + ep + '?language=' + encodeURIComponent(lang || 'en-US');
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.results || [];
+  } catch (e) { return []; }
+}
+
+async function fetchDiscover(mediaType, params, lang) {
+  try {
+    const url = TMDB_BASE_URL + '/discover/' + mediaType + '?' + params
+      + '&language=' + encodeURIComponent(lang || 'en-US');
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.results || [];
+  } catch (e) { return []; }
+}
+
 
 async function syncMyList() {
   if (!localStorage.getItem('user')) return;
@@ -157,8 +179,46 @@ async function removeFromKeepWatching(id, type) {
 }
 
 
+async function loadSecondaryRows(rowsMnt, lang, withProgress) {
+  const footerEl = document.getElementById('footer-mount');
+  function insertBeforeFooter(row) {
+    if (footerEl && footerEl.parentNode === rowsMnt.parentNode) {
+      rowsMnt.parentNode.insertBefore(row, footerEl);
+    } else {
+      rowsMnt.appendChild(row);
+    }
+  }
+
+  const SECONDARY = [
+    { label: tr('home.rows.nowPlaying',    'Now Playing in Theaters'), fetch: function() { return fetchTMDBExtra('movie', 'now_playing',   lang); }, type: 'movie', href: 'movies.html' },
+    { label: tr('home.rows.airingToday',   'Airing Today'),            fetch: function() { return fetchTMDBExtra('tv',    'airing_today',   lang); }, type: 'tv',    href: 'tvshows.html' },
+    { label: tr('home.rows.topRatedTV',    'Top Rated TV'),            fetch: function() { return fetchTMDBExtra('tv',    'top_rated',      lang); }, type: 'tv',    href: 'tvshows.html' },
+    { label: tr('home.rows.korean',        'K-Dramas'),                fetch: function() { return fetchDiscover('tv',    'with_genres=18&with_origin_country=KR&sort_by=popularity.desc', lang); }, type: 'tv',    href: 'tvshows.html' },
+    { label: tr('home.rows.bollywood',     'Bollywood'),               fetch: function() { return fetchDiscover('movie', 'with_original_language=hi&sort_by=popularity.desc&vote_count.gte=100', lang); }, type: 'movie', href: 'movies.html' },
+    { label: tr('home.rows.animation',     'Animation'),               fetch: function() { return fetchDiscover('movie', 'with_genres=16&sort_by=popularity.desc', lang); }, type: 'movie', href: 'movies.html' },
+    { label: tr('home.rows.best2010s',     'Best of the 2010s'),       fetch: function() { return fetchDiscover('movie', 'primary_release_date.gte=2010-01-01&primary_release_date.lte=2019-12-31&sort_by=vote_average.desc&vote_count.gte=1000', lang); }, type: 'movie', href: 'movies.html' },
+    { label: tr('home.rows.classics',      'Classic Films'),           fetch: function() { return fetchDiscover('movie', 'primary_release_date.lte=1979-12-31&sort_by=vote_average.desc&vote_count.gte=500', lang); }, type: 'movie', href: 'movies.html' },
+  ];
+
+  // Fetch all in parallel, render each as it arrives
+  const promises = SECONDARY.map(function(def) {
+    return def.fetch().then(function(items) {
+      if (!items || !items.length) return;
+      const normalised = withProgress(items.slice(0, 20).map(function(i) { return normalise(i, def.type); }));
+      const row = makeRow(def.label, normalised, {
+        seeAllHref: def.href,
+        onPick: function(item) { openDetailModal(item); },
+      });
+      insertBeforeFooter(row);
+    });
+  });
+  await Promise.allSettled(promises);
+}
+
+
 async function initPage() {
-  const lang     = (window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US';
+  const lang     = localStorage.getItem('eli6.contentLang') ||
+                   ((window.i18n && window.i18n.getTMDBLanguage) ? window.i18n.getTMDBLanguage() : 'en-US');
   const heroMnt  = document.getElementById('hero-mount');
   const rowsMnt  = document.getElementById('rows-mount');
   if (!rowsMnt) return;
@@ -308,8 +368,9 @@ async function initPage() {
     rowsMnt.appendChild(row);
   }
 
-  // Footer
+  // Footer renders now; secondary rows load in background
   renderFooter('footer-mount');
+  loadSecondaryRows(rowsMnt, lang, withProgress);
 }
 
 

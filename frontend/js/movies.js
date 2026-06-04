@@ -177,6 +177,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     window.renderTopNav('movies');
     window.renderBottomNav('movies');
+    var _p = new URLSearchParams(window.location.search);
+    if (_p.get('genre')) activeGenre = parseInt(_p.get('genre'), 10) || null;
+    if (_p.get('lang'))  _movieLang  = _p.get('lang');
     renderPage();
     document.addEventListener('eli6.themeChanged', function () {
       window.renderTopNav('movies');
