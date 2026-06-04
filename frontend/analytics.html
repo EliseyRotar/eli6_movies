@@ -188,6 +188,103 @@ tr:hover td{background:var(--surface2)}
 .offline-banner{background:var(--red);color:#fff;padding:8px 24px;font-size:.82rem;font-weight:600;text-align:center;position:sticky;top:97px;z-index:99;border-radius:0}
 
 @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.nav{padding:10px 14px}.main{padding:14px}.section-nav{top:48px}}
+
+/* ── LIGHT THEME ── */
+html[data-atheme="light"]{
+  --bg:#f5f6fa;--surface:#ffffff;--surface2:#f0f1f7;--surface3:#e6e8f0;
+  --border:#d8dae4;--border2:#bcc0d0;
+  --text:#1a1a2e;--muted:#5a5e7a;--muted2:#9da1b3;
+}
+.theme-toggle{background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
+.theme-toggle:hover{color:var(--text);border-color:var(--muted2)}
+.compare-toggle{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:.78rem;font-weight:600;transition:all .15s;white-space:nowrap}
+.compare-toggle.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+
+/* ── KPI sparkline canvas ── */
+.kpi-card{position:relative;background:linear-gradient(180deg,var(--surface) 0%,color-mix(in srgb,var(--surface) 90%,transparent) 100%)}
+.kpi-card.accent{border-left:2px solid var(--accent)}
+.kpi-card.green {border-left:2px solid var(--green)}
+.kpi-card.teal  {border-left:2px solid var(--accent2)}
+.kpi-card.pink  {border-left:2px solid var(--accent3)}
+.kpi-card.yellow{border-left:2px solid var(--yellow)}
+.kpi-spark{position:absolute;right:8px;top:8px;width:64px;height:22px;opacity:.85;pointer-events:none}
+.kpi-prev{font-size:.62rem;color:var(--muted2);margin-top:2px;font-weight:500;font-variant-numeric:tabular-nums}
+.kpi-prev em{font-style:normal;color:var(--muted)}
+
+/* ── 2D heatmap (day × hour) ── */
+.heat-2d{display:grid;grid-template-columns:42px repeat(24,1fr);gap:2px;margin-top:10px;font-size:.6rem}
+.heat-2d-label{color:var(--muted2);padding:2px 4px;text-align:right;line-height:1.6}
+.heat-2d-hour{color:var(--muted2);text-align:center;padding-bottom:2px;font-size:.55rem}
+.heat-cell{aspect-ratio:1;border-radius:2px;background:var(--surface3);cursor:default;transition:transform .1s}
+.heat-cell:hover{transform:scale(1.4);z-index:2;position:relative;outline:1px solid var(--accent)}
+.heat-legend{display:flex;align-items:center;gap:4px;margin-top:8px;font-size:.62rem;color:var(--muted2)}
+.heat-legend-grad{flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,rgba(124,111,247,.1),rgba(124,111,247,1))}
+
+/* ── World map (continent grouping with flag chips) ── */
+.world-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+.world-cont{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px}
+.world-cont-name{font-size:.62rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);font-weight:700;margin-bottom:6px}
+.world-cont-total{font-size:1.2rem;font-weight:800;color:var(--text);line-height:1.1}
+.world-cont-flags{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;font-size:.9rem}
+
+/* ── Funnel chart ── */
+.funnel{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.funnel-row{display:flex;align-items:center;gap:10px}
+.funnel-label{width:120px;font-size:.72rem;color:var(--muted);font-weight:600}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--surface2);border-radius:6px;overflow:hidden;position:relative}
+.funnel-bar{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));display:flex;align-items:center;padding:0 10px;color:#fff;font-weight:700;font-size:.78rem;transition:width .5s ease}
+.funnel-drop{font-size:.62rem;color:var(--red);font-weight:700;width:50px;text-align:right}
+
+/* ── Drill-down modal ── */
+.drill{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:300;padding:20px;backdrop-filter:blur(4px)}
+.drill[hidden]{display:none}
+.drill-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:720px;width:100%;max-height:85vh;overflow:auto;position:relative}
+.drill-close{position:absolute;top:14px;right:14px;background:var(--surface2);border:1px solid var(--border);width:30px;height:30px;border-radius:50%;color:var(--muted);cursor:pointer;font-size:14px}
+.drill h3{font-size:.95rem;margin-bottom:6px}
+.drill-meta{font-size:.7rem;color:var(--muted);margin-bottom:14px}
+.drill-timeline{display:flex;flex-direction:column;gap:6px;border-left:2px solid var(--border);padding-left:16px;margin-top:10px}
+.drill-step{position:relative}
+.drill-step::before{content:'';position:absolute;left:-21px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.drill-step.evt::before{background:var(--accent3)}
+.drill-step-time{font-size:.65rem;color:var(--muted2);font-family:monospace}
+.drill-step-name{font-size:.78rem;color:var(--text);font-weight:600}
+.drill-step-val{font-size:.7rem;color:var(--muted)}
+
+/* ── Web Vitals cards ── */
+.vital-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+.vital{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.vital-name{font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:700}
+.vital-value{font-size:1.5rem;font-weight:800;margin-top:4px;line-height:1}
+.vital-unit{font-size:.7rem;color:var(--muted);margin-left:3px}
+.vital-bar{display:flex;height:5px;border-radius:3px;overflow:hidden;margin-top:10px}
+.vital-bar-good{background:var(--green)}
+.vital-bar-needs{background:var(--yellow)}
+.vital-bar-poor{background:var(--red)}
+.vital-legend{display:flex;justify-content:space-between;font-size:.6rem;color:var(--muted2);margin-top:4px}
+
+/* ── Top searches/watched leaderboard ── */
+.lb{display:flex;flex-direction:column;gap:1px;margin-top:10px}
+.lb-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;font-size:.78rem;background:var(--surface2);border:1px solid transparent;transition:all .15s;cursor:pointer}
+.lb-row:hover{border-color:var(--accent);transform:translateX(2px)}
+.lb-rank{width:24px;height:24px;border-radius:50%;background:var(--surface3);color:var(--muted);font-weight:700;font-size:.68rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lb-row:nth-child(1) .lb-rank{background:linear-gradient(135deg,#FFD700,#FFA000);color:#000}
+.lb-row:nth-child(2) .lb-rank{background:linear-gradient(135deg,#C0C0C0,#9E9E9E);color:#000}
+.lb-row:nth-child(3) .lb-rank{background:linear-gradient(135deg,#CD7F32,#8B4513);color:#fff}
+.lb-key{flex:1;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.lb-val{color:var(--accent);font-weight:700;font-size:.85rem;font-variant-numeric:tabular-nums}
+.lb-sub{color:var(--muted2);font-size:.65rem}
+
+/* ── Error rows ── */
+.err-row{background:rgba(225,112,85,.08);border:1px solid rgba(225,112,85,.25);border-radius:8px;padding:10px 14px;margin-bottom:8px;cursor:pointer;transition:all .15s}
+.err-row:hover{background:rgba(225,112,85,.14);border-color:var(--red)}
+.err-msg{color:var(--red);font-weight:700;font-size:.8rem;font-family:monospace;word-break:break-word}
+.err-meta{display:flex;gap:12px;font-size:.66rem;color:var(--muted2);margin-top:4px;flex-wrap:wrap}
+
+/* ── Animations ── */
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.chart-card,.list-card,.table-card,.utm-card{animation:fadein .35s ease-out}
+.kpi-card{animation:fadein .35s ease-out}
+
 </style>
 </head>
 <body>
@@ -205,8 +302,10 @@ tr:hover td{background:var(--surface2)}
     <span class="refresh-countdown" id="refreshCountdown"></span>
   </div>
   <div class="nav-actions">
+    <button class="compare-toggle" id="compareToggle" title="Compare period vs previous period">⇄ Compare</button>
     <button class="btn-icon" id="autoRefreshBtn" title="Toggle auto-refresh">⟳ Auto</button>
     <button class="export-btn" id="exportBtn" title="Export recent activity as CSV">⬇ CSV</button>
+    <button class="theme-toggle" id="themeToggle" title="Toggle light/dark theme" aria-label="Theme">☾</button>
   </div>
 </nav>
 
@@ -214,8 +313,12 @@ tr:hover td{background:var(--surface2)}
 <nav class="section-nav">
   <button class="snav-btn active" data-section="overview">Overview</button>
   <button class="snav-btn" data-section="audience">Audience</button>
+  <button class="snav-btn" data-section="engagement">Engagement</button>
+  <button class="snav-btn" data-section="player">Player</button>
   <button class="snav-btn" data-section="acquisition">Acquisition</button>
   <button class="snav-btn" data-section="content">Content</button>
+  <button class="snav-btn" data-section="performance">Performance</button>
+  <button class="snav-btn" data-section="errors">Errors</button>
   <button class="snav-btn" data-section="activity">Activity</button>
   <button class="snav-btn" data-section="utm">UTM Builder</button>
   <button class="snav-btn" data-section="users">Users</button>
@@ -223,6 +326,16 @@ tr:hover td{background:var(--surface2)}
 
 <div class="main" id="app">
   <div class="loader"><div class="spinner"></div></div>
+</div>
+
+<!-- Drill-down modal -->
+<div class="drill" id="drillModal" hidden>
+  <div class="drill-box">
+    <button class="drill-close" id="drillClose">✕</button>
+    <h3 id="drillTitle">Session Detail</h3>
+    <div class="drill-meta" id="drillMeta"></div>
+    <div class="drill-timeline" id="drillTimeline"></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -238,6 +351,24 @@ let charts = {};
 let recentData = [];
 let mainChartMode = 'line';
 let mainChartDataset = 'all'; // 'all' | 'views' | 'uniq' | 'dur'
+
+let compareMode = false;
+let sparkData = null;
+
+// Country → continent mapping (top traffic sources only; rest go to "Other")
+const CONTINENTS = {
+  Europe: ['IT','GB','DE','FR','ES','NL','SE','NO','FI','DK','PL','CZ','AT','BE','CH','IE','PT','GR','HU','RO','UA','RU'],
+  'North America': ['US','CA','MX'],
+  'South America': ['BR','AR','CL','CO','PE','VE'],
+  Asia: ['CN','JP','KR','IN','ID','PH','VN','TH','MY','SG','PK','BD','TR','IL','AE','SA','HK','TW'],
+  Africa: ['ZA','NG','EG','KE','MA','GH','DZ','TN'],
+  Oceania: ['AU','NZ'],
+};
+function continentOf(code) {
+  if (!code) return 'Other';
+  for (const c in CONTINENTS) if (CONTINENTS[c].includes(code)) return c;
+  return 'Other';
+}
 
 // ── Helpers ──────────────────────────────────────────────────
 function fmt(n)  { return Number(n||0).toLocaleString(); }
@@ -365,6 +496,14 @@ async function loadOverview(){
   set('trendPeriod', trendHtml(d.period, d.prevPeriod));
   set('trendUniq',   trendHtml(d.uniqueSessions, d.prevUnique));
   set('trendNewUsers',trendHtml(d.newUsers||0, d.prevNewUsers||0));
+
+  if (compareMode) {
+    set('prevPeriod',   d.prevPeriod   != null ? `<em>prev:</em> ${fmt(d.prevPeriod)}`   : '');
+    set('prevUniq',     d.prevUnique   != null ? `<em>prev:</em> ${fmt(d.prevUnique)}`   : '');
+    set('prevNewUsers', d.prevNewUsers != null ? `<em>prev:</em> ${fmt(d.prevNewUsers)}` : '');
+  } else {
+    set('prevPeriod',''); set('prevUniq',''); set('prevNewUsers','');
+  }
 }
 
 // ── Main chart ───────────────────────────────────────────────
@@ -523,6 +662,9 @@ async function loadLists(){
     r=>`<span>${countryFlag(r._id.code)} ${esc(r._id.country)}</span>`,
     countries[0]?.count||1);
 
+  // also feed continent grid
+  renderWorldGrid(countries);
+
   renderList('listCities', cities,
     r=>`<span>${countryFlag(r._id.code)} ${esc(r._id.city)}, ${esc(r._id.country)}</span>`,
     cities[0]?.count||1);
@@ -574,7 +716,7 @@ function renderRecentTable(data){
     const refCell = r.referrer
       ? `<a href="https://${esc(r.referrer)}" target="_blank" rel="noopener" style="color:var(--accent2)">${esc(r.referrer)}</a>`
       : '<span style="color:var(--muted2);font-size:.68rem">direct</span>';
-    return `<tr>
+    return `<tr style="cursor:pointer" data-sid="${esc(r.sessionId||'')}" data-ip="${esc(r.ip||'')}" data-user="${esc(r.username||'')}" title="Click to see this session's timeline">
       <td>${ipCell}</td>
       <td>${r.username?`<span class="badge user-row">${esc(r.username)}</span>`:'<span style="color:var(--muted)">anon</span>'}</td>
       <td class="path-cell">${esc(r.path)}</td>
@@ -586,6 +728,13 @@ function renderRecentTable(data){
       <td class="time-cell">${timeAgo(r.createdAt)}</td>
     </tr>`;
   }).join('');
+  // wire row drill-down
+  tbody.querySelectorAll('tr[data-sid]').forEach(row => {
+    row.addEventListener('click', () => {
+      const sid = row.dataset.sid, ip = row.dataset.ip, user = row.dataset.user;
+      if (sid) showSessionDrill(sid, ip, user);
+    });
+  });
 }
 
 // ── Auth log ─────────────────────────────────────────────────
@@ -636,7 +785,11 @@ function exportCSV(){
 // ── Load all data ────────────────────────────────────────────
 async function loadAll(){
   try{
-    await Promise.all([loadOverview(),loadChart(),loadUserGrowth(),loadLists(),loadHourly(),loadRecent(),loadAuthLog()]);
+    await Promise.all([
+      loadOverview(), loadChart(), loadUserGrowth(), loadLists(), loadHourly(), loadRecent(), loadAuthLog(),
+      loadSparks(), load2DHeatmap(), loadEngagement(), loadPlayerFunnel(), loadVitals(), loadErrors(),
+      loadEntryExit(), loadRetention(),
+    ]);
     const b=document.getElementById('offlineBanner');
     if(b) b.remove();
   }catch(e){
@@ -720,6 +873,330 @@ function copyUtm(){
   }).catch(()=>{});
 }
 
+// ── Sparkline (canvas) ────────────────────────────────────────
+function drawSpark(canvasId, data, color){
+  const c = document.getElementById(canvasId);
+  if (!c || !data || !data.length) return;
+  const dpr = window.devicePixelRatio || 1;
+  const w = c.width, h = c.height;
+  c.width = w * dpr; c.height = h * dpr;
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, w, h);
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const pad = 2;
+  const stepX = (w - pad*2) / (data.length - 1 || 1);
+  // gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, color + '55');
+  grad.addColorStop(1, color + '00');
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = pad + i * stepX;
+    const y = pad + (h - pad*2) - ((v - min) / range) * (h - pad*2);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.lineJoin = 'round'; ctx.stroke();
+  // fill under
+  ctx.lineTo(w - pad, h - pad);
+  ctx.lineTo(pad, h - pad);
+  ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+}
+
+async function loadSparks(){
+  try {
+    sparkData = await api('/admin/analytics/spark');
+    drawSpark('sparkPeriod',   sparkData.views,    '#7c6ff7');
+    drawSpark('sparkUniq',     sparkData.uniq,     '#00cec9');
+    drawSpark('sparkDur',      sparkData.dur,      '#fdcb6e');
+    drawSpark('sparkNewUsers', sparkData.newUsers, '#fd79a8');
+    drawSpark('sparkToday',    sparkData.views.slice(-1).length ? [0].concat(sparkData.views) : [0], '#8888aa');
+    drawSpark('sparkLive',     sparkData.views.slice(-3), '#00b894');
+  } catch (_) {}
+}
+
+// ── 2D heatmap (day × hour) ──────────────────────────────────
+async function load2DHeatmap(){
+  try {
+    const cells = await api('/admin/analytics/day-hour?range='+currentRange);
+    const max = Math.max(1, ...cells.flat());
+    const grid = document.getElementById('heat2d');
+    if (!grid) return;
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    let html = '<div class="heat-2d">';
+    html += '<div></div>';
+    for (let h = 0; h < 24; h++) {
+      html += '<div class="heat-2d-hour">'+(h % 3 === 0 ? h : '')+'</div>';
+    }
+    for (let d = 0; d < 7; d++) {
+      html += '<div class="heat-2d-label">'+days[d]+'</div>';
+      for (let h = 0; h < 24; h++) {
+        const v = cells[d][h];
+        const intensity = v / max;
+        const a = v ? (0.15 + intensity * 0.85) : 0.04;
+        html += '<div class="heat-cell" title="'+days[d]+' '+h+':00 — '+fmt(v)+' views" style="background:rgba(124,111,247,'+a.toFixed(2)+')"></div>';
+      }
+    }
+    html += '</div>';
+    grid.innerHTML = html;
+  } catch (e) {
+    const grid = document.getElementById('heat2d');
+    if (grid) grid.innerHTML = '<div class="empty">No data</div>';
+  }
+}
+
+// ── World activity (country bars grouped by continent) ───────
+function renderWorldGrid(countries){
+  const el = document.getElementById('worldGrid');
+  if (!el) return;
+  if (!countries.length) { el.innerHTML = '<div class="empty">No geo data</div>'; return; }
+  const groups = {};
+  countries.forEach(c => {
+    const cont = continentOf(c._id.code);
+    groups[cont] = groups[cont] || { total: 0, flags: [] };
+    groups[cont].total += c.count;
+    if (groups[cont].flags.length < 5) groups[cont].flags.push(countryFlag(c._id.code));
+  });
+  const order = ['Europe','North America','Asia','South America','Africa','Oceania','Other'];
+  const totalAll = countries.reduce((s,c)=>s+c.count,0);
+  document.getElementById('worldTotal').textContent = fmt(totalAll)+' views';
+  el.innerHTML = order.filter(k=>groups[k]).map(k=>{
+    const g = groups[k];
+    const pct = totalAll ? Math.round((g.total/totalAll)*100) : 0;
+    return `<div class="world-cont">
+      <div class="world-cont-name">${k}</div>
+      <div class="world-cont-total">${fmt(g.total)}</div>
+      <div style="font-size:.62rem;color:var(--muted2);margin-top:2px">${pct}% of traffic</div>
+      <div class="world-cont-flags">${g.flags.join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Engagement loaders ──────────────────────────────────────
+async function loadEngagement(){
+  try {
+    const [searches, watched, evts] = await Promise.all([
+      api('/admin/analytics/top-searches?range='+currentRange),
+      api('/admin/analytics/top-watched?range='+currentRange),
+      api('/admin/analytics/events-summary?range='+currentRange),
+    ]);
+    renderLB('listSearches', searches, r => esc(r._id), r => r.sessions+' sessions');
+    renderLB('listWatched',  watched,  r => esc(r._id || '—'), r => r.sessions+' viewers');
+    renderLB('listEvents',   evts,     r => esc(r._id), r => r.sessions+' sessions');
+  } catch (e) {
+    ['listSearches','listWatched','listEvents'].forEach(id=>{
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="empty">No data yet — events will appear as users interact</div>';
+    });
+  }
+}
+
+function renderLB(id, rows, keyFn, subFn){
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!rows || !rows.length) { el.innerHTML = '<div class="empty">No data yet</div>'; return; }
+  el.innerHTML = rows.slice(0, 12).map((r, i) => `
+    <div class="lb-row">
+      <div class="lb-rank">${i+1}</div>
+      <div class="lb-key">${keyFn(r)}</div>
+      <div class="lb-sub">${subFn ? subFn(r) : ''}</div>
+      <div class="lb-val">${fmt(r.count)}</div>
+    </div>
+  `).join('');
+}
+
+// ── Player funnel ───────────────────────────────────────────
+async function loadPlayerFunnel(){
+  try {
+    const d = await api('/admin/analytics/player-stats?range='+currentRange);
+    const total = Math.max(1, d.start);
+    const steps = [
+      { label: '▶ Started',   v: d.start },
+      { label: '25% reached', v: d.q25 },
+      { label: '50% reached', v: d.q50 },
+      { label: '75% reached', v: d.q75 },
+      { label: '✓ Completed', v: d.complete },
+    ];
+    const fEl = document.getElementById('funnelPlayer');
+    if (!fEl) return;
+    if (!d.start) { fEl.innerHTML = '<div class="empty">No player events yet — open a movie/TV title to start tracking</div>'; return; }
+    let prev = total;
+    fEl.innerHTML = steps.map((s, i) => {
+      const pct = Math.round((s.v / total) * 100);
+      const drop = i > 0 && prev > 0 ? Math.round(((prev - s.v) / prev) * 100) : 0;
+      prev = s.v;
+      return `<div class="funnel-row">
+        <div class="funnel-label">${s.label}</div>
+        <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${Math.max(pct, 3)}%">${fmt(s.v)} <span style="opacity:.7;margin-left:6px">${pct}%</span></div></div>
+        <div class="funnel-drop">${i>0 && drop>0 ? '−'+drop+'%' : ''}</div>
+      </div>`;
+    }).join('') + (d.error ? `<div style="font-size:.7rem;color:var(--red);margin-top:8px">⚠ ${fmt(d.error)} player errors recorded</div>` : '');
+  } catch (e) {
+    const fEl = document.getElementById('funnelPlayer');
+    if (fEl) fEl.innerHTML = '<div class="empty">Could not load player funnel</div>';
+  }
+}
+
+// ── Web Vitals ──────────────────────────────────────────────
+async function loadVitals(){
+  try {
+    const data = await api('/admin/analytics/web-vitals?range='+currentRange);
+    const el = document.getElementById('vitalGrid');
+    if (!el) return;
+    if (!data.length) { el.innerHTML = '<div class="empty">No web vitals yet — collected automatically as visitors load pages</div>'; return; }
+    const order = ['LCP','INP','CLS','FCP','TTFB'];
+    const units = { LCP:'ms', INP:'ms', CLS:'', FCP:'ms', TTFB:'ms' };
+    const sorted = order.map(m => data.find(d=>d._id===m)).filter(Boolean);
+    el.innerHTML = sorted.map(v => {
+      const total = v.count || 1;
+      const gPct = (v.good/total)*100, nPct = (v.needs/total)*100, pPct = (v.poor/total)*100;
+      const val = v._id === 'CLS' ? (v.avg).toFixed(3) : Math.round(v.avg);
+      const ratingColor = v.good/total > .75 ? 'var(--green)' : v.poor/total > .25 ? 'var(--red)' : 'var(--yellow)';
+      return `<div class="vital">
+        <div class="vital-name">${v._id}</div>
+        <div class="vital-value" style="color:${ratingColor}">${val}<span class="vital-unit">${units[v._id]||''}</span></div>
+        <div class="vital-bar">
+          <div class="vital-bar-good" style="width:${gPct}%"></div>
+          <div class="vital-bar-needs" style="width:${nPct}%"></div>
+          <div class="vital-bar-poor" style="width:${pPct}%"></div>
+        </div>
+        <div class="vital-legend">
+          <span style="color:var(--green)">${Math.round(gPct)}% good</span>
+          <span>${Math.round(pPct)}% poor</span>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (_) {}
+}
+
+// ── Errors ──────────────────────────────────────────────────
+async function loadErrors(){
+  try {
+    const d = await api('/admin/analytics/errors?range='+currentRange);
+    const g = document.getElementById('errGrouped');
+    const r = document.getElementById('errRecent');
+    if (g) {
+      if (!d.grouped.length) g.innerHTML = '<div class="empty">No errors recorded — your code is clean!</div>';
+      else g.innerHTML = d.grouped.map(e => `
+        <div class="err-row">
+          <div class="err-msg">${esc(e._id)}</div>
+          <div class="err-meta">
+            <span>×${fmt(e.count)} times</span>
+            <span>${fmt(e.sessions)} sessions</span>
+            <span>last: ${timeAgo(e.last)}</span>
+            ${e.anyPath ? '<span>'+esc(e.anyPath)+'</span>' : ''}
+          </div>
+        </div>`).join('');
+    }
+    if (r) {
+      if (!d.recent.length) r.innerHTML = '<div class="empty">—</div>';
+      else r.innerHTML = d.recent.map(e => `
+        <div class="err-row">
+          <div class="err-msg">${esc(e.message)}</div>
+          <div class="err-meta">
+            <span>${esc(e.path||'?')}</span>
+            <span>${esc(e.source||'')}${e.line?':'+e.line:''}</span>
+            <span>${timeAgo(e.createdAt)}</span>
+          </div>
+        </div>`).join('');
+    }
+  } catch (_) {}
+}
+
+// ── Entry / Exit / Retention ────────────────────────────────
+async function loadEntryExit(){
+  try {
+    const [entry, exitP] = await Promise.all([
+      api('/admin/analytics/entry-pages?range='+currentRange),
+      api('/admin/analytics/exit-pages?range='+currentRange),
+    ]);
+    renderList('listEntry', entry, r=>`<span class="path-cell">${esc(r._id)}</span>`, entry[0]?.count||1);
+    renderList('listExit',  exitP, r=>`<span class="path-cell">${esc(r._id)}</span>`, exitP[0]?.count||1);
+  } catch (_) {}
+}
+
+async function loadRetention(){
+  try {
+    const data = await api('/admin/analytics/retention');
+    const el = document.getElementById('retentionTable');
+    if (!el) return;
+    if (!data.length || !data.some(r=>r.total)) { el.innerHTML = '<div class="empty">Need at least 2 weeks of data</div>'; return; }
+    let html = '<div style="font-size:.66rem;display:grid;grid-template-columns:60px repeat(6,1fr);gap:2px;margin-top:6px">';
+    html += '<div style="color:var(--muted2);font-weight:700">Cohort</div>';
+    for (let w = 0; w < 6; w++) html += `<div style="color:var(--muted2);text-align:center;font-weight:700">W${w}</div>`;
+    data.forEach(c => {
+      html += `<div style="color:var(--muted);font-weight:600">${c.weeksAgo===0?'this':c.weeksAgo+'w ago'}</div>`;
+      for (let w = 0; w < 6; w++) {
+        const pct = c.total ? Math.round((c.returns[w]/c.total)*100) : 0;
+        const a = pct/100;
+        html += `<div style="background:rgba(124,111,247,${(0.15+a*0.7).toFixed(2)});text-align:center;padding:5px 0;border-radius:3px;color:${pct>0?'#fff':'var(--muted2)'};font-weight:700;font-size:.62rem" title="${c.returns[w]} returned of ${c.total}">${c.total?pct+'%':'—'}</div>`;
+      }
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  } catch (_) {}
+}
+
+// ── Drill-down (session detail) ─────────────────────────────
+async function showSessionDrill(sid, ip, username){
+  const modal = document.getElementById('drillModal');
+  if (!modal) return;
+  modal.hidden = false;
+  document.getElementById('drillTitle').textContent = 'Session: '+(username || ip || sid.slice(0,8));
+  document.getElementById('drillMeta').innerHTML = `<span class="ip-cell">${esc(sid.slice(0,16))}…</span> · ${esc(username||'anon')} · ${esc(ip||'?')}`;
+  const tl = document.getElementById('drillTimeline');
+  tl.innerHTML = '<div class="empty">Loading…</div>';
+  try {
+    const d = await api('/admin/analytics/session/'+encodeURIComponent(sid));
+    const all = [
+      ...(d.views||[]).map(v => ({ when: v.createdAt, type: 'pv', name: 'Page', value: v.path, dur: v.duration })),
+      ...(d.events||[]).map(e => ({ when: e.createdAt, type: 'evt', name: e.name, value: e.value })),
+    ].sort((a,b) => new Date(a.when) - new Date(b.when));
+    if (!all.length) { tl.innerHTML = '<div class="empty">No activity for this session</div>'; return; }
+    tl.innerHTML = all.map(s => `
+      <div class="drill-step ${s.type==='evt'?'evt':''}">
+        <div class="drill-step-time">${new Date(s.when).toLocaleString()}</div>
+        <div class="drill-step-name">${esc(s.name)}${s.dur?` · ${fmtDur(s.dur)}`:''}</div>
+        ${s.value?`<div class="drill-step-val">${esc(s.value)}</div>`:''}
+      </div>
+    `).join('');
+  } catch (_) {
+    tl.innerHTML = '<div class="empty">Could not load session</div>';
+  }
+}
+function closeDrill(){ const m = document.getElementById('drillModal'); if (m) m.hidden = true; }
+
+// ── Theme toggle ────────────────────────────────────────────
+function applyTheme(name){
+  document.documentElement.setAttribute('data-atheme', name);
+  try { localStorage.setItem('eli6.analyticsTheme', name); } catch(_) {}
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.textContent = name === 'light' ? '☀' : '☾';
+  // re-draw sparklines after theme color shifts
+  setTimeout(loadSparks, 100);
+}
+function toggleTheme(){
+  const curr = document.documentElement.getAttribute('data-atheme') || 'dark';
+  applyTheme(curr === 'dark' ? 'light' : 'dark');
+}
+
+// ── Compare mode ────────────────────────────────────────────
+function toggleCompare(){
+  compareMode = !compareMode;
+  const btn = document.getElementById('compareToggle');
+  if (btn) btn.classList.toggle('active', compareMode);
+  // Re-render prev values
+  refreshPrevDisplay();
+}
+function refreshPrevDisplay(){
+  // Pull last fetched overview from cached DOM (just re-trigger overview)
+  loadOverview();
+}
+
 // ── Render shell ─────────────────────────────────────────────
 function renderShell(){
   document.getElementById('app').innerHTML=`
@@ -737,21 +1214,27 @@ function renderShell(){
         <div class="kpi-label">Live Now</div>
         <div class="kpi-value" id="statLive">—</div>
         <div class="kpi-sub">active visitors</div>
+        <canvas class="kpi-spark" id="sparkLive" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Today</div>
         <div class="kpi-value" id="statToday">—</div>
         <div class="kpi-sub">page views</div>
+        <canvas class="kpi-spark" id="sparkToday" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card accent">
         <div class="kpi-label">This Period</div>
         <div class="kpi-value" id="statPeriod">—</div>
         <div id="trendPeriod"></div>
+        <div class="kpi-prev" id="prevPeriod"></div>
+        <canvas class="kpi-spark" id="sparkPeriod" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card teal">
         <div class="kpi-label">Unique Sessions</div>
         <div class="kpi-value" id="statUniq">—</div>
         <div id="trendUniq"></div>
+        <div class="kpi-prev" id="prevUniq"></div>
+        <canvas class="kpi-spark" id="sparkUniq" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Logged-in Users</div>
@@ -762,6 +1245,7 @@ function renderShell(){
         <div class="kpi-label">Avg Duration</div>
         <div class="kpi-value" id="statDur">—</div>
         <div class="kpi-sub">per session</div>
+        <canvas class="kpi-spark" id="sparkDur" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Bounce Rate</div>
@@ -772,6 +1256,8 @@ function renderShell(){
         <div class="kpi-label">New Users</div>
         <div class="kpi-value" id="statNewUsers">—</div>
         <div id="trendNewUsers"></div>
+        <div class="kpi-prev" id="prevNewUsers"></div>
+        <canvas class="kpi-spark" id="sparkNewUsers" width="64" height="22"></canvas>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">All-Time Views</div>
@@ -849,6 +1335,29 @@ function renderShell(){
         <div class="heatmap-wrap"><canvas id="hourlyChart"></canvas></div>
       </div>
     </div>
+
+    <!-- 2D Day-Hour Heatmap + World map -->
+    <div class="audience-grid" style="margin-top:16px">
+      <div class="chart-card" style="grid-column:1/3">
+        <div class="chart-head">
+          <span class="chart-title">Day-of-Week × Hour-of-Day Heatmap</span>
+          <span style="font-size:.68rem;color:var(--muted2)">when your visitors come</span>
+        </div>
+        <div id="heat2d"></div>
+        <div class="heat-legend">
+          <span>less</span>
+          <div class="heat-legend-grad"></div>
+          <span>more</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <span class="chart-title">World Activity</span>
+          <span style="font-size:.68rem;color:var(--muted2)" id="worldTotal"></span>
+        </div>
+        <div class="world-grid" id="worldGrid"></div>
+      </div>
+    </div>
   </div>
 
   <!-- ACQUISITION -->
@@ -879,6 +1388,76 @@ function renderShell(){
     <div class="list-card">
       <div class="chart-title">Top Pages <span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:6px">with avg time on page</span></div>
       <div class="rows" id="listPages"></div>
+    </div>
+    <div class="audience-grid" style="margin-top:16px">
+      <div class="list-card">
+        <div class="chart-title">→ Entry Pages <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">where sessions begin</span></div>
+        <div class="rows" id="listEntry"></div>
+      </div>
+      <div class="list-card">
+        <div class="chart-title">⤴ Exit Pages <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">last page before leaving</span></div>
+        <div class="rows" id="listExit"></div>
+      </div>
+      <div class="list-card">
+        <div class="chart-title">📅 Weekly Retention <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">% who return</span></div>
+        <div id="retentionTable" style="margin-top:8px"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENGAGEMENT -->
+  <div id="section-engagement" style="margin-top:4px">
+    <div class="section-label">Engagement</div>
+    <div class="audience-grid">
+      <div class="list-card">
+        <div class="chart-title">🔍 Top Searches</div>
+        <div class="lb" id="listSearches"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="list-card">
+        <div class="chart-title">▶ Top Watched</div>
+        <div class="lb" id="listWatched"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="list-card">
+        <div class="chart-title">⚡ Event Activity <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">all custom events</span></div>
+        <div class="lb" id="listEvents"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER -->
+  <div id="section-player" style="margin-top:4px">
+    <div class="section-label">Player Funnel</div>
+    <div class="list-card">
+      <div class="chart-title">Watch-through Funnel <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">where viewers drop off</span></div>
+      <div class="funnel" id="funnelPlayer">
+        <div class="empty">Loading…</div>
+      </div>
+      <div style="margin-top:14px;font-size:.7rem;color:var(--muted2)">
+        Player events are tracked at start, 25%, 50%, 75%, completion, and error. Drop-offs help pick which servers to prioritize.
+      </div>
+    </div>
+  </div>
+
+  <!-- PERFORMANCE (Web Vitals) -->
+  <div id="section-performance" style="margin-top:4px">
+    <div class="section-label">Performance — Core Web Vitals</div>
+    <div class="list-card">
+      <div class="chart-title">Core Web Vitals <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">measured on real visitors</span></div>
+      <div class="vital-grid" id="vitalGrid"><div class="empty">Loading…</div></div>
+      <div style="margin-top:12px;font-size:.7rem;color:var(--muted2)">
+        Good ≤ threshold · Needs improvement · Poor. Targets: LCP ≤ 2.5s, INP ≤ 200ms, CLS ≤ 0.1, FCP ≤ 1.8s, TTFB ≤ 800ms.
+      </div>
+    </div>
+  </div>
+
+  <!-- ERRORS -->
+  <div id="section-errors" style="margin-top:4px">
+    <div class="section-label">JavaScript Errors</div>
+    <div class="list-card">
+      <div class="chart-title">Top Errors <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">grouped by message</span></div>
+      <div id="errGrouped" style="margin-top:10px"><div class="empty">Loading…</div></div>
+      <div class="chart-title" style="margin-top:18px">Most Recent <span style="font-size:.62rem;color:var(--muted2);margin-left:6px">last 20</span></div>
+      <div id="errRecent" style="margin-top:10px"><div class="empty">Loading…</div></div>
     </div>
   </div>
 
@@ -1045,7 +1624,7 @@ document.querySelector('.section-nav').addEventListener('click',e=>{
 
 // Highlight section nav on scroll
 function onScroll(){
-  const sections=['overview','audience','acquisition','content','activity','utm','users'];
+  const sections=['overview','audience','engagement','player','acquisition','content','performance','errors','activity','utm','users'];
   for(const id of [...sections].reverse()){
     const el=document.getElementById('section-'+id);
     if(!el) continue;
@@ -1071,6 +1650,13 @@ document.getElementById('rangeTabs').addEventListener('click',async e=>{
 // ── Controls ──────────────────────────────────────────────────
 document.getElementById('autoRefreshBtn').addEventListener('click',toggleAutoRefresh);
 document.getElementById('exportBtn').addEventListener('click',exportCSV);
+document.getElementById('themeToggle')?.addEventListener('click', toggleTheme);
+document.getElementById('compareToggle')?.addEventListener('click', toggleCompare);
+document.getElementById('drillClose')?.addEventListener('click', closeDrill);
+document.getElementById('drillModal')?.addEventListener('click', e => { if (e.target.id === 'drillModal') closeDrill(); });
+
+// Restore theme preference
+try { applyTheme(localStorage.getItem('eli6.analyticsTheme') || 'dark'); } catch(_) {}
 
 // ── Migrate / Debug IP (wired after renderShell) ──────────────
 async function runMigration(){

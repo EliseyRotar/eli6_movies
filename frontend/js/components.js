@@ -770,6 +770,7 @@
       e.stopPropagation();
       const _base = (window.location.origin + window.location.pathname).replace(/[^/]*$/, "");
       const _shareUrl = _base + "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
+      if (window.trackEvent) window.trackEvent("share", (kind + ":" + (item.title || item.name || "")).slice(0, 100));
       if (navigator.share) {
         navigator.share({ title: item.title || item.name || "ELI6 Movies", url: _shareUrl }).catch(function () {});
       } else {

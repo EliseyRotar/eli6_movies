@@ -2949,6 +2949,13 @@
             playerLoading.style.display = 'none';
             videoIframe.style.display = 'block';
 
+            try {
+                if (window.trackEvent) {
+                    var _t = (document.getElementById('heroTitle')||{}).textContent || '';
+                    window.trackEvent('player_start', _t.slice(0,100), { server: currentServer || null });
+                }
+            } catch(_) {}
+
             videoIframe.src = videoUrl;
             videoIframe.allowFullscreen = true;
             videoIframe.allow = 'fullscreen; web-share';

@@ -220,6 +220,7 @@ window.toggleMyList = async function (item, btn) {
     if (btn) btn.disabled = true;
     try {
         if (alreadyIn) {
+            if (window.trackEvent) window.trackEvent('mylist_remove', (type + ':' + title).slice(0, 100));
             await removeFromMyList(id, type);
             const updated = myListArr.filter(function (i) { return !(i.id === id && i.type === type); });
             localStorage.setItem('myList', JSON.stringify(updated));
@@ -236,6 +237,7 @@ window.toggleMyList = async function (item, btn) {
             });
             if (btn) { btn.innerHTML = (window.ICONS ? window.ICONS.plus : '') + ' My List'; btn.classList.remove('btn--in-list'); }
         } else {
+            if (window.trackEvent) window.trackEvent('mylist_add', (type + ':' + title).slice(0, 100));
             await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
             myListArr.unshift({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
             localStorage.setItem('myList', JSON.stringify(myListArr));

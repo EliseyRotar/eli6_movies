@@ -1,6 +1,9 @@
 const express = require('express');
 const optionalAuth = require('../middleware/optionalAuth');
 const PageView = require('../models/PageView');
+const Event = require('../models/Event');
+const WebVital = require('../models/WebVital');
+const JSError = require('../models/JSError');
 const { geoLookup } = require('../utils/geoip');
 
 const router = express.Router();
@@ -125,6 +128,69 @@ router.post('/data', optionalAuth, (req, res) => {
                     { $max: { duration: Math.min(Number(dur) || 0, 86400) } },
                     { sort: { createdAt: -1 } }
                 );
+            } else if (type === 'evt' && typeof body.name === 'string') {
+                const name = body.name.slice(0, 80);
+                const value = typeof body.value === 'string' ? body.value.slice(0, 200) : (body.value != null ? String(body.value).slice(0, 200) : null);
+                let device = null;
+                const ua = req.headers['user-agent'] || '';
+                if (/Android/.test(ua) || /iPhone/.test(ua) || /Mobi/.test(ua)) device = 'mobile';
+                else if (/iPad/.test(ua)) device = 'tablet';
+                else device = 'desktop';
+                let country = null;
+                if (body.geo !== false) {
+                    const ip = getClientIp(req);
+                    if (ip) {
+                        try { const g = await geoLookup(ip); country = g.countryCode || null; } catch (_) {}
+                    }
+                }
+                let meta = body.meta || null;
+                if (meta && typeof meta === 'object') {
+                    try {
+                        const s = JSON.stringify(meta);
+                        if (s.length > 2000) meta = null;
+                    } catch (_) { meta = null; }
+                }
+                await Event.create({
+                    sessionId: sid,
+                    userId,
+                    username,
+                    name,
+                    path: safePath,
+                    value,
+                    meta,
+                    country,
+                    device,
+                });
+            } else if (type === 'vital' && typeof body.metric === 'string' && typeof body.value === 'number') {
+                const metric = body.metric.toUpperCase();
+                if (!['LCP', 'INP', 'CLS', 'TTFB', 'FCP', 'FID'].includes(metric)) return;
+                const val = Number(body.value);
+                if (!isFinite(val) || val < 0 || val > 600000) return;
+                const ua = req.headers['user-agent'] || '';
+                let device = 'desktop';
+                if (/Android/.test(ua) || /iPhone/.test(ua) || /Mobi/.test(ua)) device = 'mobile';
+                else if (/iPad/.test(ua)) device = 'tablet';
+                await WebVital.create({
+                    sessionId: sid,
+                    path: safePath,
+                    metric,
+                    value: val,
+                    rating: ['good', 'needs-improvement', 'poor'].includes(body.rating) ? body.rating : null,
+                    device,
+                });
+            } else if (type === 'err' && typeof body.message === 'string') {
+                await JSError.create({
+                    sessionId: sid,
+                    userId,
+                    username,
+                    path: safePath,
+                    message: body.message.slice(0, 500),
+                    source: typeof body.source === 'string' ? body.source.slice(0, 300) : null,
+                    line: typeof body.line === 'number' ? body.line : null,
+                    col: typeof body.col === 'number' ? body.col : null,
+                    stack: typeof body.stack === 'string' ? body.stack.slice(0, 2000) : null,
+                    userAgent: (req.headers['user-agent'] || '').slice(0, 300),
+                });
             }
         } catch (_) {}
     });

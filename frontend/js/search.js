@@ -36,6 +36,7 @@
       list = [q].concat(list.filter(function (s) { return s !== q; })).slice(0, 8);
       localStorage.setItem('eli6.searches', JSON.stringify(list));
     } catch (_) {}
+    if (window.trackEvent && q && q.length >= 2) window.trackEvent('search', q.slice(0, 100));
   }
 
   function _getRecentSearches() {

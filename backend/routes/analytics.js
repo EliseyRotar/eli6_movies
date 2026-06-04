@@ -3,6 +3,10 @@ const auth = require('../middleware/auth');
 const adminOnly = require('../middleware/adminOnly');
 const PageView = require('../models/PageView');
 const ActivityLog = require('../models/ActivityLog');
+const Event = require('../models/Event');
+const WebVital = require('../models/WebVital');
+const JSError = require('../models/JSError');
+const User = require('../models/User');
 const { activeSessions } = require('./track');
 
 const SITE_HOST = (process.env.SITE_HOST || 'eli6movies.vercel.app').replace(/^www\./, '');
@@ -307,6 +311,238 @@ router.get('/admin/analytics/auth-log', async (req, res, next) => {
         const limit = Math.min(Number(req.query.limit) || 100, 200);
         const data  = await ActivityLog.find().sort({ createdAt: -1 }).limit(limit).lean();
         res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Per-day sparkline data (last 7 days) for KPI cards ─────────────────
+router.get('/admin/analytics/spark', async (req, res, next) => {
+    try {
+        const from = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const days = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: {
+                _id:  { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+                views: { $sum: 1 },
+                uniq:  { $addToSet: '$sessionId' },
+                dur:   { $avg: { $cond: [{ $gt: ['$duration', 0] }, '$duration', null] } },
+            }},
+            { $project: { _id: 1, views: 1, uniq: { $size: '$uniq' }, dur: { $ifNull: ['$dur', 0] } } },
+            { $sort: { _id: 1 } },
+        ]);
+        const regs = await ActivityLog.aggregate([
+            { $match: { event: 'register', createdAt: { $gte: from } } },
+            { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, c: { $sum: 1 } } },
+            { $sort: { _id: 1 } },
+        ]);
+        const regsMap = Object.fromEntries(regs.map(r => [r._id, r.c]));
+        res.json({
+            views: days.map(d => d.views),
+            uniq:  days.map(d => d.uniq),
+            dur:   days.map(d => Math.round(d.dur)),
+            newUsers: days.map(d => regsMap[d._id] || 0),
+            labels: days.map(d => d._id),
+        });
+    } catch (err) { next(err); }
+});
+
+// ── 7×24 Day-of-week × Hour-of-day heatmap ─────────────────────────────
+router.get('/admin/analytics/day-hour', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: {
+                _id:  { day: { $dayOfWeek: '$createdAt' }, hour: { $hour: '$createdAt' } },
+                count: { $sum: 1 },
+            }},
+        ]);
+        // Mongo $dayOfWeek: 1=Sunday … 7=Saturday → convert to 0=Mon, 6=Sun
+        const cells = Array.from({ length: 7 }, () => Array(24).fill(0));
+        data.forEach(d => {
+            const day = (d._id.day + 5) % 7; // Mon=0..Sun=6
+            cells[day][d._id.hour] = d.count;
+        });
+        res.json(cells);
+    } catch (err) { next(err); }
+});
+
+// ── Entry pages (first pageview of each session) ───────────────────────
+router.get('/admin/analytics/entry-pages', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $sort: { createdAt: 1 } },
+            { $group: { _id: '$sessionId', firstPath: { $first: '$path' } } },
+            { $group: { _id: '$firstPath', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 15 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Exit pages (last pageview of each session) ─────────────────────────
+router.get('/admin/analytics/exit-pages', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $sort: { createdAt: 1 } },
+            { $group: { _id: '$sessionId', lastPath: { $last: '$path' } } },
+            { $group: { _id: '$lastPath', count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 15 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Weekly retention cohort (users who returned in following weeks) ────
+router.get('/admin/analytics/retention', async (req, res, next) => {
+    try {
+        const sixWeeks = 6 * 7 * 24 * 60 * 60 * 1000;
+        const from = new Date(Date.now() - sixWeeks);
+        const sessions = await PageView.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: { _id: '$sessionId', first: { $min: '$createdAt' }, days: { $addToSet: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } } } } },
+        ]);
+        // bucket by week of first seen
+        const weekIndex = (d) => Math.floor((Date.now() - d.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        const cohorts = {};
+        sessions.forEach(s => {
+            const w = weekIndex(new Date(s.first));
+            if (w < 0 || w > 5) return;
+            cohorts[w] = cohorts[w] || { total: 0, returns: [0, 0, 0, 0, 0, 0] };
+            cohorts[w].total++;
+            const firstDay = new Date(s.first);
+            s.days.forEach(dayStr => {
+                const d = new Date(dayStr + 'T00:00:00Z');
+                const offsetWeeks = Math.floor((d - firstDay) / (7 * 24 * 60 * 60 * 1000));
+                if (offsetWeeks >= 0 && offsetWeeks <= 5) cohorts[w].returns[offsetWeeks]++;
+            });
+        });
+        const result = [];
+        for (let w = 5; w >= 0; w--) {
+            const c = cohorts[w] || { total: 0, returns: [0, 0, 0, 0, 0, 0] };
+            result.push({ weeksAgo: w, total: c.total, returns: c.returns });
+        }
+        res.json(result);
+    } catch (err) { next(err); }
+});
+
+// ── Top searches ───────────────────────────────────────────────────────
+router.get('/admin/analytics/top-searches', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await Event.aggregate([
+            { $match: { name: 'search', createdAt: { $gte: from }, value: { $nin: [null, ''] } } },
+            { $group: { _id: { $toLower: '$value' }, count: { $sum: 1 }, sessions: { $addToSet: '$sessionId' } } },
+            { $project: { _id: 1, count: 1, sessions: { $size: '$sessions' } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Top watched (player_start events) ──────────────────────────────────
+router.get('/admin/analytics/top-watched', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await Event.aggregate([
+            { $match: { name: 'player_start', createdAt: { $gte: from } } },
+            { $group: { _id: '$value', count: { $sum: 1 }, sessions: { $addToSet: '$sessionId' } } },
+            { $project: { _id: 1, count: 1, sessions: { $size: '$sessions' } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Player drop-off / completion stats ─────────────────────────────────
+router.get('/admin/analytics/player-stats', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await Event.aggregate([
+            { $match: { name: { $in: ['player_start', 'player_25', 'player_50', 'player_75', 'player_complete', 'player_error'] }, createdAt: { $gte: from } } },
+            { $group: { _id: '$name', count: { $sum: 1 } } },
+        ]);
+        const map = Object.fromEntries(data.map(d => [d._id, d.count]));
+        res.json({
+            start: map.player_start || 0,
+            q25:   map.player_25 || 0,
+            q50:   map.player_50 || 0,
+            q75:   map.player_75 || 0,
+            complete: map.player_complete || 0,
+            error: map.player_error || 0,
+        });
+    } catch (err) { next(err); }
+});
+
+// ── Top events (custom event leaderboard) ──────────────────────────────
+router.get('/admin/analytics/events-summary', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await Event.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: { _id: '$name', count: { $sum: 1 }, sessions: { $addToSet: '$sessionId' } } },
+            { $project: { _id: 1, count: 1, sessions: { $size: '$sessions' } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 },
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── Web vitals (P75 per metric per page) ───────────────────────────────
+router.get('/admin/analytics/web-vitals', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const data = await WebVital.aggregate([
+            { $match: { createdAt: { $gte: from } } },
+            { $group: {
+                _id: '$metric',
+                avg: { $avg: '$value' },
+                p75: { $avg: '$value' }, // approximation, real P75 would need $percentile
+                good: { $sum: { $cond: [{ $eq: ['$rating', 'good'] }, 1, 0] } },
+                needs: { $sum: { $cond: [{ $eq: ['$rating', 'needs-improvement'] }, 1, 0] } },
+                poor: { $sum: { $cond: [{ $eq: ['$rating', 'poor'] }, 1, 0] } },
+                count: { $sum: 1 },
+            }},
+        ]);
+        res.json(data);
+    } catch (err) { next(err); }
+});
+
+// ── JS errors (recent + grouped) ───────────────────────────────────────
+router.get('/admin/analytics/errors', async (req, res, next) => {
+    try {
+        const from = getFrom(req.query.range);
+        const [grouped, recent] = await Promise.all([
+            JSError.aggregate([
+                { $match: { createdAt: { $gte: from } } },
+                { $group: { _id: '$message', count: { $sum: 1 }, sessions: { $addToSet: '$sessionId' }, last: { $max: '$createdAt' }, anyPath: { $first: '$path' } } },
+                { $project: { _id: 1, count: 1, sessions: { $size: '$sessions' }, last: 1, anyPath: 1 } },
+                { $sort: { count: -1 } },
+                { $limit: 15 },
+            ]),
+            JSError.find({ createdAt: { $gte: from } }).sort({ createdAt: -1 }).limit(20).lean(),
+        ]);
+        res.json({ grouped, recent });
+    } catch (err) { next(err); }
+});
+
+// ── Session detail (all pageviews + events for a sessionId) ────────────
+router.get('/admin/analytics/session/:sid', async (req, res, next) => {
+    try {
+        const sid = req.params.sid;
+        const [views, events] = await Promise.all([
+            PageView.find({ sessionId: sid }).sort({ createdAt: 1 }).limit(200).lean(),
+            Event.find({ sessionId: sid }).sort({ createdAt: 1 }).limit(200).lean(),
+        ]);
+        res.json({ views, events });
     } catch (err) { next(err); }
 });
 
