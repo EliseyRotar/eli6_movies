@@ -758,9 +758,9 @@ html[data-theme="marquee"] .pagehead__title { letter-spacing: 0.02em; text-trans
 @keyframes e6-rise { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 @keyframes slideUp { from { transform: translateY(100%); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 .detail__art {
-  height: 320px; position: relative; overflow: hidden; flex-shrink: 0;
+  height: 200px; position: relative; overflow: hidden; flex-shrink: 0;
 }
-@media (min-width: 900px) { .detail__art { height: 420px; } }
+@media (min-width: 900px) { .detail__art { height: 260px; } }
 .detail__close {
   position: absolute; top: 16px; right: 16px; z-index: 10;
   width: 36px; height: 36px; border-radius: var(--r-pill);
