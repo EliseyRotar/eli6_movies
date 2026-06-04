@@ -25,6 +25,28 @@ const ROOT = path.resolve(__dirname, '..');
 const UPDATES_HTML = path.join(ROOT, 'frontend', 'updates.html');
 
 const args = process.argv.slice(2);
+
+if (args.includes('--help') || args.includes('-h')) {
+  process.stdout.write([
+    'Usage: node scripts/generate-changelog.js [options]',
+    '',
+    'Walks git history and prepends new entries into frontend/updates.html.',
+    '',
+    'Options:',
+    '  --dry-run            Print the resulting HTML to stdout instead of writing it.',
+    '  --since YYYY-MM-DD   Override the cutoff date (default: last date in updates.html).',
+    '  --backfill-all       Walk the entire repo history; insert blocks for any date',
+    '                       that does not already have one. Hand-written entries are',
+    '                       preserved untouched.',
+    '  -h, --help           Show this message.',
+    '',
+    'Commit subjects matching `chore: update changelog` or containing `[skip changelog]`',
+    'are ignored so the bot does not surface its own commits.',
+    '',
+  ].join('\n'));
+  process.exit(0);
+}
+
 const DRY = args.includes('--dry-run');
 const BACKFILL_ALL = args.includes('--backfill-all');
 const sinceIdx = args.indexOf('--since');
