@@ -129,7 +129,7 @@
 
     const navLinks = el("div", "topnav__links");
 
-    function tNav(k, fb) { return (window.i18n ? window.i18n.t("nav." + k) : "") || fb; }
+    function tNav(k, fb) { return window.i18n ? window.i18n.t("nav." + k, fb) : fb; }
 
     [
       { k: "home",    label: tNav("home",    "Home"),     href: "index.html"   },
