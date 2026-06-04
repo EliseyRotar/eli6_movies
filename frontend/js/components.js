@@ -224,7 +224,7 @@
     const art = el("div", "poster__art");
     if (item.poster_path) {
       const img = el("img", "poster__img");
-      img.src = "https://image.tmdb.org/t/p/w342" + item.poster_path;
+      img.src = item.poster_path.startsWith('http') ? item.poster_path : "https://image.tmdb.org/t/p/w342" + item.poster_path;
       img.alt = item.title || item.name || "";
       img.loading = "lazy";
       img.onerror = function () {
