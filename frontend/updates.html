@@ -479,7 +479,721 @@
       </ul>
     </div>
 
-    <!-- May 2026 — early features -->
+        <!-- May 29, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 29, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add Russian CDN embed proxy route (/api/embed/ru)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Mount Russian embed proxy route in server</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add 6 Russian CDN servers to player (Kodik, Bazon, Collaps, Alloha, HDVB, VideoCDN)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add Russian CDN domains to CSP frame-src</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add apiplayer and vaplayer Russian servers to player</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update CSP frame-src — remove dead Russian CDN domains, add apiplayer/vaplayer</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Require jti in JWT — tokens without jti no longer bypass session revocation</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Cap password max length at 128 chars to prevent bcrypt DoS</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove error.message from translation failure responses to prevent internal hostname disclosure</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Validate IMDB ID format, remove error detail leak, sanitize unknown-server error in ruembed</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Require authentication on /api/embed route</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Escape all user-supplied fields before innerHTML in admin panel to prevent stored XSS</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Stop storing JWT in localStorage — switch all authenticated fetches to httpOnly cookie</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Replace innerHTML with textContent in changelog popover to close latent XSS sink</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Coerce username to String in findByUsername to prevent NoSQL injection</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add try/catch error handling to all admin route handlers</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Validate IMDB ID format and sanitize upstream errors in ruembed</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Escape HTML output in createCard and use credentials:include for all fetches</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Only delete selected users in bulkDeleteConfirmed — check checkbox.checked</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Replace innerHTML with DOM methods in renderWatchHistory to prevent XSS</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Replace token-based auth with credentials:include and add postMessage origin allowlist</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add CSS for continue-watching remove button and episode label</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add onRemove button and episodeLabel to poster cards</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Fix continue-watching row — cookie auth, episode labels, remove button, instant render</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Delete admin_users.html</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Whitelist keep-watching fields and require password on account deletion</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Validate role allowlist in POST /admin/users</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Sanitize backdrop_path before interpolating into CSS backgroundImage</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Sanitize poster_path in CSS url() and require password to confirm account deletion</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Harden API security — CSRF, localStorage tokens, rate limit bypass</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Self-hosted analytics dashboard</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add promote-admin script for one-time role elevation</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Force Render redeploy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Trigger Render redeploy</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 28, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 28, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Send watch progress to /user/keep-watching with season/episode</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Pass item.progress to makePoster so progress bars render</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Keep-watching resume passes season/episode to player URL</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add progress/season/episode fields to keepWatching schema</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add GET / root route so backend returns 200 instead of 404</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove CORS wildcard — restrict to explicit allowedOrigins only; add auth to TMDB proxy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Use cf-connecting-ip/socket address instead of spoofable X-Forwarded-For</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add type allowlist to VidSrc proxy endpoint</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Require current password verification before email/username change</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add X-Frame-Options, CSP, and Permissions-Policy headers</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update express to &gt;=4.20.0 and axios to &gt;=1.6.0 to patch CVE-2024-29041, CVE-2024-43796, CVE-2023-45857</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Escape TMDB/API data in innerHTML sinks, add sandbox to video iframe</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Pin express to ^4.22.2 (Express 5 incompatible with /* wildcard in tmdb proxy)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove auth from TMDB proxy — browsing must work for logged-out users</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove duplicate /api prefix in anime trending URL</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add language switcher (EN/IT/RU) to top nav on every page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add language switcher styles to design system</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update i18n to use new topnav lang switcher instead of old navbar</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Fire eli6.langChanged event so pages can re-fetch content on language switch</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Reload home page content and use i18n row titles on language change</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Pass TMDB language param and reload on lang change in movies page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Pass TMDB language param and reload on lang change in tvshows page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Pass TMDB language param and reload on lang change in anime page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Pass TMDB language param and reload on lang change in search page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Use selected language for TMDB content in player, reload on lang change</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove duplicate signIn/signUp keys, add missing player/nav keys</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Complete Italian translations — add missing keys</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Complete Russian translations — add missing keys</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Defer translateStaticContent until DOM ready in i18n.js</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add data-i18n to movies page header</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add data-i18n to tvshows page header</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add data-i18n to anime page header</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Translate movies page row titles and genre pills</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Translate tvshows page row titles and genre pills</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add missing translation keys to en.json</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add missing translation keys to it.json</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add missing player and account translation keys to en.json</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add missing player and account translation keys to it.json</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add missing player and account translation keys to ru.json</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Translate anime page row titles using i18n tr() helper</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Translate all account page strings using i18n tr() helper</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Translate player page loading texts and anime overview labels</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove iframe sandbox for vixsrc to fix video rendering</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Define window.toggleMyList so hero and detail modal My List buttons work</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Correct auth route paths from /auth/login to /login and /auth/register to /register</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Return JWT token in login and register response body for localStorage storage</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove data-i18n from hero rating/year/duration to prevent translateStaticContent overwriting dynamic values</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove data-i18n from heroTitle and heroDescription to stop translateStaticContent overwriting dynamic movie title and description</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add frontend validation and translate backend error codes in register/login forms</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add .acc__* CSS classes for account hub redesign</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Implement full account hub with all 11 sections</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Ignore account.html/ design handoff folder</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update addons todo list</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add createdAt to /user/profile response</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Replace fake account hub data with real API data</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add sessions array to User schema</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Validate session jti in auth middleware</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Record and clear sessions on login/register/logout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add GET /user/sessions and DELETE /user/sessions routes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Replace fake signed-in devices with real session data</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Play trailer on hero hover after 2s, advance on mouse leave</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add hero__trailer and hero__trailer-mute styles</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Clamp hero description to 2 lines, detail modal to 3 lines</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Save and restore server, season/episode, and watch time in player</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add custom 404 page matching site design system</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Route all unmatched paths to custom 404.html on Vercel</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Replace dead embed servers and update all URL formats in player</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update CSP frame-src to cover all active embed servers</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 27, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 27, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Ignore design_handoff dir and zip files</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite theme.css as CSS-vars-only foundation with transition utilities</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add design.css — full design system for Pulse and Marquee themes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite theme.js with Pulse + Marquee themes, applyTheme() and setPref()</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add data.js with placeholder movie/show data and gradient presets</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add components.js — shared vanilla JS renderers for all pages</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add settings.js — theme/mode/accent/density/preset controls</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite index.js to use new component system with TMDB data fetching</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite movies.js with genre pills and new component renderers</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add tvshows.js — TV browse page with genre filtering</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add anime.js — anime browse page with TMDB and animeapi.skin sources</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add search.js — real-time search with movie/tv/anime filters</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add mylist-page.js — My List page with backend sync and remove button</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite account.js — login/register forms and profile view with new design</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite index.html with new design system and anti-FOUC theme script</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite movies.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite tvshows.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite anime.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite search.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite mylist.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite account.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Rewrite settings.html with new design system layout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Auto-assign eli6movies.vercel.app alias after each Vercel deploy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Expand detail modal with spec-compliant CTA, About section, episodes, and More like this</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Update search default view with recent pills, Popular right now, and Trending in anime rows</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Update home rows to spec — numbered Trending Now, New Releases, Critically Acclaimed, Anime Spotlight, Because you watched</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Redesign player.html — replace old nav/CSS with design system tokens, components.js nav mounts, and .btn classes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Update settings page — back button to Account, Appearance title, CUSTOMIZE eyebrow, Done button</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Update account page — Settings eyebrow, spec-compliant info rows, restructured actions and danger zone</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Correct preset toast syntax error — curly quotes broke JS string parsing</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add backend proxy for anime trending to fix CORS block from animeapi.skin</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Route anime fetch through backend proxy instead of calling animeapi.skin directly</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add legal page styles, expanded footer classes, and cookie banner CSS to design.css</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Expand footer with legal links, add cookie consent banner auto-rendered on all pages</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add Privacy Policy page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add Terms of Service page</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add Cookie Policy page with localStorage inventory table</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add DMCA &amp; Copyright page with takedown and counter-notification procedures</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add workflow_dispatch trigger and fix Vercel token env var auth</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Fix Render deploy API body — v1 endpoint does not accept clearCache</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- May 26, 2026 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">May 26, 2026</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Wire MongoDB into backend with connection caching</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update routes for MongoDB persistence and cross-origin auth</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add Render + Vercel deployment config</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add frontend config.js for centralized API URL</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Remove hardcoded dead API domain from all frontend JS files</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add config.js to all HTML pages and remove dead API URLs</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Rewrite README with full deployment guide</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add .vercel to .gitignore</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Set Render backend URL (eli6movies.onrender.com)</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Start HTTP server immediately, connect MongoDB in background with retries</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Configure Vercel experimentalServices with /api routePrefix</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add .vercelignore to exclude backend from Vercel static deploy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add frontend/vercel.json for direct subdirectory deploy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Add frontend/.gitignore to exclude .vercel dir</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Update README with live URLs</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">Remove hash_pwd.js with hardcoded password from repo</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">Apply rate limiting middleware to all API routes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">Fix stale API fallback URL and clear all localStorage on logout</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-sec">sec</span>
+          <span class="entry-text">Replace hardcoded TMDB API keys in frontend with backend proxy</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Add GitHub Actions workflows for auto-deploy to Vercel and Render</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Exclude INFRASTRUCTURE.md from git (contains live secrets)</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- December 29, 2025 -->
+    <div class="release">
+      <div class="release-dot"></div>
+      <div class="release-header">
+        <span class="release-date">December 29, 2025</span>
+      </div>
+      <ul class="entry-list">
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Implement Android TV support and navbar fixes</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-new">new</span>
+          <span class="entry-text">Fixed movies.html not loading bug</span>
+        </li>
+        <li class="entry">
+          <span class="entry-badge badge-fix">fix</span>
+          <span class="entry-text">Resolve issue with movies.html loading and improve navbar functionality</span>
+        </li>
+      </ul>
+    </div>
+
+<!-- May 2026 — early features -->
     <div class="release">
       <div class="release-dot minor"></div>
       <div class="release-header">
