@@ -431,6 +431,25 @@
             "watch": "Guarda",
             "streams": "stream",
             "finished": "Terminata"
+        },
+        "remind": {
+            "set": "Ricordami",
+            "cancel": "Annulla promemoria",
+            "cancelled": "Promemoria annullato",
+            "denied": "Abilita le notifiche per usare i promemoria",
+            "match": "Partita",
+            "starting": "Inizia tra poco su eli6 Sports"
+        },
+        "cal": {
+            "add": "Aggiungi al calendario"
+        },
+        "share": {
+            "share": "Condividi",
+            "copied": "Copiato negli appunti"
+        },
+        "lang": {
+            "label": "Lingua:",
+            "all": "Tutte"
         }
     }
 }
