@@ -214,6 +214,8 @@
   var _searchDebounce = null;
   var _refreshInFlight = false;
   var liveScores = {}; // norm title → { home, away, status, time, badgeHome, badgeAway }
+  var reminders = {};  // matchKey → timeoutId
+  var _scoreTickInterval = null;
 
   // === PERSISTENCE ===
   function loadJSON(key, fallback) {
@@ -837,6 +839,7 @@
     if (liveData && (liveData.home != null || liveData.away != null)) {
       var scoreRow = document.createElement('div');
       scoreRow.className = 'match-card__score';
+      scoreRow.dataset.scoreKey = normalizeTitle(m.title);
       var homeBlock = document.createElement('div');
       homeBlock.className = 'match-card__team';
       if (liveData.badgeHome) {
@@ -865,6 +868,7 @@
 
       var scoreCenter = document.createElement('div');
       scoreCenter.className = 'match-card__scorenum';
+      scoreCenter.dataset.scoreKey = normalizeTitle(m.title);
       scoreCenter.textContent = (liveData.home == null ? '–' : liveData.home) + ' : ' + (liveData.away == null ? '–' : liveData.away);
 
       scoreRow.appendChild(homeBlock);
@@ -903,16 +907,61 @@
         timeEl.classList.add('match-card__time--soon');
       }
     }
+    bot.appendChild(timeEl);
+
+    // action buttons for upcoming matches
+    var isUpcoming = !m.isLive && m.date && (m.date - Date.now()) > 0 && currentDate !== 'yesterday';
+    if (isUpcoming) {
+      var actGroup = document.createElement('span');
+      actGroup.className = 'match-card__actions';
+
+      // bell reminder button
+      var matchKey = m.id || normalizeTitle(m.title);
+      var bellBtn = document.createElement('button');
+      bellBtn.className = 'match-card__act-btn match-card__bell' + (reminders[matchKey] ? ' match-card__bell--active' : '');
+      bellBtn.innerHTML = reminders[matchKey] ? BELL_ACTIVE_SVG : BELL_SVG;
+      bellBtn.setAttribute('aria-label', reminders[matchKey] ? lt('live.remind.cancel', 'Cancel reminder') : lt('live.remind.set', 'Remind me'));
+      bellBtn.title = bellBtn.getAttribute('aria-label');
+      bellBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleReminder(m, bellBtn); });
+      actGroup.appendChild(bellBtn);
+
+      // add-to-calendar button
+      var calBtn = document.createElement('button');
+      calBtn.className = 'match-card__act-btn';
+      calBtn.innerHTML = CAL_SVG;
+      calBtn.setAttribute('aria-label', lt('live.cal.add', 'Add to calendar'));
+      calBtn.title = calBtn.getAttribute('aria-label');
+      calBtn.addEventListener('click', function (e) { e.stopPropagation(); addToCalendar(m); });
+      actGroup.appendChild(calBtn);
+
+      bot.appendChild(actGroup);
+    }
+
+    // share button (all matches)
+    var shareBtn = document.createElement('button');
+    shareBtn.className = 'match-card__act-btn match-card__share';
+    shareBtn.innerHTML = SHARE_SVG;
+    shareBtn.setAttribute('aria-label', lt('live.share.share', 'Share'));
+    shareBtn.title = shareBtn.getAttribute('aria-label');
+    shareBtn.addEventListener('click', function (e) { e.stopPropagation(); shareMatch(m); });
+
     var srcCount = m.sources ? m.sources.length : (m.iframes ? m.iframes.length : 0);
+    var hasHD = (m.sources || []).some(function (s) { return s.hd; }) || (m.iframes || []).some(function (s) { return s.hd; });
+
     var playEl = document.createElement('span');
     playEl.className = 'match-card__play';
     if (currentDate === 'yesterday' && !srcCount) {
       playEl.textContent = lt('live.streams.finished', 'Finished');
     } else {
-      playEl.innerHTML = '&#9654; ' + (srcCount > 1 ? srcCount + ' ' + lt('live.streams.streams', 'streams') : lt('live.streams.watch', 'Watch'));
+      var streamTxt = srcCount > 1 ? srcCount + ' ' + lt('live.streams.streams', 'streams') : lt('live.streams.watch', 'Watch');
+      playEl.innerHTML = (hasHD ? '<span class="match-card__hd">HD</span> ' : '') + '&#9654; ' + streamTxt;
     }
-    bot.appendChild(timeEl);
-    bot.appendChild(playEl);
+
+    var rightGroup = document.createElement('span');
+    rightGroup.className = 'match-card__right';
+    rightGroup.appendChild(shareBtn);
+    rightGroup.appendChild(playEl);
+    bot.appendChild(rightGroup);
     card.appendChild(bot);
 
     card.addEventListener('click', function () { openPlayer(m); });
@@ -923,6 +972,135 @@
     card.__match = m;
     _cardObserver.observe(card);
     return card;
+  }
+
+  // === CARD ACTION ICONS ===
+
+  var BELL_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+  var BELL_ACTIVE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>';
+  var SHARE_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+  var CAL_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+
+  // === REMINDER ===
+
+  function toggleReminder(m, btn) {
+    var key = m.id || normalizeTitle(m.title);
+    if (reminders[key]) {
+      clearTimeout(reminders[key]);
+      delete reminders[key];
+      btn.classList.remove('match-card__bell--active');
+      btn.innerHTML = BELL_SVG;
+      btn.setAttribute('aria-label', lt('live.remind.set', 'Remind me'));
+      btn.title = btn.getAttribute('aria-label');
+      if (window.showToast) window.showToast(lt('live.remind.cancelled', 'Reminder cancelled'));
+      return;
+    }
+    var notifSupported = ('Notification' in window);
+    function _scheduleReminder() {
+      var delay = m.date - Date.now() - 5 * 60000; // 5 min before kickoff
+      if (delay < 0) delay = 0;
+      reminders[key] = setTimeout(function () {
+        delete reminders[key];
+        var allBells = document.querySelectorAll('.match-card__bell');
+        allBells.forEach(function (b) {
+          if (b._matchKey === key) {
+            b.classList.remove('match-card__bell--active');
+            b.innerHTML = BELL_SVG;
+          }
+        });
+        try {
+          new Notification((m.title || lt('live.remind.match', 'Match')), {
+            body: lt('live.remind.starting', 'Starting soon on eli6 Sports'),
+            icon: '/favicon.png',
+          });
+        } catch (e) {}
+      }, delay);
+      btn._matchKey = key;
+      btn.classList.add('match-card__bell--active');
+      btn.innerHTML = BELL_ACTIVE_SVG;
+      btn.setAttribute('aria-label', lt('live.remind.cancel', 'Cancel reminder'));
+      btn.title = btn.getAttribute('aria-label');
+      if (window.showToast) window.showToast(lt('live.remind.set', 'Reminder set!'));
+    }
+    if (notifSupported && Notification.permission === 'granted') {
+      _scheduleReminder();
+    } else if (notifSupported && Notification.permission !== 'denied') {
+      Notification.requestPermission().then(function (perm) {
+        if (perm === 'granted') _scheduleReminder();
+        else if (window.showToast) window.showToast(lt('live.remind.denied', 'Enable notifications to use reminders'));
+      });
+    } else {
+      if (window.showToast) window.showToast(lt('live.remind.denied', 'Enable notifications to use reminders'));
+    }
+  }
+
+  // === ADD TO CALENDAR ===
+
+  function addToCalendar(m) {
+    var start = new Date(m.date);
+    var end = new Date(m.date + 2 * 3600000);
+    var fmt = function (d) { return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'; };
+    var uid = (m.id || normalizeTitle(m.title) || String(Date.now())) + '@eli6.sports';
+    var ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//eli6//Sports//EN',
+      'BEGIN:VEVENT',
+      'UID:' + uid,
+      'DTSTAMP:' + fmt(new Date()),
+      'DTSTART:' + fmt(start),
+      'DTEND:' + fmt(end),
+      'SUMMARY:' + (m.title || '').replace(/[,;\\]/g, '\\$&'),
+      'DESCRIPTION:Watch on eli6 Sports',
+      (m.league ? 'LOCATION:' + m.league : ''),
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].filter(Boolean).join('\r\n');
+    var blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (m.title || 'match').replace(/[^a-z0-9]/gi, '_').slice(0, 60) + '.ics';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+  }
+
+  // === SHARE MATCH ===
+
+  function shareMatch(m) {
+    var text = (m.title || '') + (m.date ? '  ·  ' + fmtAbsTime(m.date) : '') + (m.league ? '  ·  ' + m.league : '');
+    var url = window.location.href.split('?')[0];
+    if (navigator.share) {
+      navigator.share({ title: m.title || '', text: text, url: url }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text + '\n' + url).then(function () {
+        if (window.showToast) window.showToast(lt('live.share.copied', 'Copied to clipboard'));
+      }).catch(function () {
+        if (window.showToast) window.showToast(lt('live.share.copied', 'Copied to clipboard'));
+      });
+    }
+  }
+
+  // === SCORE TICKER (patches score numbers in-place every 60s) ===
+
+  function patchCardScores() {
+    document.querySelectorAll('.match-card__scorenum[data-score-key]').forEach(function (el) {
+      var key = el.dataset.scoreKey;
+      var s = liveScores[key];
+      if (!s || s.home == null) return;
+      var txt = String(s.home) + ' : ' + String(s.away);
+      if (el.textContent !== txt) el.textContent = txt;
+    });
+  }
+
+  function startScoreTicker() {
+    if (_scoreTickInterval) return;
+    _scoreTickInterval = setInterval(async function () {
+      try {
+        liveScores = await fetchLiveScoresForDate(currentDate);
+        patchCardScores();
+      } catch (e) {}
+    }, 60000);
   }
 
   // === REFRESH BAR ===
@@ -1252,6 +1430,7 @@
     renderLeagueFilter();
     renderMatches();
     startRefreshCountdown();
+    startScoreTicker();
 
     // re-render dynamic text when user switches language
     window.addEventListener('eli6.langChanged', function () {

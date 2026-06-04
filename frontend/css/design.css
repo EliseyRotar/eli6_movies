@@ -1539,7 +1539,6 @@ html[data-theme="marquee"] .acc__field input { border-radius: 0; }
 }
 .match-card__title { font-size: 15px; font-weight: 600; color: var(--fg); line-height: 1.35; }
 .match-card__league { font-size: 12px; color: var(--fg-muted); }
-.match-card__bot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
 .match-card__time { font-size: 12px; color: var(--fg-muted); }
 .match-card__time--live { color: #e84040; font-weight: 700; }
 .match-card__time--soon { color: var(--accent); font-weight: 600; }
@@ -1698,6 +1697,40 @@ html[data-theme="marquee"] .live-modal__player { border-radius: 0; }
 }
 .match-card__star:hover { color: #facc15; transform: scale(1.15); }
 .match-card__star--active { color: #facc15; }
+
+/* card footer layout */
+.match-card__bot { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; gap: 4px; }
+.match-card__actions { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: center; }
+.match-card__right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.match-card__act-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 6px;
+  line-height: 0;
+  transition: color 0.15s, background 0.15s;
+  min-width: 28px;
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-card__act-btn:hover { color: var(--fg); background: rgba(255,255,255,0.08); }
+.match-card__bell--active { color: var(--accent) !important; }
+.match-card__hd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  background: rgba(34,197,94,0.2);
+  color: #4ade80;
+  vertical-align: middle;
+}
 
 /* status badges */
 .match-card__status {
