@@ -1946,6 +1946,52 @@ html[data-theme="marquee"] .live-modal__player { border-radius: 0; }
   .live-src-vote { padding: 8px 10px; font-size: 16px; }
 }
 
+/* Tier-2 fallback: two team badges side-by-side as a VS composite */
+.match-card.match-card--vs-composite {
+  position: relative;
+}
+.match-card.match-card--vs-composite::after {
+  content: 'VS';
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Major Mono Display', monospace;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.72);
+  text-shadow: 0 0 12px rgba(0,0,0,0.7);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Tier-3 fallback: empty cards show a big faded sport icon */
+.match-card.match-card--empty-bg {
+  position: relative;
+  overflow: hidden;
+}
+.match-card.match-card--empty-bg::before {
+  content: attr(data-sport-icon);
+  position: absolute;
+  top: 32%;
+  right: -8px;
+  font-size: 120px;
+  line-height: 1;
+  opacity: 0.12;
+  transform: rotate(-15deg);
+  pointer-events: none;
+  filter: grayscale(0.3);
+  z-index: 0;
+}
+.match-card.match-card--empty-bg > * { position: relative; z-index: 1; }
+
+@media (max-width: 480px) {
+  .match-card.match-card--vs-composite { background-size: cover, 72px, 72px, cover !important; }
+  .match-card.match-card--vs-composite::after { font-size: 14px; }
+  .match-card.match-card--empty-bg::before { font-size: 96px; }
+}
+
 /* narrow phones — card action bar was clipping bell/cal/share/play */
 @media (max-width: 480px) {
   .match-card__bot { flex-wrap: wrap; row-gap: 6px; }
