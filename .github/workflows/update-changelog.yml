@@ -1,0 +1,57 @@
+name: Update Changelog
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# We need to commit back to the repo and trigger the frontend deploy.
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    # Skip when the pushed commit was authored by this workflow itself
+    # (so the auto-update commit doesn't trigger another run).
+    if: "!contains(github.event.head_commit.message, '[skip changelog]')"
+
+    steps:
+      - name: Check out full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run changelog generator
+        run: node scripts/generate-changelog.js
+
+      - name: Commit + push if updates.html changed
+        id: commit
+        run: |
+          if git diff --quiet -- frontend/updates.html; then
+            echo "No changelog changes."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name 'eli6 changelog bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add frontend/updates.html
+          git commit -m "chore: update changelog [skip changelog]"
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger frontend deploy so the new changelog ships to prod
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GITHUB_TOKEN-authored pushes don't fire path-gated workflows by
+          # default, so kick off deploy-frontend.yml explicitly.
+          gh workflow run deploy-frontend.yml --ref main || true
