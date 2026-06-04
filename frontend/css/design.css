@@ -1946,3 +1946,59 @@ html[data-theme="marquee"] .live-modal__player { border-radius: 0; }
   .live-src-vote { padding: 8px 10px; font-size: 16px; }
 }
 
+/* narrow phones — card action bar was clipping bell/cal/share/play */
+@media (max-width: 480px) {
+  .match-card__bot { flex-wrap: wrap; row-gap: 6px; }
+  .match-card__actions { order: 2; flex: 1 1 100%; justify-content: flex-start; gap: 4px; }
+  .match-card__right { order: 3; flex: 1 1 100%; justify-content: space-between; }
+  .match-card__time { order: 1; flex: 1 1 auto; }
+}
+
+/* edge-fade on horizontally scrolling sport tabs so users see there's more */
+#sport-tabs-mount .pills,
+.live-league-pills,
+.live-date-pills {
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+}
+
+/* language picker bar inside player modal */
+.live-src-langbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  width: 100%;
+}
+.live-src-langbar__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  margin-right: 4px;
+}
+.live-src-langpill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--fg);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  line-height: 1.2;
+}
+.live-src-langpill:hover { background: rgba(255,255,255,0.12); }
+.live-src-langpill:active { transform: scale(0.96); }
+.live-src-langpill--active {
+  background: var(--accent);
+  color: #0a0a0a;
+  border-color: var(--accent);
+}
+@media (max-width: 480px) {
+  .live-src-langbar { padding: 8px 4px; gap: 4px; }
+  .live-src-langpill { font-size: 11px; padding: 4px 8px; }
+}
+
