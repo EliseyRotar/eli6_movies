@@ -38,12 +38,12 @@
 
     var pageTitle = el("h1");
     pageTitle.style.cssText = "font-family:var(--font-head);font-weight:var(--head-weight);font-size:clamp(28px,5vw,48px);letter-spacing:-0.03em;color:var(--fg);margin:0";
-    pageTitle.textContent = "Appearance";
+    pageTitle.textContent = "Settings";
     head.appendChild(pageTitle);
 
     var pageSub = el("p");
     pageSub.style.cssText = "color:var(--fg-muted);font-size:14px;margin-top:8px";
-    pageSub.textContent = "Customise your ELI6 experience.";
+    pageSub.textContent = "Appearance, layout, and content preferences — all in one place.";
     head.appendChild(pageSub);
     main.appendChild(head);
 
@@ -256,6 +256,58 @@
 
     presetSection.appendChild(presetGrid);
     main.appendChild(presetSection);
+
+    // --- Content Preferences section ---
+    var contentPrefSection = buildSection(
+      "06 / CONTENT",
+      "Content Preferences",
+      "Pick the genres you want to see highlighted. Unchecked genres are still available, just deprioritised."
+    );
+    var GENRES = [
+      { id: 28,    name: "Action" },
+      { id: 35,    name: "Comedy" },
+      { id: 18,    name: "Drama" },
+      { id: 27,    name: "Horror" },
+      { id: 878,   name: "Sci-Fi" },
+      { id: 10749, name: "Romance" },
+      { id: 53,    name: "Thriller" },
+      { id: 99,    name: "Documentary" },
+      { id: 16,    name: "Animation" },
+      { id: 14,    name: "Fantasy" },
+      { id: 80,    name: "Crime" },
+      { id: 12,    name: "Adventure" },
+    ];
+    var savedGenres = [];
+    try { savedGenres = JSON.parse(localStorage.getItem('eli6.genres') || '[]'); } catch(e) {}
+    var genreGrid = div("settings__genre-grid");
+    genreGrid.style.cssText = "display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;";
+    GENRES.forEach(function (g) {
+      var active = savedGenres.includes(g.id);
+      var chip = el("button", "settings__genre-chip" + (active ? " is-active" : ""));
+      chip.type = "button";
+      chip.textContent = g.name;
+      chip.style.cssText = "padding:7px 16px;border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.18s;border:1.5px solid;";
+      chip.style.background = active ? "var(--accent)" : "transparent";
+      chip.style.color = active ? "var(--bg)" : "var(--fg-muted)";
+      chip.style.borderColor = active ? "var(--accent)" : "rgba(128,128,128,0.35)";
+      chip.addEventListener("click", function () {
+        try { savedGenres = JSON.parse(localStorage.getItem('eli6.genres') || '[]'); } catch(e) { savedGenres = []; }
+        var idx = savedGenres.indexOf(g.id);
+        if (idx === -1) {
+          savedGenres.push(g.id);
+          chip.classList.add("is-active");
+          chip.style.background = "var(--accent)"; chip.style.color = "var(--bg)"; chip.style.borderColor = "var(--accent)";
+        } else {
+          savedGenres.splice(idx, 1);
+          chip.classList.remove("is-active");
+          chip.style.background = "transparent"; chip.style.color = "var(--fg-muted)"; chip.style.borderColor = "rgba(128,128,128,0.35)";
+        }
+        localStorage.setItem('eli6.genres', JSON.stringify(savedGenres));
+      });
+      genreGrid.appendChild(chip);
+    });
+    contentPrefSection.appendChild(genreGrid);
+    main.appendChild(contentPrefSection);
 
     var footerActions = div("settings__footer-actions");
     var doneBtn = el("button", "btn btn--primary");

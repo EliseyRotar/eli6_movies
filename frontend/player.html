@@ -1946,6 +1946,7 @@
                     <div class="player-overlay-server overlay" id="playerOverlayServer" style="display:none;">
                         <label for="overlayServerSelect" data-i18n="player.server">Server:</label>
                         <select id="overlayServerSelect"></select>
+                        <button id="nextServerBtn" title="Try next server" style="background:rgba(255,255,255,0.15);border:none;color:#fff;border-radius:4px;padding:3px 8px;font-size:13px;cursor:pointer;margin-left:4px;transition:background 0.2s;" onmouseenter="this.style.background='rgba(255,255,255,0.28)'" onmouseleave="this.style.background='rgba(255,255,255,0.15)'">&#9654;</button>
                     </div>
                     <!-- Overlay Season/Episode Dropdown (top right, TV only) -->
                     <div class="player-overlay-season-episode overlay" id="playerOverlaySeasonEpisode" style="display:none;">
@@ -2209,6 +2210,11 @@
                         else if (tab === 'trailers') loadTrailers();
                         else if (tab === 'similar') loadSimilar();
                         else if (tab === 'episodes' && type === 'tv') loadEpisodes();
+                    }
+                    // Scroll to the content section so the header doesn't eat the screen
+                    const contentSection = document.getElementById('contentSection');
+                    if (contentSection) {
+                        setTimeout(() => contentSection.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
                     }
                 });
             });
@@ -2891,9 +2897,10 @@
 
             // Remove previous event listeners by replacing the iframe
             const newIframe = videoIframe.cloneNode(true);
-            // VixSrc actively detects the sandbox attribute and refuses to render video when present.
-            // Remove it for vixsrc; restore it for all other servers.
-            if (currentServer === 'vixsrc') {
+            // Several embed providers detect the sandbox attribute and refuse to load.
+            // Remove it for those providers; keep it for everything else.
+            const NO_SANDBOX_SERVERS = ['vixsrc', 'vidsrcfyi', 'vidsrcme', 'vidsrcrip', 'vidsrccc'];
+            if (NO_SANDBOX_SERVERS.includes(currentServer)) {
                 newIframe.removeAttribute('sandbox');
             } else {
                 newIframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-forms allow-popups allow-pointer-lock allow-orientation-lock');
@@ -3694,6 +3701,14 @@
                     loadVideoPlayer();
                     updateOverlayDropdowns();
                 }
+            });
+            // Next server button
+            const nextServerBtn = document.getElementById('nextServerBtn');
+            if (nextServerBtn) nextServerBtn.addEventListener('click', function() {
+                currentServerIndex = (currentServerIndex + 1) % SERVER_LIST.length;
+                showNotification('Switching to ' + SERVER_LIST[currentServerIndex].label + '…', 'info');
+                loadVideoPlayer();
+                updateOverlayDropdowns();
             });
             // Overlay season/episode selectors
             const seasonSelectMini = document.getElementById('overlaySeasonSelectMini');
