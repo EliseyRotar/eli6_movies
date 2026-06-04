@@ -431,6 +431,25 @@
             "watch": "Watch",
             "streams": "streams",
             "finished": "Finished"
+        },
+        "remind": {
+            "set": "Remind me",
+            "cancel": "Cancel reminder",
+            "cancelled": "Reminder cancelled",
+            "denied": "Enable notifications to use reminders",
+            "match": "Match",
+            "starting": "Starting soon on eli6 Sports"
+        },
+        "cal": {
+            "add": "Add to calendar"
+        },
+        "share": {
+            "share": "Share",
+            "copied": "Copied to clipboard"
+        },
+        "lang": {
+            "label": "Language:",
+            "all": "All"
         }
     }
 }
