@@ -1247,6 +1247,8 @@
 
     // re-render dynamic text when user switches language
     window.addEventListener('eli6.langChanged', function () {
+      if (window.renderTopNav) renderTopNav('live');
+      if (window.renderBottomNav) renderBottomNav('live');
       renderDatePicker(); renderSearch(); renderRefreshBar();
       renderTabs(); renderLeagueFilter(); renderMatches();
     });
