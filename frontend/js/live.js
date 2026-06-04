@@ -130,8 +130,10 @@
     // Replace the lower-tier composite/icon with a real fanart photo
     card.classList.remove('match-card--vs-composite', 'match-card--empty-bg');
     var grad = CAT_GRAD[cat] || CAT_GRAD['other'];
+    // Only a soft fade near the bottom so the title stays readable; let the
+    // image show through cleanly everywhere else.
     card.style.backgroundImage =
-      'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.78) 60%,#080808 100%),url(' + imgUrl + '),' + grad;
+      'linear-gradient(180deg,transparent 0%,transparent 55%,rgba(0,0,0,.35) 100%),url(' + imgUrl + '),' + grad;
     card.style.backgroundSize = 'cover,cover,cover';
     card.style.backgroundPosition = 'center,center top,center';
     card.style.backgroundRepeat = '';
@@ -142,7 +144,7 @@
     if (!card.isConnected) return;
     var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
     card.style.backgroundImage =
-      'linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 55%,#080808 100%),' +
+      'linear-gradient(180deg,transparent 0%,transparent 60%,rgba(0,0,0,.3) 100%),' +
       'url(' + m.homeBadgeUrl + '),' +
       'url(' + m.awayBadgeUrl + '),' + grad;
     card.style.backgroundSize = 'cover,90px,90px,cover';
@@ -528,22 +530,52 @@
   // channels as additional language-tagged sources rather than as separate cards (would be very
   // noisy). New cards are only added when no existing match title matches.
   var DADDY_SPORT_MAP = {
-    'soccer': 'football', 'football': 'football',
+    'soccer': 'football', 'football': 'football', 'futsal': 'football',
     'basketball': 'basketball', 'nba': 'basketball',
-    'tennis': 'tennis', 'baseball': 'baseball', 'mlb': 'baseball',
+    'tennis': 'tennis', 'atp': 'tennis', 'wta': 'tennis', 'roland': 'tennis',
+    'french open': 'tennis', 'wimbledon': 'tennis', 'us open': 'tennis',
+    'australian open': 'tennis',
+    'baseball': 'baseball', 'mlb': 'baseball',
     'ice hockey': 'hockey', 'nhl': 'hockey', 'hockey': 'hockey',
-    'american football': 'american-football', 'nfl': 'american-football',
-    'motor sports': 'motorsports', 'motorsports': 'motorsports',
+    'am. football': 'american-football', 'american football': 'american-football',
+    'nfl': 'american-football',
+    'motorsport': 'motorsports', 'motor sports': 'motorsports',
+    'motorsports': 'motorsports',
     'f1': 'motorsports', 'formula 1': 'motorsports', 'motogp': 'motorsports',
     'rugby': 'rugby', 'cricket': 'cricket', 'volleyball': 'volleyball',
     'boxing': 'fight', 'mma': 'fight', 'ufc': 'fight', 'fight': 'fight',
-    'golf': 'golf', 'darts': 'darts',
+    'wrestling': 'fight',
+    'golf': 'golf', 'darts': 'darts', 'badminton': 'badminton',
+    'aussie rules': 'afl', 'afl': 'afl',
   };
   function _daddyCatFromString(str) {
     var s = (str || '').toLowerCase();
+    // Tennis: try specific match first because "atp/wta" appear inside the
+    // long French Open category strings DaddyLive uses.
+    if (/\b(atp|wta|tennis|roland|french open|wimbledon|us open|australian open)\b/.test(s)) return 'tennis';
     var keys = Object.keys(DADDY_SPORT_MAP);
     for (var i = 0; i < keys.length; i++) if (s.indexOf(keys[i]) !== -1) return DADDY_SPORT_MAP[keys[i]];
     return 'other';
+  }
+
+  // Parse the daddy `day` string ("Thursday 4th June 2026") + `time` ("13:00")
+  // into a UTC epoch. Times in their API are stamped "UK GMT" but during June
+  // that's actually BST (UTC+1). We treat the time as UTC since DST is messy
+  // and a 1h offset matters less than getting the day right.
+  var DADDY_MONTHS = { jan:0, feb:1, mar:2, apr:3, may:4, jun:5, jul:6, aug:7, sep:8, oct:9, nov:10, dec:11 };
+  function parseDaddyTime(dayStr, timeStr) {
+    if (!dayStr) return 0;
+    var dm = /(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]+)\s+(\d{4})/.exec(dayStr || '');
+    if (!dm) return 0;
+    var day = parseInt(dm[1], 10);
+    var mon = DADDY_MONTHS[dm[2].slice(0,3).toLowerCase()];
+    var yr = parseInt(dm[3], 10);
+    if (mon == null) return 0;
+    var h = 0, mi = 0;
+    var tm = /(\d{1,2}):(\d{2})/.exec(timeStr || '');
+    if (tm) { h = parseInt(tm[1], 10); mi = parseInt(tm[2], 10); }
+    // UK in June = BST = UTC+1. Compensate so "13:00 UK" -> 12:00 UTC.
+    return Date.UTC(yr, mon, day, h - 1, mi);
   }
   async function fetchDaddy() {
     try {
@@ -555,29 +587,46 @@
       var data = await r.json();
       if (!Array.isArray(data)) return [];
       var out = [];
+      var now = Date.now();
+      var STALE_AFTER_MS = 3 * 3600000;   // a match 3h+ past kickoff is treated as finished
+      var FUTURE_LIMIT_MS = 36 * 3600000; // ignore events more than 36h in the future (next-next-day noise)
       data.forEach(function (day) {
         var cats = day.categories || {};
         Object.keys(cats).forEach(function (catName) {
           var arr = cats[catName];
           if (!Array.isArray(arr)) return;
-          var cat = _daddyCatFromString(catName);
+          // Try the category name first, fall back to scanning event titles.
+          var defaultCat = _daddyCatFromString(catName);
           arr.forEach(function (ev) {
             var title = ev.event || '';
             if (!title) return;
             // event strings often look like "Football : Real Madrid vs Barcelona" → strip prefix
             var clean = title.replace(/^[^:]+:\s*/, '').trim();
+            // Use category name first, but if that came back "other" probe the
+            // title too (so "Roland-Garros 360 Day 12 | Semi-Final" → tennis).
+            var cat = defaultCat;
+            if (cat === 'other') cat = _daddyCatFromString(clean);
             var channels = Array.isArray(ev.channels) ? ev.channels.filter(function (c) {
               return c && c.url && /^https:\/\/(daddylive\.(eu|nl)|daddylives\.sbs|dlhd\.(pk|link))/.test(c.url);
             }) : [];
             if (!channels.length) return;
+            var timeStr = (ev.time || '').trim();
+            // "Live" string in the time field — treat as currently live, no date
+            var explicitLive = /^live\b/i.test(timeStr);
+            var kickoff = explicitLive ? now : parseDaddyTime(day.day, timeStr);
+            if (!kickoff) return;
+            // Drop stale (past) and too-far-future events
+            if (kickoff < now - STALE_AFTER_MS) return;
+            if (kickoff > now + FUTURE_LIMIT_MS) return;
+            var isLive = explicitLive || (kickoff <= now && kickoff > now - STALE_AFTER_MS);
             out.push({
               id: 'daddy-' + (ev.event || Math.random()).slice(0, 80),
               title: clean,
               category: cat,
               league: '',
               poster: null,
-              date: 0, // daddy doesn't expose epoch — treat as live; cards will say "Live now"
-              isLive: /^live\b/i.test(ev.time || '') || true,
+              date: kickoff,
+              isLive: isLive,
               provider: 'daddy',
               channels: channels,
             });
@@ -1042,9 +1091,11 @@
 
     var liveData = scoreFor(m);
     if (m.poster) {
-      // Tier 1: real match-promo image from streamed.pk or ESX (loaded upfront)
+      // Tier 1: real match-promo image from streamed.pk or ESX (loaded upfront).
+      // Soft fade only at the bottom so the title stays readable on bright
+      // posters — no heavy darkening over the artwork.
       card.style.backgroundImage =
-        'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.75) 60%,#080808 100%),url(' + m.poster + '),' + grad;
+        'linear-gradient(180deg,transparent 0%,transparent 55%,rgba(0,0,0,.35) 100%),url(' + m.poster + '),' + grad;
       card.style.backgroundSize = 'cover,cover,cover';
       card.style.backgroundPosition = 'center,center top,center';
     } else if (m.homeBadgeUrl && m.awayBadgeUrl) {
