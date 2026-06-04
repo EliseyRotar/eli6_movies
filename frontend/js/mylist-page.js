@@ -269,9 +269,9 @@
         (state.bulk ? '<div class="ml-card__check"><i class="material-icons">' + (selected ? 'check_box' : 'check_box_outline_blank') + '</i></div>' : '') +
         '<div class="ml-card__overlay">' +
           (inProg
-            ? '<button class="ml-card__cont-btn" data-action="play">▶ Continue' + (kwInfo ? ' · ' + kwInfo : '') + '</button>'
-            : '<button class="ml-card__play-btn" data-action="play">▶ Play</button>') +
-          '<button class="ml-card__rm-btn" data-action="remove" title="Remove">×</button>' +
+            ? '<button class="ml-card__cont-btn" data-action="play">' + (window.ICONS ? window.ICONS.play : '') + ' Continue' + (kwInfo ? ' · ' + kwInfo : '') + '</button>'
+            : '<button class="ml-card__play-btn" data-action="play">' + (window.ICONS ? window.ICONS.play : '') + ' Play</button>') +
+          '<button class="ml-card__rm-btn" data-action="remove" title="Remove">' + (window.ICONS ? window.ICONS.close : '×') + '</button>' +
         '</div>' +
         (inProg ? '<div class="ml-card__prog"><div class="ml-card__prog-fill" style="width:' + progress + '%"></div></div>' : '') +
       '</div>' +
@@ -279,7 +279,7 @@
         '<div class="ml-card__badges">' +
           '<span class="ml-badge ml-badge--' + type + '">' + typeLabel(type) + '</span>' +
           (year ? '<span class="ml-card__year">' + esc(year) + '</span>' : '') +
-          (rating ? '<span class="ml-card__rating">★ ' + esc(String(rating)) + '</span>' : '') +
+          (rating ? '<span class="ml-card__rating">' + (window.ICONS ? window.ICONS.star : '★') + ' ' + esc(String(rating)) + '</span>' : '') +
         '</div>' +
         '<div class="ml-card__title">' + esc(title) + '</div>' +
       '</div>';
@@ -337,15 +337,15 @@
         '<div class="ml-row__meta">' +
           '<span class="ml-badge ml-badge--' + type + '">' + typeLabel(type) + '</span>' +
           (year ? '<span class="ml-row__year">' + esc(year) + '</span>' : '') +
-          (rating ? '<span class="ml-row__rating">★ ' + esc(String(rating)) + '</span>' : '') +
+          (rating ? '<span class="ml-row__rating">' + (window.ICONS ? window.ICONS.star : '★') + ' ' + esc(String(rating)) + '</span>' : '') +
         '</div>' +
         '<div class="ml-row__title">' + esc(title) + '</div>' +
         (overview ? '<div class="ml-row__overview">' + esc(overview) + '</div>' : '') +
         (inProg ? '<div class="ml-row__prog-wrap"><div class="ml-row__prog-bg"><div class="ml-row__prog-fill" style="width:' + progress + '%"></div></div><span class="ml-row__prog-label">' + progress + '%' + esc(kwInfo) + '</span></div>' : '') +
       '</div>' +
       '<div class="ml-row__actions">' +
-        '<button class="ml-row__play-btn" data-action="play">' + (inProg ? '▶ Continue' : '▶ Play') + '</button>' +
-        '<button class="ml-row__rm-btn" data-action="remove" title="Remove">×</button>' +
+        '<button class="ml-row__play-btn" data-action="play">' + (window.ICONS ? window.ICONS.play : '') + (inProg ? ' Continue' : ' Play') + '</button>' +
+        '<button class="ml-row__rm-btn" data-action="remove" title="Remove">' + (window.ICONS ? window.ICONS.close : '×') + '</button>' +
       '</div>';
 
     el.addEventListener('click', function (e) {
@@ -434,7 +434,7 @@
         '<div class="ml-spotlight__badges">' +
           '<span class="ml-badge ml-badge--' + type + '">' + typeLabel(type) + '</span>' +
           (year   ? '<span class="ml-spotlight__year">' + esc(year) + '</span>' : '') +
-          (rating ? '<span class="ml-spotlight__rating">★ ' + esc(String(rating)) + '</span>' : '') +
+          (rating ? '<span class="ml-spotlight__rating">' + (window.ICONS ? window.ICONS.star : '★') + ' ' + esc(String(rating)) + '</span>' : '') +
         '</div>' +
         '<div class="ml-spotlight__title">' + esc(item.title || item.name || '') + '</div>' +
         (overview ? '<div class="ml-spotlight__overview">' + esc(overview) + '</div>' : '') +

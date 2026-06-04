@@ -228,19 +228,19 @@ window.toggleMyList = async function (item, btn) {
                     await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
                     myListArr.unshift({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
                     localStorage.setItem('myList', JSON.stringify(myListArr));
-                    if (btn) { btn.textContent = '✓ My List'; btn.classList.add('btn--in-list'); btn.disabled = false; }
+                    if (btn) { btn.innerHTML = (window.ICONS ? window.ICONS.check : '') + ' My List'; btn.classList.add('btn--in-list'); btn.disabled = false; }
                     showMyListToast('Added back to My List', 'success');
                 } catch (e) {
                     if (!e.isAuthError) showMyListToast(e.message || 'Failed to undo', 'error');
                 }
             });
-            if (btn) { btn.textContent = '+ My List'; btn.classList.remove('btn--in-list'); }
+            if (btn) { btn.innerHTML = (window.ICONS ? window.ICONS.plus : '') + ' My List'; btn.classList.remove('btn--in-list'); }
         } else {
             await addToMyList({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
             myListArr.unshift({ id: id, title: title, type: type, poster_path: posterPath, overview: overview });
             localStorage.setItem('myList', JSON.stringify(myListArr));
             showMyListToast('Added to My List', 'success');
-            if (btn) { btn.textContent = '✓ My List'; btn.classList.add('btn--in-list'); }
+            if (btn) { btn.innerHTML = (window.ICONS ? window.ICONS.check : '') + ' My List'; btn.classList.add('btn--in-list'); }
         }
         syncMyListStorage().catch(function () {});
     } catch (e) {
@@ -257,7 +257,7 @@ window.updateMyListBtn = function (item, btn) {
     const type = item.kind || item.type || 'movie';
     const myListArr = JSON.parse(localStorage.getItem('myList') || '[]');
     const inList = id && myListArr.some(function (i) { return i.id === id && i.type === type; });
-    btn.textContent = inList ? '✓ My List' : '+ My List';
+    btn.innerHTML = inList ? (window.ICONS ? window.ICONS.check : '') + ' My List' : (window.ICONS ? window.ICONS.plus : '') + ' My List';
     btn.classList.toggle('btn--in-list', !!inList);
 };
 

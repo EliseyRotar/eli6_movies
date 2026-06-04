@@ -562,7 +562,7 @@
     var allCount = allMatches.length;
 
     var tabs = [];
-    if (favorites.length) tabs.push({ id: '__fav', label: '⭐ ' + lt('live.tabs.favorites', 'My Teams'), count: favCount });
+    if (favorites.length) tabs.push({ id: '__fav', label: (window.ICONS ? window.ICONS.star + ' ' : '') + lt('live.tabs.favorites', 'My Teams'), count: favCount });
     tabs.push({ id: 'all', label: lt('live.tabs.all', 'All'), count: allCount });
     presentSports.forEach(function (s) { tabs.push({ id: s, label: catIcon(s) + ' ' + catLabel(s), count: countByCat[s] || 0 }); });
 
@@ -717,17 +717,17 @@
       var empty = document.createElement('div');
       empty.className = 'live-empty';
       if (searchQuery) {
-        var icon = document.createElement('span'); icon.style.fontSize = '32px'; icon.textContent = '🔍';
+        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.search : '';
         empty.appendChild(icon);
         empty.appendChild(document.createElement('br'));
         empty.appendChild(document.createTextNode(' ' + lt('live.empty.noResults', 'No matches found for') + ' “' + searchQuery + '”'));
       } else if (currentSport === '__fav') {
-        var icon = document.createElement('span'); icon.style.fontSize = '32px'; icon.textContent = '⭐';
+        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.star : '';
         empty.appendChild(icon);
         empty.appendChild(document.createElement('br'));
         empty.appendChild(document.createTextNode(' ' + lt('live.empty.noFavorites', 'No matches for your favorite teams today.')));
       } else {
-        var icon = document.createElement('span'); icon.style.fontSize = '32px'; icon.textContent = '📺';
+        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.tv : '';
         empty.appendChild(icon);
         empty.appendChild(document.createElement('br'));
         empty.appendChild(document.createTextNode(' ' + lt('live.empty.noMatches', 'No matches scheduled right now.')));
@@ -742,7 +742,7 @@
     var live = rest.filter(function (m) { return m.isLive; });
     var upcoming = rest.filter(function (m) { return !m.isLive; });
 
-    if (favs.length) appendSection(mount, '⭐ ' + lt('live.sections.favorites', 'My Teams'), favs, true);
+    if (favs.length) appendSection(mount, (window.ICONS ? window.ICONS.star + ' ' : '') + lt('live.sections.favorites', 'My Teams'), favs, true);
     if (live.length) appendSection(mount, lt('live.sections.liveNow', 'Live Now'), live, true);
     if (upcoming.length) appendSection(mount, lt('live.sections.todaySchedule', "Today's Schedule"), upcoming, false);
   }
@@ -819,7 +819,7 @@
       var star = document.createElement('button');
       var anyFav = teams.some(isFavoriteTeam);
       star.className = 'match-card__star' + (anyFav ? ' match-card__star--active' : '');
-      star.innerHTML = anyFav ? '★' : '☆';
+      star.innerHTML = anyFav ? (window.ICONS ? window.ICONS.star : '★') : (window.ICONS ? window.ICONS.starOutline : '☆');
       star.setAttribute('aria-label', anyFav ? lt('live.fav.remove', 'Remove from favorites') : lt('live.fav.add', 'Add to favorites'));
       star.title = star.getAttribute('aria-label');
       star.addEventListener('click', function (e) {
@@ -1105,7 +1105,7 @@
       link.target = '_blank'; link.rel = 'noopener';
       link.className = 'btn-primary';
       link.style.cssText = 'display:inline-block;margin-top:12px;padding:8px 14px;border-radius:8px';
-      link.textContent = '▶ ' + lt('live.player.watchHighlights', 'Watch highlights on YouTube');
+      link.innerHTML = (window.ICONS ? window.ICONS.play + ' ' : '') + lt('live.player.watchHighlights', 'Watch highlights on YouTube');
       loading.appendChild(msg);
       loading.appendChild(link);
       return;

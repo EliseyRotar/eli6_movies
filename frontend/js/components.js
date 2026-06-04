@@ -1,6 +1,47 @@
 // ELI6 Movies — shared vanilla JS component renderers
 // All components read CSS vars from the theme system (theme.js + theme.css + design.css)
 
+// Inline SVG icon set — Lucide-style, MIT licensed paths
+// Available globally as window.ICONS so every page script can use them
+(function () {
+  function ic(paths, size, filled) {
+    var f = filled ? 'currentColor' : 'none';
+    var s = filled ? 'none' : 'currentColor';
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="' + (size||16) + '" height="' + (size||16) + '" viewBox="0 0 24 24" fill="' + f + '" stroke="' + s + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;pointer-events:none">' + paths + '</svg>';
+  }
+  window.ICONS = {
+    play:       ic('<polygon points="5 3 19 12 5 21 5 3"/>', 15, true),
+    playLg:     ic('<polygon points="5 3 19 12 5 21 5 3"/>', 18, true),
+    skipFwd:    ic('<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/>', 17),
+    info:       ic('<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>', 16),
+    share:      ic('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>', 16),
+    plus:       ic('<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>', 14),
+    check:      ic('<polyline points="20 6 9 17 4 12"/>', 14),
+    close:      ic('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>', 14),
+    arrowLeft:  ic('<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>', 16),
+    arrowRight: ic('<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>', 14),
+    chevronRight: ic('<polyline points="9 18 15 12 9 6"/>', 14),
+    star:       ic('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', 13, true),
+    heart:      ic('<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', 15),
+    moon:       ic('<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>', 16, true),
+    sun:        ic('<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>', 16),
+    film:       ic('<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>', 20),
+    tv:         ic('<rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/>', 20),
+    user:       ic('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', 20),
+    bookmark:   ic('<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>', 16),
+    bell:       ic('<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>', 18),
+    zap:        ic('<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>', 18, true),
+    flag:       ic('<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>', 18),
+    megaphone:  ic('<path d="M3 11l19-9-9 19-2-8-8-2z"/>', 18),
+    clock:      ic('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 18),
+    helpCircle: ic('<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>', 18),
+    listPlus:   ic('<line x1="11" y1="12" x2="19" y2="12"/><line x1="11" y1="6" x2="19" y2="6"/><line x1="11" y1="18" x2="19" y2="18"/><line x1="5" y1="9" x2="5" y2="15"/><line x1="2" y1="12" x2="8" y2="12"/>', 18),
+    calendar:   ic('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', 16),
+    starOutline: ic('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', 13),
+    search:     ic('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>', 32),
+  };
+})();
+
 (function (window) {
   "use strict";
 
@@ -256,7 +297,7 @@
 
       const meta = el("div", "poster__meta");
       const left = el("span");  left.textContent  = item.year || item.release_date?.slice(0, 4) || "";
-      const right = el("span"); right.textContent = item.rating ? "★" + item.rating : (item.vote_average ? "★" + item.vote_average.toFixed(1) : "");
+      const right = el("span"); right.innerHTML = item.rating ? ICONS.star + item.rating : (item.vote_average ? ICONS.star + item.vote_average.toFixed(1) : "");
       meta.appendChild(left);
       meta.appendChild(right);
       div.appendChild(meta);
@@ -268,7 +309,7 @@
       const _rv = item.rating || (item.vote_average != null ? Number(item.vote_average).toFixed(1) : null);
       if (_rv && Number(_rv) > 0) {
         const ratingSpan = el("span", "poster__rating");
-        ratingSpan.textContent = "★ " + _rv;
+        ratingSpan.innerHTML = ICONS.star + " " + _rv;
         div.appendChild(ratingSpan);
       }
 
@@ -312,7 +353,7 @@
 
       const playOverlay = el("div", "poster__play-overlay");
       const playBtn = el("button", "poster__play-btn");
-      playBtn.textContent = "▶";
+      playBtn.innerHTML = ICONS.play;
       playOverlay.appendChild(playBtn);
       div.appendChild(playOverlay);
 
@@ -467,10 +508,10 @@
       const _heroUnreleased = _heroRd ? (_heroRd > new Date().toISOString().slice(0, 10)) : false;
       const watchBtn = el("button", "btn btn--primary" + (_heroUnreleased ? " detail__watch-coming" : ""));
       if (_heroUnreleased) {
-        watchBtn.textContent = "📅 Coming " + _fmtReleaseDate(_heroRd);
+        watchBtn.textContent = "Coming " + _fmtReleaseDate(_heroRd);
         watchBtn.disabled = true;
       } else {
-        watchBtn.textContent = "▶ Watch now";
+        watchBtn.innerHTML = ICONS.playLg + " Watch now";
         watchBtn.addEventListener("click", function () {
           if (opts.onWatch) opts.onWatch(item);
           else openDetailModal(item);
@@ -484,7 +525,7 @@
         else showToast("Added to list");
       });
       const infoBtn = el("button", "btn btn--ghost btn--icon");
-      infoBtn.textContent = "ⓘ";
+      infoBtn.innerHTML = ICONS.info;
       infoBtn.addEventListener("click", function () { openDetailModal(item); });
       cta.appendChild(watchBtn);
       cta.appendChild(listBtn);
@@ -667,7 +708,7 @@
     const meta = el("div", "detail__meta");
     if (item.rating || item.vote_average) {
       const star = el("span", "detail__meta-star");
-      star.textContent = "★ " + (item.rating || item.vote_average.toFixed(1));
+      star.innerHTML = ICONS.star + " " + (item.rating || item.vote_average.toFixed(1));
       meta.appendChild(star);
     }
     const year = item.year || (item.release_date || item.first_air_date || "").slice(0, 4);
@@ -690,10 +731,10 @@
     const cta = el("div", "detail__cta");
     const watchBtn = el("button", "btn btn--primary" + (_unreleased ? " detail__watch-coming" : ""));
     if (_unreleased) {
-      watchBtn.textContent = "📅 Coming " + _fmtReleaseDate(_rd);
+      watchBtn.textContent = "Coming " + _fmtReleaseDate(_rd);
       watchBtn.disabled = true;
     } else {
-      watchBtn.textContent = "▶ Watch now";
+      watchBtn.innerHTML = ICONS.playLg + " Watch now";
       watchBtn.addEventListener("click", function () {
         window.location.href = "player.html?id=" + (item.tmdb_id || item.id) + "&type=" + kind;
       });
@@ -706,10 +747,10 @@
       else showToast("Added to list");
     });
     const likeBtn = el("button", "btn btn--ghost btn--icon");
-    likeBtn.textContent = "♥";
+    likeBtn.innerHTML = ICONS.heart;
     likeBtn.title = "Like";
     const shareBtn = el("button", "btn btn--ghost btn--icon");
-    shareBtn.textContent = "↗";
+    shareBtn.innerHTML = ICONS.share;
     shareBtn.title = "Share";
     shareBtn.addEventListener("click", function (e) {
       e.stopPropagation();
@@ -821,7 +862,7 @@
           thumb.style.backgroundSize = "cover"; thumb.style.backgroundPosition = "center";
         } else {
           thumb.style.background = "linear-gradient(135deg," + g[0] + "," + g[1] + ")";
-          thumb.textContent = "▶";
+          thumb.innerHTML = ICONS.play;
         }
         const epInfo = el("div"); epInfo.style.flex = "1";
         const epSub2 = el("div", "detail__ep-sub");

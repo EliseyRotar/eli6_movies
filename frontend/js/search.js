@@ -176,8 +176,8 @@
       thumb.src = thumbUrl;
       thumb.alt = item.title || item.name || '';
     } else {
-      thumb.style.cssText = 'display:grid;place-items:center;font-size:14px;color:var(--fg-muted)';
-      thumb.textContent = isPerson ? '👤' : '🎬';
+      thumb.style.cssText = 'display:grid;place-items:center;color:var(--fg-muted)';
+      thumb.innerHTML = isPerson ? (window.ICONS ? window.ICONS.user : '') : (window.ICONS ? window.ICONS.film : '');
     }
     li.appendChild(thumb);
 
@@ -292,7 +292,7 @@
     backRow.style.cssText = 'padding:8px var(--pad-x) 16px';
     var backBtn = document.createElement('button');
     backBtn.className = 'btn btn--ghost';
-    backBtn.textContent = '← Back';
+    backBtn.innerHTML = (window.ICONS ? window.ICONS.arrowLeft + ' ' : '← ') + 'Back';
     backBtn.addEventListener('click', function () {
       if (_currentQuery) doSearch(_currentQuery);
       else showDefaultContent();
@@ -322,7 +322,7 @@
     mount.appendChild(header);
 
     if (!data || (!data.cast && !data.crew)) {
-      mount.innerHTML += '<div class="empty"><div class="empty__icon">🎬</div><div class="empty__title">No credits found</div></div>';
+      mount.innerHTML += '<div class="empty"><div class="empty__icon">' + (window.ICONS ? window.ICONS.film : '') + '</div><div class="empty__title">No credits found</div></div>';
       return;
     }
 
@@ -365,8 +365,8 @@
       photo.alt = person.name || '';
       photo.loading = 'lazy';
     } else {
-      photo.style.cssText = 'display:grid;place-items:center;font-size:28px;color:var(--fg-muted)';
-      photo.textContent = '👤';
+      photo.style.cssText = 'display:grid;place-items:center;color:var(--fg-muted)';
+      photo.innerHTML = window.ICONS ? window.ICONS.user : '';
     }
     card.appendChild(photo);
 

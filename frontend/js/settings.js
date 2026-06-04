@@ -82,7 +82,8 @@
       var metaEl = div("settings__themecard-meta");
       metaEl.textContent = key === "pulse" ? "8.4  ·  2024  ·  Sci-Fi" : "★ 8.4 · 2024 · SCI-FI";
       var btns = div("settings__themecard-btns");
-      var wb = el("div", "settings__themecard-btn primary"); wb.textContent = key === "marquee" ? "WATCH" : "▶ Watch";
+      var wb = el("div", "settings__themecard-btn primary");
+      if (key === "marquee") { wb.textContent = "WATCH"; } else { wb.innerHTML = (window.ICONS ? window.ICONS.play : "") + " Watch"; }
       var lb = el("div", "settings__themecard-btn"); lb.textContent = key === "marquee" ? "+ LIST" : "+ List";
       btns.appendChild(wb); btns.appendChild(lb);
       hero.appendChild(titleEl); hero.appendChild(metaEl); hero.appendChild(btns);
@@ -135,8 +136,8 @@
     var modeCards = div("settings__modecards");
 
     [
-      { k: "dark",  label: "Dark",  icon: "◑" },
-      { k: "light", label: "Light", icon: "○" },
+      { k: "dark",  label: "Dark",  icon: window.ICONS ? window.ICONS.moon : "" },
+      { k: "light", label: "Light", icon: window.ICONS ? window.ICONS.sun  : "" },
     ].forEach(function (m) {
       var card = el("button", "settings__modecard" + (prefs.mode === m.k ? " is-active" : ""));
       card.type = "button";
@@ -147,7 +148,7 @@
       var mBody = div("settings__modecard-body");
       var l1 = div("settings__modecard-line wide"); var l2 = div("settings__modecard-line med"); var l3 = div("settings__modecard-line");
       mBody.appendChild(l1); mBody.appendChild(l2); mBody.appendChild(l3);
-      var mIcon = div("settings__modecard-icon"); mIcon.textContent = m.icon;
+      var mIcon = div("settings__modecard-icon"); mIcon.innerHTML = m.icon;
       preview.appendChild(mBar); preview.appendChild(mBody); preview.appendChild(mIcon);
       card.appendChild(preview);
 

@@ -968,7 +968,7 @@
         var barWrap  = div('acc__cont-card-bar');
         var barFill  = div(); barFill.style.width = Math.min(100, item.progress || 0) + '%';
         barWrap.appendChild(barFill);
-        var playBtn = div('acc__cont-card-play'); playBtn.innerHTML = '<div>▶</div>';
+        var playBtn = div('acc__cont-card-play'); playBtn.innerHTML = '<div>' + (window.ICONS ? window.ICONS.play : '') + '</div>';
         card.appendChild(meta); card.appendChild(titleEl2); card.appendChild(barWrap); card.appendChild(playBtn);
         card.addEventListener('click', function () {
           var url = 'player.html?type=' + (item.type || 'movie') + '&id=' + item.id;
@@ -1012,11 +1012,11 @@
     [
       { icon: '✦', label: tr('account.appearance','Appearance'), sub: 'Theme, accent, layout',
         onClick: function () { window.location.href = 'settings.html'; } },
-      { icon: '♥', label: tr('nav.mylist','My List'), sub: ml.length + ' items saved',
+      { icon: window.ICONS ? window.ICONS.bookmark : '', label: tr('nav.mylist','My List'), sub: ml.length + ' items saved',
         onClick: function () { window.location.href = 'mylist.html'; } },
-      { icon: '⏱', label: 'Watch history', sub: wh.length + ' titles watched',
+      { icon: window.ICONS ? window.ICONS.clock : '', label: 'Watch history', sub: wh.length + ' titles watched',
         onClick: function () { openWatchHistoryModal(wh); } },
-      { icon: '↗', label: 'Refer a friend', sub: "Share ELI6 — it's free",
+      { icon: window.ICONS ? window.ICONS.share : '', label: 'Refer a friend', sub: "Share ELI6 — it's free",
         onClick: function () {
           if (navigator.share) { navigator.share({ title: 'ELI6 Movies', url: window.location.origin }); }
           else { if (navigator.clipboard) navigator.clipboard.writeText(window.location.origin); showToast('Link copied!'); }
@@ -1025,12 +1025,12 @@
         onClick: function () { window.open('mailto:eli6movies@proton.me?subject=ELI6%20Movies%20Support', '_blank'); } },
     ].forEach(function (q) {
       var tile = el('button', 'acc__quick-tile');
-      var icon = div('acc__quick-icon'); icon.textContent = q.icon;
+      var icon = div('acc__quick-icon'); icon.innerHTML = q.icon;
       var textWrap = div();
       var qlabel = div('acc__quick-label'); qlabel.textContent = q.label;
       var qsub   = div('acc__quick-sub');   qsub.textContent   = q.sub;
       textWrap.appendChild(qlabel); textWrap.appendChild(qsub);
-      var arrow = el('span', 'acc__quick-arrow'); arrow.textContent = '→';
+      var arrow = el('span', 'acc__quick-arrow'); arrow.innerHTML = window.ICONS ? window.ICONS.chevronRight : '›';
       tile.appendChild(icon); tile.appendChild(textWrap); tile.appendChild(arrow);
       tile.addEventListener('click', q.onClick);
       quickGrid.appendChild(tile);
@@ -1123,7 +1123,7 @@
             fetch(API_URL + '/user/link-discord', { method: 'DELETE', credentials: 'include' })
               .then(function () {
                 dcBtn.textContent = 'Link'; dcBtn.className = 'btn btn--outline'; dcBtn.disabled = false;
-                dcHint.textContent = 'Link your account to get the ⭐ VIP role when Trakt is connected.';
+                dcHint.textContent = 'Link your account to get the VIP role when Trakt is connected.';
                 showToast('Discord unlinked');
               }).catch(function () { dcBtn.disabled = false; });
           };
