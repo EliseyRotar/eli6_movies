@@ -218,6 +218,7 @@ tr:hover td{background:var(--surface2)}
   <button class="snav-btn" data-section="content">Content</button>
   <button class="snav-btn" data-section="activity">Activity</button>
   <button class="snav-btn" data-section="utm">UTM Builder</button>
+  <button class="snav-btn" data-section="users">Users</button>
 </nav>
 
 <div class="main" id="app">
@@ -956,6 +957,48 @@ function renderShell(){
         Tip: share this link in your Reddit posts, Discord, social media, or emails. The campaign will appear in the Acquisition section above within minutes.
       </div>
     </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="section-users" style="margin-top:4px">
+    <div class="section-label">User Management</div>
+    <div class="table-card">
+      <div class="table-head">
+        <div class="table-head-left">
+          <span class="chart-title" style="margin:0">All Users</span>
+          <span id="usersStats" style="font-size:.72rem;color:var(--muted)"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="search-bar">
+            <input class="search-input" id="userSearch" placeholder="Search email or username…"/>
+          </div>
+          <select id="userRoleFilter" class="search-input" style="width:auto;cursor:pointer;padding:6px 10px">
+            <option value="">All roles</option>
+            <option value="user">Users only</option>
+            <option value="admin">Admins only</option>
+          </select>
+          <button class="btn-icon" id="refreshUsersBtn">↻ Refresh</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>My List</th>
+              <th>History</th>
+              <th>Joined</th>
+              <th>Change Role</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr><td colspan="7" class="empty" style="padding:24px;text-align:center">Click the <strong>Users</strong> tab above to load</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>`;
 
   // Tab switching
@@ -997,11 +1040,12 @@ document.querySelector('.section-nav').addEventListener('click',e=>{
   btn.classList.add('active');
   const el=document.getElementById('section-'+btn.dataset.section);
   if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+  if(btn.dataset.section==='users' && !adminUsersLoaded) loadAdminUsers();
 });
 
 // Highlight section nav on scroll
 function onScroll(){
-  const sections=['overview','audience','acquisition','content','activity','utm'];
+  const sections=['overview','audience','acquisition','content','activity','utm','users'];
   for(const id of [...sections].reverse()){
     const el=document.getElementById('section-'+id);
     if(!el) continue;
@@ -1060,6 +1104,103 @@ async function debugIp(){
   finally{ btn.disabled=false; btn.textContent='🔍 Debug IP'; }
 }
 
+// ── User management ───────────────────────────────────────────
+let adminUsersData = [];
+let adminUsersFiltered = [];
+let adminUsersLoaded = false;
+
+async function loadAdminUsers(){
+  const tbody = document.getElementById('usersBody');
+  if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center"><div class="spinner" style="margin:0 auto"></div></td></tr>';
+  try{
+    const data = await api('/admin/users');
+    adminUsersData = data;
+    adminUsersFiltered = data;
+    renderAdminUsersTable(data);
+    const admins = data.filter(u=>u.role==='admin').length;
+    const statsEl = document.getElementById('usersStats');
+    if(statsEl) statsEl.innerHTML = `&nbsp;— ${fmt(data.length)} total · <span style="color:var(--accent)">${admins} admin${admins!==1?'s':''}</span>`;
+    adminUsersLoaded = true;
+  }catch(e){
+    if(tbody) tbody.innerHTML = `<tr><td colspan="7" class="empty" style="padding:20px">Failed to load: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function renderAdminUsersTable(users){
+  const tbody = document.getElementById('usersBody');
+  if(!tbody) return;
+  if(!users.length){tbody.innerHTML='<tr><td colspan="7" class="empty" style="padding:20px">No users found</td></tr>';return;}
+  tbody.innerHTML = users.map(u=>{
+    const initial = esc((u.username||u.email||'?')[0].toUpperCase());
+    const isAdmin = u.role==='admin';
+    return `<tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:28px;height:28px;border-radius:50%;background:${isAdmin?'var(--accent)':'var(--surface3)'};border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;color:${isAdmin?'#fff':'var(--muted)'}">${initial}</div>
+          <span style="font-weight:600">${esc(u.username||'—')}</span>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:.75rem">${esc(u.email||'—')}</td>
+      <td><span class="badge ${isAdmin?'login':'user-row'}" id="ubadge-${esc(u._id)}">${esc(u.role||'user')}</span></td>
+      <td style="color:var(--muted2)">${(u.myList||[]).length}</td>
+      <td style="color:var(--muted2)">${(u.watchHistory||[]).length}</td>
+      <td class="time-cell">${u.createdAt?new Date(u.createdAt).toLocaleDateString():'—'}</td>
+      <td>
+        <select data-uid="${esc(u._id)}" data-prev="${esc(u.role||'user')}"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 8px;border-radius:6px;font-size:.75rem;cursor:pointer;outline:none"
+          onchange="changeAdminRole(this)">
+          <option value="user" ${u.role!=='admin'?'selected':''}>user</option>
+          <option value="admin" ${u.role==='admin'?'selected':''}>admin</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterAdminUsers(){
+  const q = (document.getElementById('userSearch')||{}).value?.toLowerCase()||'';
+  const role = (document.getElementById('userRoleFilter')||{}).value||'';
+  adminUsersFiltered = adminUsersData.filter(u=>{
+    const matchQ = !q||(u.username||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q);
+    const matchR = !role||(u.role||'user')===role;
+    return matchQ && matchR;
+  });
+  renderAdminUsersTable(adminUsersFiltered);
+}
+
+async function changeAdminRole(sel){
+  const id = sel.dataset.uid;
+  const role = sel.value;
+  const prev = sel.dataset.prev;
+  if(role === prev) return;
+  sel.disabled = true;
+  try{
+    const r = await fetch(API+'/admin/users/'+id+'/role',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      credentials:'include',
+      body:JSON.stringify({role}),
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    sel.dataset.prev = role;
+    // Update in-memory record
+    const u = adminUsersData.find(u=>String(u._id)===String(id));
+    if(u) u.role = role;
+    // Update badge
+    const badge = document.getElementById('ubadge-'+id);
+    if(badge){badge.textContent=role;badge.className='badge '+(role==='admin'?'login':'user-row');}
+    // Refresh stats
+    const admins = adminUsersData.filter(u=>u.role==='admin').length;
+    const statsEl = document.getElementById('usersStats');
+    if(statsEl) statsEl.innerHTML = `&nbsp;— ${fmt(adminUsersData.length)} total · <span style="color:var(--accent)">${admins} admin${admins!==1?'s':''}</span>`;
+  }catch(e){
+    sel.value = prev;
+    alert('Failed to update role: '+e.message);
+  }finally{
+    sel.disabled = false;
+  }
+}
+
 // ── Boot ──────────────────────────────────────────────────────
 (async()=>{
   showWaking(1);
@@ -1072,6 +1213,9 @@ async function debugIp(){
   // Wire up dynamic buttons rendered by renderShell
   document.getElementById('migrateBtn')?.addEventListener('click', runMigration);
   document.getElementById('debugIpBtn')?.addEventListener('click', debugIp);
+  document.getElementById('refreshUsersBtn')?.addEventListener('click', loadAdminUsers);
+  document.getElementById('userSearch')?.addEventListener('input', filterAdminUsers);
+  document.getElementById('userRoleFilter')?.addEventListener('change', filterAdminUsers);
 
   // Live every 5s
   setInterval(refreshLive,5000);
