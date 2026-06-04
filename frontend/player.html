@@ -1916,6 +1916,11 @@
                         </select>
                     </div>
                 </div>
+                <!-- Auto-next toggle (TV only, shown by JS) -->
+                <div id="autoNextContainer" style="display:none;align-items:center;gap:8px;margin-top:8px;">
+                    <span style="font-size:13px;color:var(--fg-muted)">Auto-next</span>
+                    <button id="autoNextToggle" onclick="toggleAutoNext()" style="padding:4px 14px;border-radius:6px;border:1.5px solid var(--border,rgba(255,255,255,0.15));background:var(--accent);color:var(--bg,#000);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:background 0.15s,color 0.15s;">ON</button>
+                </div>
             </div>
             <div class="server-notice">
                 <span style="font-size: 16px; vertical-align: middle; margin-right: 5px;">ⓘ</span>
@@ -1961,6 +1966,8 @@
                             <span style="font-size: 28px; color: #fff;">⏭</span>
                         </button>
                     </div>
+                    <!-- Auto-next countdown — appears at bottom centre when countdown starts -->
+                    <div id="autoNextTimer" style="display:none;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#fff;padding:9px 20px;border-radius:8px;z-index:9999;font-size:14px;font-weight:600;white-space:nowrap;pointer-events:auto;box-shadow:0 2px 14px rgba(0,0,0,0.5);"></div>
                 </div>
             </div>
         </div>
@@ -2143,6 +2150,16 @@
             // Show/hide episode selector based on type
             if (type === 'tv') {
                 document.getElementById('episodeSelector').style.display = 'none'; // Always hidden
+                const anc = document.getElementById('autoNextContainer');
+                if (anc) {
+                    anc.style.display = 'flex';
+                    const btn = document.getElementById('autoNextToggle');
+                    if (btn) {
+                        btn.textContent = autoNextEnabled ? 'ON' : 'OFF';
+                        btn.style.background = autoNextEnabled ? 'var(--accent)' : 'var(--surface,#1e1e28)';
+                        btn.style.color = autoNextEnabled ? 'var(--bg,#000)' : 'var(--fg-muted,#aaa)';
+                    }
+                }
                 await populateEpisodeSelectors();
             } else {
                 document.getElementById('episodeSelector').style.display = 'none';
@@ -3747,8 +3764,21 @@
         });
 
         // === AUTO NEXT EPISODE FEATURE (REFACTOR) ===
-        let autoNextEnabled = localStorage.getItem('autoNextEnabled') === 'true';
+        let autoNextEnabled = localStorage.getItem('autoNextEnabled') !== 'false';
         let autoNextTimeout = null;
+
+        function toggleAutoNext() {
+            autoNextEnabled = !autoNextEnabled;
+            localStorage.setItem('autoNextEnabled', String(autoNextEnabled));
+            const btn = document.getElementById('autoNextToggle');
+            if (btn) {
+                btn.textContent = autoNextEnabled ? 'ON' : 'OFF';
+                btn.style.background = autoNextEnabled ? 'var(--accent)' : 'var(--surface,#1e1e28)';
+                btn.style.color = autoNextEnabled ? 'var(--bg,#000)' : 'var(--fg-muted,#aaa)';
+            }
+            if (!autoNextEnabled) cancelAutoNext();
+            else startAutoNextTimer();
+        }
 
         function getNextEpisodeInfo() {
             const seasonSelect = document.getElementById('seasonSelect');

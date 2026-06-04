@@ -96,6 +96,19 @@ async function fetchAnimeContent() {
   } catch (e) { return []; }
 }
 
+async function fetchForYou(lang) {
+  const genreIds = JSON.parse(localStorage.getItem('eli6.genres') || '[]');
+  if (!genreIds.length) return [];
+  try {
+    const url = TMDB_BASE_URL + '/discover/movie?sort_by=popularity.desc&vote_count.gte=50&with_genres='
+      + genreIds.join(',') + '&language=' + encodeURIComponent(lang || 'en-US');
+    const r = await fetch(url);
+    if (!r.ok) return [];
+    const d = await r.json();
+    return d.results || [];
+  } catch (e) { return []; }
+}
+
 
 async function syncMyList() {
   if (!localStorage.getItem('user')) return;
@@ -150,7 +163,6 @@ async function initPage() {
   const rowsMnt  = document.getElementById('rows-mount');
   if (!rowsMnt) return;
 
-  // Clear rows mount (keep watching re-renders)
   rowsMnt.innerHTML = '';
 
   const loadingDiv = document.createElement('div');
@@ -165,7 +177,7 @@ async function initPage() {
     loadingSpan.textContent = 'Server is warming up, hang on…';
   }, 4000);
 
-  const [trending, trendingTV, popular, upcoming, topRated, anime, keepWatching] = await Promise.all([
+  const [trending, trendingTV, popular, upcoming, topRated, anime, keepWatching, forYou] = await Promise.all([
     fetchTMDBWithFallback('movie', 'trending',  lang),
     fetchTMDBWithFallback('tv',    'trending',  lang),
     fetchTMDBWithFallback('movie', 'popular',   lang),
@@ -173,10 +185,23 @@ async function initPage() {
     fetchTMDBWithFallback('movie', 'top_rated', lang),
     fetchAnimeContent(),
     fetchKeepWatching(),
+    fetchForYou(lang),
   ]);
 
   clearTimeout(warmTimer);
   rowsMnt.innerHTML = '';
+
+  // Build a progress map so watched items show their bar on any row
+  var progressMap = {};
+  keepWatching.forEach(function(kw) {
+    if (kw.progress != null) progressMap[String(kw.id)] = kw.progress;
+  });
+  function withProgress(items) {
+    return items.map(function(item) {
+      var p = progressMap[String(item.id)];
+      return p != null ? Object.assign({}, item, { progress: p }) : item;
+    });
+  }
 
   // Hero slider — first 7 from trending mix
   if (heroMnt) {
@@ -228,9 +253,18 @@ async function initPage() {
     rowsMnt.insertBefore(kwRow, rowsMnt.firstChild);
   }
 
+  // For You — personalised by genre preferences
+  if (forYou.length) {
+    const row = makeRow('For You', withProgress(forYou.slice(0, 20).map(i => normalise(i, 'movie'))), {
+      seeAllHref: 'movies.html',
+      onPick: function (item) { openDetailModal(item); },
+    });
+    rowsMnt.appendChild(row);
+  }
+
   // Trending Now (numbered, 10 items)
   if (trending.length) {
-    const row = makeRow(tr('home.rows.trendingNow', 'Trending Now'), trending.slice(0, 10).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.trendingNow', 'Trending Now'), withProgress(trending.slice(0, 10).map(i => normalise(i, 'movie'))), {
       numbered:   true,
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
@@ -240,7 +274,7 @@ async function initPage() {
 
   // New Releases
   if (upcoming.length) {
-    const row = makeRow(tr('home.rows.newReleases', 'New Releases'), upcoming.slice(0, 20).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.newReleases', 'New Releases'), withProgress(upcoming.slice(0, 20).map(i => normalise(i, 'movie'))), {
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -249,7 +283,7 @@ async function initPage() {
 
   // Critically Acclaimed
   if (topRated.length) {
-    const row = makeRow(tr('home.rows.criticallyAcclaimed', 'Critically Acclaimed'), topRated.slice(0, 20).map(i => normalise(i, 'movie')), {
+    const row = makeRow(tr('home.rows.criticallyAcclaimed', 'Critically Acclaimed'), withProgress(topRated.slice(0, 20).map(i => normalise(i, 'movie'))), {
       seeAllHref: 'movies.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -267,7 +301,7 @@ async function initPage() {
 
   // Because you watched…
   if (trendingTV.length) {
-    const row = makeRow(tr('home.rows.becauseYouWatched', 'Because You Watched'), trendingTV.slice(0, 20).map(i => normalise(i, 'tv')), {
+    const row = makeRow(tr('home.rows.becauseYouWatched', 'Because You Watched'), withProgress(trendingTV.slice(0, 20).map(i => normalise(i, 'tv'))), {
       seeAllHref: 'tvshows.html',
       onPick: function (item) { openDetailModal(item); },
     });
@@ -290,14 +324,12 @@ document.addEventListener('DOMContentLoaded', async function () {
   await syncMyList();
   await initPage();
 
-  // Re-render nav on theme changes
   document.addEventListener('eli6.themeChanged', function () {
     renderTopNav('home');
     renderBottomNav('home');
   });
 });
 
-// Re-fetch all home page content in the new language when the user switches language
 window.addEventListener('eli6.langChanged', function () {
   initPage();
 });

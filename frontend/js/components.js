@@ -1135,6 +1135,44 @@
     renderAdBlockPrompt: renderAdBlockPrompt,
   });
 
+  // PWA: register service worker on all pages
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(function() {});
+  }
+
+  // PWA: capture install prompt, show after 12s if not dismissed
+  var _deferredInstall = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    _deferredInstall = e;
+    setTimeout(_showInstallBar, 12000);
+  });
+
+  function _showInstallBar() {
+    if (!_deferredInstall) return;
+    if (localStorage.getItem('eli6.pwa.dismissed')) return;
+    if (document.getElementById('pwa-install-bar')) return;
+    var bar = document.createElement('div');
+    bar.id = 'pwa-install-bar';
+    bar.style.cssText = 'position:fixed;bottom:0;left:0;right:0;background:var(--surface-2,#1a1a24);border-top:1px solid var(--border,rgba(255,255,255,0.1));padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:9999;font-size:14px;animation:slideUp 0.22s ease;';
+    bar.innerHTML =
+      '<span style="flex:1;color:var(--fg,#fff);font-weight:500;">Add ELI6 Movies to your home screen</span>' +
+      '<button id="pwa-install-btn" style="padding:8px 18px;background:var(--accent,#c8ff3a);color:var(--bg,#0a0a0a);border:none;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;">Install</button>' +
+      '<button id="pwa-dismiss-btn" style="padding:8px 10px;background:transparent;color:var(--fg-muted,#888);border:none;font-size:20px;cursor:pointer;line-height:1;" aria-label="Dismiss">×</button>';
+    document.body.appendChild(bar);
+    document.getElementById('pwa-install-btn').addEventListener('click', function() {
+      _deferredInstall.prompt();
+      _deferredInstall.userChoice.then(function() {
+        _deferredInstall = null;
+        bar.remove();
+      });
+    });
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', function() {
+      localStorage.setItem('eli6.pwa.dismissed', '1');
+      bar.remove();
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     renderCookieBanner();
     renderAdBlockPrompt();

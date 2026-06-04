@@ -697,6 +697,7 @@ html[data-theme="marquee"] .pagehead__title { letter-spacing: 0.02em; text-trans
   animation: e6-rise 240ms ease;
 }
 @keyframes e6-rise { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 .detail__art {
   height: 320px; position: relative; overflow: hidden; flex-shrink: 0;
 }
