@@ -26,6 +26,7 @@ const UPDATES_HTML = path.join(ROOT, 'frontend', 'updates.html');
 
 const args = process.argv.slice(2);
 const DRY = args.includes('--dry-run');
+const BACKFILL_ALL = args.includes('--backfill-all');
 const sinceIdx = args.indexOf('--since');
 const SINCE_OVERRIDE = sinceIdx !== -1 ? args[sinceIdx + 1] : null;
 
@@ -50,26 +51,32 @@ function formatDateText(iso) {
   return `${MONTHS[m-1]} ${d}, ${y}`;
 }
 
-function findLastReleaseDate(html) {
+function findAllReleaseDates(html) {
   const re = /<span class="release-date">([^<]+)<\/span>/g;
-  const matches = [];
+  const matches = new Set();
   let m;
   while ((m = re.exec(html)) !== null) {
     const iso = parseDateText(m[1]);
-    if (iso) matches.push(iso);
+    if (iso) matches.add(iso);
   }
-  if (!matches.length) return null;
-  // Return the latest (largest) — the file is supposed to be newest-first
-  // but don't assume.
-  matches.sort();
-  return matches[matches.length - 1];
+  return matches;
+}
+
+function findLastReleaseDate(html) {
+  const all = [...findAllReleaseDates(html)];
+  if (!all.length) return null;
+  all.sort();
+  return all[all.length - 1];
 }
 
 function gitLogSince(sinceIso) {
   // Use a unique separator that won't appear in commit messages.
   const SEP = '<<<COMMITSEP>>>';
   const FIELDSEP = '<<<FIELD>>>';
-  const cmd = `git -C "${ROOT}" log --since="${sinceIso} 00:00" --no-merges --pretty=format:"%H${FIELDSEP}%ci${FIELDSEP}%s${FIELDSEP}%b${SEP}"`;
+  // Special: sinceIso "1970-01-01" means "all history" — git's --since parser
+  // doesn't deal well with pre-1980 dates, so omit the flag entirely.
+  const sinceArg = (sinceIso === '1970-01-01') ? '' : `--since="${sinceIso} 00:00"`;
+  const cmd = `git -C "${ROOT}" log ${sinceArg} --no-merges --pretty=format:"%H${FIELDSEP}%ci${FIELDSEP}%s${FIELDSEP}%b${SEP}"`;
   let out;
   try { out = execSync(cmd, { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 }); }
   catch (e) { console.error('git log failed:', e.message); process.exit(2); }
@@ -215,21 +222,30 @@ if (!fs.existsSync(UPDATES_HTML)) {
 }
 
 const original = fs.readFileSync(UPDATES_HTML, 'utf8');
-const lastIso = SINCE_OVERRIDE || findLastReleaseDate(original);
-if (!lastIso) {
-  console.error('Could not detect a last release date in updates.html. Use --since YYYY-MM-DD.');
-  process.exit(2);
+const existingDates = findAllReleaseDates(original);
+
+let sinceIso, commits;
+if (BACKFILL_ALL) {
+  // Walk every commit since the repo started, then filter out any date that
+  // already has a release block — preserves hand-written summaries.
+  sinceIso = '1970-01-01';
+  console.error('Backfill mode: walking full git history, skipping dates that already have a release block.');
+  console.error(`Already-covered dates (${existingDates.size}): ${[...existingDates].sort().join(', ')}`);
+} else {
+  const lastIso = SINCE_OVERRIDE || findLastReleaseDate(original);
+  if (!lastIso) {
+    console.error('Could not detect a last release date in updates.html. Use --since YYYY-MM-DD or --backfill-all.');
+    process.exit(2);
+  }
+  // Commits AFTER the last release date — same day already covered.
+  const sinceDate = new Date(lastIso + 'T00:00:00Z');
+  sinceDate.setUTCDate(sinceDate.getUTCDate() + 1);
+  sinceIso = sinceDate.toISOString().slice(0, 10);
+  console.error(`Last release date in updates.html: ${lastIso}`);
+  console.error(`Collecting commits since: ${sinceIso}`);
 }
 
-// We want commits AFTER the last release date — same day already covered.
-const sinceDate = new Date(lastIso + 'T00:00:00Z');
-sinceDate.setUTCDate(sinceDate.getUTCDate() + 1);
-const sinceIso = sinceDate.toISOString().slice(0, 10);
-
-console.error(`Last release date in updates.html: ${lastIso}`);
-console.error(`Collecting commits since: ${sinceIso}`);
-
-const commits = gitLogSince(sinceIso).filter(c => !isSkippable(c));
+commits = gitLogSince(sinceIso).filter(c => !isSkippable(c));
 
 if (!commits.length) {
   console.error('No new commits to add. Nothing to do.');
@@ -240,28 +256,64 @@ if (!commits.length) {
 const byDay = new Map();
 for (const c of commits) {
   const day = isoDay(c.ciDate);
+  if (BACKFILL_ALL && existingDates.has(day)) continue; // preserve hand-written
   if (!byDay.has(day)) byDay.set(day, []);
   byDay.get(day).push(c);
+}
+
+if (!byDay.size) {
+  console.error('All dates with commits are already represented in updates.html. Nothing to do.');
+  process.exit(0);
 }
 
 // Process newest day first; within day, keep the chronological commit order.
 const orderedDays = [...byDay.keys()].sort().reverse();
 for (const d of orderedDays) byDay.get(d).reverse();   // newest-commit first within the day
 
-const newBlocks = orderedDays.map((d, i) => releaseBlockHtml(d, byDay.get(d), i === 0));
+// In backfill mode we never override the "latest" tag — the newest existing
+// block keeps it. In normal mode the new top block becomes "latest".
+const newBlocks = orderedDays.map((d, i) =>
+  releaseBlockHtml(d, byDay.get(d), !BACKFILL_ALL && i === 0)
+);
 
-// Insert immediately after the subtitle <p>, replacing the existing "latest" tag elsewhere.
-let html = stripLatestTag(original);
-const anchor = '<p class="updates-subtitle">Every update since launch, most recent first.</p>';
-const idx = html.indexOf(anchor);
-if (idx === -1) {
-  console.error('Could not find subtitle anchor. Aborting to avoid corrupting the page.');
-  process.exit(2);
+let html = BACKFILL_ALL ? original : stripLatestTag(original);
+let insertAt;
+
+if (BACKFILL_ALL) {
+  // Slot the new (old-dated) blocks right BEFORE the "May 2026" launch sentinel
+  // so the existing hand-written newer entries stay at the top and the catch-all
+  // launch block stays at the very bottom.
+  const launchMarker = '<span class="release-date">May 2026</span>';
+  const launchIdx = html.indexOf(launchMarker);
+  if (launchIdx !== -1) {
+    // Walk back to the start of the <!-- ... --> comment that precedes the launch block.
+    const blockStart = html.lastIndexOf('<div class="release">', launchIdx);
+    const commentStart = html.lastIndexOf('<!--', blockStart);
+    insertAt = (commentStart !== -1 && blockStart - commentStart < 200) ? commentStart : blockStart;
+  } else {
+    // No sentinel — insert right before </main>
+    insertAt = html.indexOf('</main>');
+    if (insertAt === -1) {
+      console.error('Cannot find insertion point. Aborting.');
+      process.exit(2);
+    }
+  }
+} else {
+  const anchor = '<p class="updates-subtitle">Every update since launch, most recent first.</p>';
+  const idx = html.indexOf(anchor);
+  if (idx === -1) {
+    console.error('Could not find subtitle anchor. Aborting to avoid corrupting the page.');
+    process.exit(2);
+  }
+  insertAt = idx + anchor.length;
 }
-const insertAt = idx + anchor.length;
+
 const prefix = html.slice(0, insertAt);
 const suffix = html.slice(insertAt);
-const merged = prefix + '\n\n' + newBlocks.join('\n') + suffix.replace(/^\n+/, '\n');
+const joined = newBlocks.join('\n');
+const merged = BACKFILL_ALL
+  ? (prefix + joined + '\n' + suffix.replace(/^\s+/, '    '))
+  : (prefix + '\n\n' + joined + suffix.replace(/^\n+/, '\n'));
 
 if (DRY) {
   process.stdout.write(merged);
