@@ -6,12 +6,18 @@ const mongoose = require('mongoose');
 const DiscordXP = require('../models/DiscordXP');
 const { fetchTMDB } = require('../services/tmdbClient');
 
-const GUILD_ID      = process.env.DISCORD_GUILD_ID     || '1511802012637860001';
-const LEVELUP_CH    = process.env.DISCORD_LEVELUP_CH   || '1511802515677642985';
-const REGULAR_ROLE  = process.env.DISCORD_REGULAR_ROLE || '1511802418533372084';
-const VERIFIED_ROLE = process.env.DISCORD_VERIFIED_ROLE|| '1511802416197144708';
-const VIP_ROLE      = process.env.DISCORD_VIP_ROLE     || '1511802420957544519';
-const STATUS_CH     = process.env.DISCORD_STATUS_CH    || '1511802446366642357';
+const GUILD_ID      = process.env.DISCORD_GUILD_ID      || '1511802012637860001';
+const LEVELUP_CH    = process.env.DISCORD_LEVELUP_CH    || '1511802515677642985';
+const REGULAR_ROLE  = process.env.DISCORD_REGULAR_ROLE  || '1511802418533372084';
+const VERIFIED_ROLE = process.env.DISCORD_VERIFIED_ROLE || '1511802416197144708';
+const VIP_ROLE      = process.env.DISCORD_VIP_ROLE      || '1511802420957544519';
+const STATUS_CH     = process.env.DISCORD_STATUS_CH     || '1511802446366642357';
+const SUGGEST_CH    = process.env.DISCORD_SUGGEST_CH    || '1511802490092261540';
+const REPORT_CH     = process.env.DISCORD_REPORT_CH     || '1511802487961817139';
+const CHANGELOG_CH  = process.env.DISCORD_CHANGELOG_CH  || '1511983116795904100';
+const SCREENSHOTS_CH= process.env.DISCORD_SCREENSHOTS_CH|| '1511982889833599018';
+const SOURCE_DOWN_ROLE = process.env.DISCORD_SOURCE_DOWN_ROLE || '1511814123032412221';
+const UPDATE_PINGS_ROLE= process.env.DISCORD_UPDATE_PINGS_ROLE|| '1511814119832031312';
 
 const SITE    = 'https://eli6movies.vercel.app';
 const BACKEND = 'https://eli6movies.onrender.com';
@@ -39,8 +45,8 @@ function buildBar(current, max, length = 14) {
 
 const cooldowns = new Map();
 
-const COLORS = { yellow: 0xE5FF00, green: 0x46D369, blue: 0x5865F2, gold: 0xFFD700 };
-const FOOTER = { text: 'ELI6 Movies', iconURL: `${SITE}/img/favicon.svg` };
+const COLORS = { yellow: 0xE5FF00, green: 0x46D369, blue: 0x5865F2, gold: 0xFFD700, red: 0xed4245 };
+const FOOTER  = { text: 'ELI6 Movies', iconURL: `${SITE}/img/favicon.svg` };
 
 // Pending Discord link codes: code → { discordId, username, expires }
 const pendingLinks = new Map();
@@ -157,19 +163,24 @@ function startBot(token) {
 
     async function onLevelUp(msg, newLevel) {
         try {
-            const ch = await client.channels.fetch(LEVELUP_CH).catch(() => null);
-            if (ch) {
-                await ch.send({
-                    embeds: [new EmbedBuilder()
-                        .setColor(newLevel >= 5 ? COLORS.gold : COLORS.yellow)
-                        .setTitle(newLevel >= 5 ? '⭐ Level Up + Role Unlocked!' : '🎉 Level Up!')
-                        .setDescription(
-                            `${msg.author} reached **Level ${newLevel}**!` +
-                            (newLevel === 5 ? '\n\nYou\'ve been given the 🔥 **Regular** role — welcome to the inner circle.' : '')
-                        )
-                        .setFooter(FOOTER)],
-                });
+            const embed = new EmbedBuilder()
+                .setColor(newLevel >= 5 ? COLORS.gold : COLORS.yellow)
+                .setTitle(newLevel >= 5 ? '⭐ Level Up + Role Unlocked!' : '🎉 Level Up!')
+                .setDescription(
+                    `${msg.author} reached **Level ${newLevel}**!` +
+                    (newLevel === 5 ? '\n\nYou\'ve been given the 🔥 **Regular** role — welcome to the inner circle.' : '')
+                )
+                .setFooter(FOOTER);
+
+            // DM the user — no channel spam
+            try {
+                await msg.author.send({ embeds: [embed] });
+            } catch {
+                // DMs off — fall back to channel
+                const ch = await client.channels.fetch(LEVELUP_CH).catch(() => null);
+                if (ch) await ch.send({ embeds: [embed] });
             }
+
             if (newLevel >= 5) {
                 const guild  = await client.guilds.fetch(GUILD_ID).catch(() => null);
                 const member = await guild?.members.fetch(msg.author.id).catch(() => null);
@@ -238,9 +249,91 @@ function startBot(token) {
             }
         }
 
+        // ── !request <title> ─────────────────────────────────────────────────
+        if (cmd === '!request') {
+            const title = parts.slice(1).join(' ');
+            if (!title) return msg.reply('Usage: `!request <movie or show title>`');
+            try {
+                const ch = await client.channels.fetch(SUGGEST_CH).catch(() => null);
+                if (!ch) return msg.reply('Suggestions channel not found.');
+                const embed = new EmbedBuilder()
+                    .setColor(COLORS.blue)
+                    .setTitle('📬 New Request')
+                    .addFields(
+                        { name: 'Title',       value: title,                      inline: true },
+                        { name: 'Requested by', value: `${msg.author} (${msg.author.username})`, inline: true },
+                    )
+                    .setFooter(FOOTER)
+                    .setTimestamp();
+                const posted = await ch.send({ embeds: [embed] });
+                await posted.react('👍');
+                await posted.react('👎');
+                await msg.reply(`✅ Request posted in <#${SUGGEST_CH}>! Others can vote 👍/👎.`);
+            } catch (err) {
+                console.error('[!request]', err.message);
+                return msg.reply('Could not post request right now.');
+            }
+        }
+
+        // ── !report <title> [server] ─────────────────────────────────────────
+        if (cmd === '!report') {
+            const rest = parts.slice(1).join(' ');
+            if (!rest) return msg.reply('Usage: `!report <title> [server name]`\nExample: `!report Breaking Bad VidSrc`');
+            try {
+                const ch = await client.channels.fetch(REPORT_CH).catch(() => null);
+                if (!ch) return msg.reply('Report channel not found.');
+                const embed = new EmbedBuilder()
+                    .setColor(COLORS.red)
+                    .setTitle('🚨 Broken Source Report')
+                    .addFields(
+                        { name: 'Content',      value: rest,                                   inline: true },
+                        { name: 'Reported by',  value: `${msg.author} (${msg.author.username})`, inline: true },
+                        { name: 'From channel', value: `<#${msg.channelId}>`,                  inline: true },
+                    )
+                    .setFooter(FOOTER)
+                    .setTimestamp();
+                await ch.send({ embeds: [embed] });
+                await msg.reply(`✅ Report logged in <#${REPORT_CH}>. Thanks — the team will check it.`);
+            } catch (err) {
+                console.error('[!report]', err.message);
+                return msg.reply('Could not file report right now.');
+            }
+        }
+
+        // ── !faq ──────────────────────────────────────────────────────────────
+        if (cmd === '!faq') {
+            return msg.reply({
+                embeds: [new EmbedBuilder()
+                    .setColor(COLORS.blue)
+                    .setTitle('❓ Frequently Asked Questions')
+                    .addFields(
+                        {
+                            name:  'Why is a source broken?',
+                            value: 'Third-party embed providers go down all the time. Hit the ▶ button in the player to switch to a different server — there are 15+ options.',
+                        },
+                        {
+                            name:  'Why are there ads?',
+                            value: `We don't control ads in embed players. Install **uBlock Origin** — it blocks basically all of them. [Get it here](${SITE}) (the site has a guide on install).`,
+                        },
+                        {
+                            name:  'How do I request a title?',
+                            value: `Use \`!request <title>\` right here — it posts to <#${SUGGEST_CH}> and others can upvote it.`,
+                        },
+                        {
+                            name:  'How do I get VIP?',
+                            value: `Link your ELI6 Movies account (\`!link\`) **and** connect Trakt from your account page — VIP gets assigned automatically when both are done.`,
+                        },
+                        {
+                            name:  'Why was my account removed?',
+                            value: `Email **eli6movies@proton.me** or post in <#${msg.channelId === '1511802495473811520' ? msg.channelId : '1511802495473811520'}> — we'll sort it.`,
+                        },
+                    )
+                    .setFooter(FOOTER)],
+            });
+        }
+
         // ── !link ─────────────────────────────────────────────────────────────
         if (cmd === '!link') {
-            // Clean up expired codes
             for (const [k, v] of pendingLinks) {
                 if (v.expires < Date.now()) pendingLinks.delete(k);
             }
@@ -335,9 +428,6 @@ function startBot(token) {
             });
         }
 
-        if (cmd === '!report')
-            return msg.reply('Drop the title, type, and which server failed in <#1511802487961817139> and the team will look into it.');
-
         if (cmd === '!trakt')
             return msg.reply(`Connect your Trakt account at **Account → Connected apps** on the site: ${SITE}/account.html`);
 
@@ -347,16 +437,18 @@ function startBot(token) {
                     .setColor(COLORS.blue)
                     .setTitle('🤖 ELI6 Bot Commands')
                     .addFields(
-                        { name: '!watch <title>', value: 'Search and get a watch link',     inline: true },
-                        { name: '!new',           value: 'Trending titles this week',        inline: true },
-                        { name: '!status',        value: 'Live service status',              inline: true },
-                        { name: '!rank',          value: 'Your level and XP progress',       inline: true },
-                        { name: '!leaderboard',   value: 'Top 10 most active members',       inline: true },
-                        { name: '!link',          value: 'Link your ELI6 Movies account',    inline: true },
-                        { name: '!site',          value: 'Link to ELI6 Movies',              inline: true },
-                        { name: '!report',        value: 'How to report a broken source',    inline: true },
-                        { name: '!trakt',         value: 'How to connect Trakt',             inline: true },
-                        { name: '!help',          value: 'This message',                     inline: true },
+                        { name: '!watch <title>',          value: 'Search and get a watch link',             inline: true },
+                        { name: '!new',                    value: 'Trending titles this week',               inline: true },
+                        { name: '!request <title>',        value: 'Request a movie or show',                 inline: true },
+                        { name: '!report <title> [server]',value: 'Report a broken source',                  inline: true },
+                        { name: '!faq',                    value: 'Answers to common questions',             inline: true },
+                        { name: '!status',                 value: 'Live service status',                     inline: true },
+                        { name: '!rank',                   value: 'Your level and XP progress',              inline: true },
+                        { name: '!leaderboard',            value: 'Top 10 most active members',              inline: true },
+                        { name: '!link',                   value: 'Link your ELI6 Movies account',           inline: true },
+                        { name: '!site',                   value: 'Link to ELI6 Movies',                     inline: true },
+                        { name: '!trakt',                  value: 'How to connect Trakt',                    inline: true },
+                        { name: '!help',                   value: 'This message',                            inline: true },
                     )
                     .setFooter(FOOTER)],
             });
@@ -369,7 +461,7 @@ function startBot(token) {
 // ── Status monitor ────────────────────────────────────────────────────────────
 let lastStatus    = null;
 let statusMsgId   = null;
-let prevStatusKey = null; // compact string to detect changes
+let prevStatusKey = null;
 
 async function httpCheck(url, timeout = 7000) {
     try {
@@ -407,7 +499,6 @@ async function startStatusMonitor(client) {
     const ch = await client.channels.fetch(STATUS_CH).catch(() => null);
     if (!ch) { console.log('[Status] Channel not found'); return; }
 
-    // Find an existing status message posted by this bot
     try {
         const recent = await ch.messages.fetch({ limit: 20 });
         const mine   = recent.find(m => m.author.id === client.user.id && m.embeds.length > 0);
@@ -429,14 +520,12 @@ async function runStatusCheck(ch) {
     const s = { frontend: frontendOk, db: dbOk, tmdb: tmdbOk, anime: animeOk, ts: Date.now() };
     const key = statusKey(s);
 
-    // Detect changes for incident/recovery messages
     if (prevStatusKey !== null && prevStatusKey !== key) {
         await postIncidentMessage(ch, s, key);
     }
     prevStatusKey = key;
     lastStatus    = s;
 
-    // Edit pinned embed or post new one
     const embed = buildStatusEmbed(s);
     if (statusMsgId) {
         try {
@@ -455,10 +544,9 @@ async function runStatusCheck(ch) {
 }
 
 async function postIncidentMessage(ch, s, key) {
-    const allOk   = s.frontend && s.db && s.tmdb && s.anime;
-    const wasAllOk = prevStatusKey === '1111';
-    const icon    = ok => ok ? '🟢' : '🔴';
-    const lines   = [
+    const allOk = s.frontend && s.db && s.tmdb && s.anime;
+    const icon  = ok => ok ? '🟢' : '🔴';
+    const lines = [
         `${icon(s.frontend)} Frontend`,
         `${icon(s.db)} Database`,
         `${icon(s.tmdb)} TMDB`,
@@ -470,7 +558,13 @@ async function postIncidentMessage(ch, s, key) {
         .setTitle(allOk ? '✅ All systems recovered' : '🚨 Incident detected')
         .setDescription(lines)
         .setTimestamp();
-    await ch.send({ embeds: [embed] }).catch(() => {});
+
+    // Ping Source Down role on outage, Update Pings on recovery
+    const rolePing = allOk
+        ? `<@&${UPDATE_PINGS_ROLE}> Site is back online.`
+        : `<@&${SOURCE_DOWN_ROLE}> Something went down — checking now.`;
+
+    await ch.send({ content: rolePing, embeds: [embed] }).catch(() => {});
 }
 
 // ── AutoMod ────────────────────────────────────────────────────────────────────
@@ -527,8 +621,8 @@ async function checkAndPostPoll(client) {
     const now     = new Date();
     const weekKey = `${now.getUTCFullYear()}-W${getISOWeek(now)}`;
     if (lastPollWeek === weekKey) return;
-    if (now.getUTCDay() !== 0) return;                             // Sunday only
-    if (now.getUTCHours() < 12 || now.getUTCHours() > 13) return; // ~12:00 UTC
+    if (now.getUTCDay() !== 0) return;
+    if (now.getUTCHours() < 12 || now.getUTCHours() > 13) return;
 
     lastPollWeek = weekKey;
     try {
@@ -545,6 +639,7 @@ async function checkAndPostPoll(client) {
         if (!ch) return;
 
         const pollMsg = await ch.send({
+            content: `<@&${UPDATE_PINGS_ROLE}>`,
             embeds: [new EmbedBuilder()
                 .setColor(COLORS.yellow)
                 .setTitle('🗳️ Weekly Poll — Which one are you watching?')
