@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 
 const TARGET_USERNAME = 'eli6';
-const TARGET_EMAIL    = 'xshaburu@gmail.com';
+const TARGET_EMAIL    = ''; // set to an email to promote by email, otherwise promotes by username
 
 (async () => {
     if (!process.env.MONGODB_URI) {

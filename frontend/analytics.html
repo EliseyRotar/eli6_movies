@@ -1110,6 +1110,8 @@ let adminUsersFiltered = [];
 let adminUsersLoaded = false;
 
 async function loadAdminUsers(){
+  if(adminUsersLoaded) return;
+  adminUsersLoaded = true;
   const tbody = document.getElementById('usersBody');
   if(tbody) tbody.innerHTML = '<tr><td colspan="7" style="padding:32px;text-align:center"><div class="spinner" style="margin:0 auto"></div></td></tr>';
   try{
@@ -1122,6 +1124,7 @@ async function loadAdminUsers(){
     if(statsEl) statsEl.innerHTML = `&nbsp;— ${fmt(data.length)} total · <span style="color:var(--accent)">${admins} admin${admins!==1?'s':''}</span>`;
     adminUsersLoaded = true;
   }catch(e){
+    adminUsersLoaded = false;
     if(tbody) tbody.innerHTML = `<tr><td colspan="7" class="empty" style="padding:20px">Failed to load: ${esc(e.message)}</td></tr>`;
   }
 }
@@ -1213,7 +1216,7 @@ async function changeAdminRole(sel){
   // Wire up dynamic buttons rendered by renderShell
   document.getElementById('migrateBtn')?.addEventListener('click', runMigration);
   document.getElementById('debugIpBtn')?.addEventListener('click', debugIp);
-  document.getElementById('refreshUsersBtn')?.addEventListener('click', loadAdminUsers);
+  document.getElementById('refreshUsersBtn')?.addEventListener('click', ()=>{ adminUsersLoaded=false; loadAdminUsers(); });
   document.getElementById('userSearch')?.addEventListener('input', filterAdminUsers);
   document.getElementById('userRoleFilter')?.addEventListener('change', filterAdminUsers);
 
