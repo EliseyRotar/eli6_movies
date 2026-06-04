@@ -58,7 +58,7 @@
     /(^|\.)embedsportex\.site$/i,
     /(^|\.)embedme\.top$/i,
     /(^|\.)embed\.su$/i,
-    /(^|\.)vidsrc\./i,
+    /(^|\.)vidsrc\.[a-z]{2,}$/i,
     /(^|\.)vixsrc\.to$/i,
     /(^|\.)autoembed\.co$/i,
     /(^|\.)multiembed\.mov$/i,
@@ -281,14 +281,14 @@
       var [liveRes, todayRes] = await Promise.all(endpoints.map(function (u) { return fetch(u); }));
       var live = liveRes.ok ? (await liveRes.json() || []) : [];
       var all = todayRes.ok ? (await todayRes.json() || []) : [];
-      var liveIds = new Set(live.map(function (m) { return m.id; }));
+      var liveIds = liveRes.ok ? new Set(live.map(function (m) { return m.id; })) : null;
 
       var CAT_NORMALIZE = { 'motor-sports': 'motorsports' };
 
       var mapped = (Array.isArray(all) ? all : []).map(function (m) {
         var cat = m.category || 'other';
         return Object.assign({}, m, {
-          isLive: liveIds.has(m.id),
+          isLive: liveIds ? liveIds.has(m.id) : (m.isLive || false),
           provider: 'streamed',
           category: CAT_NORMALIZE[cat] || cat,
         });
@@ -326,6 +326,7 @@
     try {
       var r = await fetch(ESX + '/streams');
       if (!r.ok) return [];
+      if (!(r.headers.get('content-type') || '').includes('json')) return [];
       var data = await r.json();
       var out = [];
       var now = Date.now();
@@ -1050,13 +1051,15 @@
     document.body.appendChild(modal);
 
     modal.addEventListener('click', function (e) { if (e.target === modal) closePlayer(); });
-    document.addEventListener('keydown', function (e) {
+    function _modalKeydown(e) {
       if (modal.hidden) return;
       if (e.key === 'Escape') closePlayer();
       else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleTheater(); }
       else if (e.key === 'ArrowRight') { switchSourceByOffset(1); }
       else if (e.key === 'ArrowLeft') { switchSourceByOffset(-1); }
-    });
+    }
+    document.addEventListener('keydown', _modalKeydown);
+    modal._keydownHandler = _modalKeydown;
 
     return modal;
   }
@@ -1088,6 +1091,7 @@
 
     var sourcesEl = document.getElementById('live-sources');
     var loading = document.getElementById('live-player-loading');
+    if (!loading || !sourcesEl) return;
 
     var oldFr = document.querySelector('#live-player-wrap iframe');
     if (oldFr) oldFr.remove();
@@ -1221,6 +1225,10 @@
     if (modal) {
       modal.hidden = true;
       modal.classList.remove('live-modal--theater');
+      if (modal._keydownHandler) {
+        document.removeEventListener('keydown', modal._keydownHandler);
+        delete modal._keydownHandler;
+      }
     }
     var fr = document.querySelector('#live-player-wrap iframe');
     if (fr) fr.remove();

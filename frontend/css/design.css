@@ -1099,6 +1099,7 @@ html[data-theme="marquee"] .settings__preset-name { letter-spacing: 0.05em; text
   min-width: 220px;
 }
 .e6-toast.show { opacity: 1; transform: translateY(0); }
+@media (min-width: 900px) { .e6-toast { top: 24px; right: 24px; } }
 
 /* loading */
 .e6-loading {
@@ -1134,6 +1135,7 @@ html[data-theme="marquee"] .settings__preset-name { letter-spacing: 0.05em; text
   pointer-events: none;
 }
 .mylist-undo-toast.show { opacity: 1; pointer-events: auto; }
+@media (min-width: 900px) { .mylist-undo-toast { bottom: 32px; } }
 .mylist-undo-btn {
   background: none; border: 1px solid var(--border);
   color: var(--accent); padding: 4px 12px;
