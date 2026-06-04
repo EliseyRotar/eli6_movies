@@ -127,14 +127,81 @@
 
   function applyCardImage(card, imgUrl, cat) {
     if (!imgUrl || !card.isConnected) return;
+    // Replace the lower-tier composite/icon with a real fanart photo
+    card.classList.remove('match-card--vs-composite', 'match-card--empty-bg');
     var grad = CAT_GRAD[cat] || CAT_GRAD['other'];
     card.style.backgroundImage =
       'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.78) 60%,#080808 100%),url(' + imgUrl + '),' + grad;
     card.style.backgroundSize = 'cover,cover,cover';
     card.style.backgroundPosition = 'center,center top,center';
+    card.style.backgroundRepeat = '';
   }
 
-  // IntersectionObserver — only fetches when card is near viewport
+  // Apply the streamed.pk two-badge composite as the card background.
+  function applyBadgeComposite(card, m) {
+    if (!card.isConnected) return;
+    var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
+    card.style.backgroundImage =
+      'linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.55) 55%,#080808 100%),' +
+      'url(' + m.homeBadgeUrl + '),' +
+      'url(' + m.awayBadgeUrl + '),' + grad;
+    card.style.backgroundSize = 'cover,90px,90px,cover';
+    card.style.backgroundPosition = 'center,18% 38%,82% 38%,center';
+    card.style.backgroundRepeat = 'no-repeat,no-repeat,no-repeat,no-repeat';
+    card.classList.remove('match-card--pending-bg');
+  }
+
+  // Throttle badge loads — streamed.pk DDoS-guards parallel image bursts and
+  // ~half of requests fail with ERR_HTTP2_PROTOCOL_ERROR if we fire >5 at once.
+  // Probe each badge via new Image() so we can detect failure and fall back to
+  // the sport-icon overlay instead of leaving the card mid-state.
+  var _badgeQueue = [];
+  var _badgeInFlight = 0;
+  var BADGE_MAX_CONCURRENT = 3;
+  var _badgeProbed = Object.create(null);
+
+  function probeImage(url) {
+    if (!url) return Promise.resolve(false);
+    if (_badgeProbed[url] !== undefined) return Promise.resolve(_badgeProbed[url]);
+    return new Promise(function (resolve) {
+      var img = new Image();
+      var done = false;
+      var to = setTimeout(function () { if (!done) { done = true; _badgeProbed[url] = false; resolve(false); } }, 7000);
+      img.onload = function () { if (!done) { done = true; clearTimeout(to); _badgeProbed[url] = true; resolve(true); } };
+      img.onerror = function () { if (!done) { done = true; clearTimeout(to); _badgeProbed[url] = false; resolve(false); } };
+      img.src = url;
+    });
+  }
+  function _drainBadgeQueue() {
+    while (_badgeInFlight < BADGE_MAX_CONCURRENT && _badgeQueue.length) {
+      var task = _badgeQueue.shift();
+      _badgeInFlight++;
+      (function (t) {
+        Promise.all([probeImage(t.m.homeBadgeUrl), probeImage(t.m.awayBadgeUrl)])
+          .then(function (results) {
+            if (!t.card.isConnected) return;
+            if (results[0] && results[1]) {
+              applyBadgeComposite(t.card, t.m);
+            } else {
+              // Both badges failed → degrade to the sport-icon overlay
+              t.card.classList.remove('match-card--vs-composite', 'match-card--pending-bg');
+              t.card.classList.add('match-card--empty-bg');
+            }
+          })
+          .then(function () { _badgeInFlight--; _drainBadgeQueue(); }, function () { _badgeInFlight--; _drainBadgeQueue(); });
+      })(task);
+    }
+  }
+  function queueBadgeComposite(card, m) {
+    _badgeQueue.push({ card: card, m: m });
+    _drainBadgeQueue();
+  }
+
+  // IntersectionObserver — only triggers when card is near viewport. Two phases:
+  //   1. If the match has streamed.pk team badges, apply the badge composite first
+  //      (lazy so DDoS-guard doesn't 503 a hundred parallel requests).
+  //   2. If the title is "X vs Y" and the sport supports team fanart, fetch TSDB
+  //      strFanart for the home team and upgrade to that. Falls back to away team.
   var _cardObserver = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (!entry.isIntersecting) return;
@@ -142,10 +209,19 @@
       var card = entry.target;
       var m = card.__match;
       if (!m || m.poster) return;
+      // Phase 1: badge composite (queued + probed so failures don't leave the
+      // card in a half-broken state and bursts don't trip streamed.pk's DDoS-guard)
+      if (m.homeBadgeUrl && m.awayBadgeUrl && card.classList.contains('match-card--pending-bg')) {
+        queueBadgeComposite(card, m);
+      }
+      // Phase 2: TSDB fanart upgrade (only for team sports with "X vs Y" titles)
       if (!TEAM_SPORTS[m.category]) return;
       var vs = (m.title || '').match(/^(.+?)\s+vs\.?\s+(.+)$/i);
       if (!vs) return;
-      fetchTeamBanner(vs[1].trim()).then(function (url) { applyCardImage(card, url, m.category); });
+      fetchTeamBanner(vs[1].trim()).then(function (url) {
+        if (url) return applyCardImage(card, url, m.category);
+        return fetchTeamBanner(vs[2].trim()).then(function (u2) { applyCardImage(card, u2, m.category); });
+      });
     });
   }, { rootMargin: '200px' });
 
@@ -345,8 +421,17 @@
         if (poster && typeof poster === 'string' && poster.charAt(0) === '/') {
           poster = STREAMED_ORIGIN + poster;
         }
+        // Extract team badges to use as a "VS composite" fallback when no full
+        // match poster is available. These IDs resolve to /api/images/badge/<id>.webp.
+        var teams = m.teams || {};
+        var hb = teams.home && teams.home.badge;
+        var ab = teams.away && teams.away.badge;
+        var homeBadgeUrl = hb ? STREAMED_ORIGIN + '/api/images/badge/' + hb + '.webp' : null;
+        var awayBadgeUrl = ab ? STREAMED_ORIGIN + '/api/images/badge/' + ab + '.webp' : null;
         return Object.assign({}, m, {
           poster: poster,
+          homeBadgeUrl: homeBadgeUrl,
+          awayBadgeUrl: awayBadgeUrl,
           isLive: liveIds ? liveIds.has(m.id) : (m.isLive || false),
           provider: 'streamed',
           category: CAT_NORMALIZE[cat] || cat,
@@ -957,11 +1042,20 @@
 
     var liveData = scoreFor(m);
     if (m.poster) {
+      // Tier 1: real match-promo image from streamed.pk or ESX (loaded upfront)
       card.style.backgroundImage =
         'linear-gradient(180deg,rgba(0,0,0,.1) 0%,rgba(0,0,0,.75) 60%,#080808 100%),url(' + m.poster + '),' + grad;
       card.style.backgroundSize = 'cover,cover,cover';
       card.style.backgroundPosition = 'center,center top,center';
+    } else if (m.homeBadgeUrl && m.awayBadgeUrl) {
+      // Tier 2: two team badges → composite (applied lazily on intersect so
+      // streamed.pk's DDoS-guard doesn't 503 a hundred parallel badge requests).
+      card.classList.add('match-card--vs-composite', 'match-card--pending-bg');
+      card.style.backgroundImage = grad;
     } else {
+      // Tier 3: gradient + big faded sport icon centered. Looks intentional
+      // rather than empty for events like F1, UFC, golf, single-player tennis.
+      card.classList.add('match-card--empty-bg');
       card.style.backgroundImage = grad;
     }
 
