@@ -115,29 +115,6 @@
     active = active || activePage();
     const theme = currentTheme();
 
-    const BROWSE_CATS = [
-      { label: "Home",     href: "index.html",    k: "home" },
-      { label: "Movies",   href: "movies.html",   k: "movies" },
-      { label: "TV Shows", href: "tvshows.html",  k: "tvshows" },
-      { label: "Anime",    href: "anime.html",    k: "anime" },
-      { label: "Live",     href: "live.html",     k: "live" },
-      { label: "My List",  href: "mylist.html",   k: "mylist" },
-    ];
-    const BROWSE_GENRES = [
-      { label: "Action",      href: "movies.html?genre=28" },
-      { label: "Comedy",      href: "movies.html?genre=35" },
-      { label: "Horror",      href: "movies.html?genre=27" },
-      { label: "Sci-Fi",      href: "movies.html?genre=878" },
-      { label: "Thriller",    href: "movies.html?genre=53" },
-      { label: "Drama",       href: "movies.html?genre=18" },
-      { label: "Animation",   href: "movies.html?genre=16" },
-      { label: "Romance",     href: "movies.html?genre=10749" },
-      { label: "Crime",       href: "movies.html?genre=80" },
-      { label: "Adventure",   href: "movies.html?genre=12" },
-      { label: "K-Drama",     href: "tvshows.html?origin=KR" },
-      { label: "Bollywood",   href: "movies.html?lang=hi" },
-    ];
-
     const nav = el("nav", "topnav");
 
     // left
@@ -152,67 +129,20 @@
 
     const navLinks = el("div", "topnav__links");
 
-    // Home link
-    const homeA = el("a", "topnav__link" + (active === "home" ? " topnav__link--active" : ""));
-    homeA.href = "index.html";
-    homeA.textContent = "Home";
-    navLinks.appendChild(homeA);
+    function tNav(k, fb) { return (window.i18n ? window.i18n.t("nav." + k) : "") || fb; }
 
-    // Browse mega-dropdown
-    const browseWrap = el("div", "topnav__browse-wrap");
-    const browseBtn  = el("button", "topnav__link topnav__browse-btn" + (["movies","tvshows","anime","live"].includes(active) ? " topnav__link--active" : ""));
-    browseBtn.type = "button";
-    browseBtn.innerHTML = 'Browse <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:middle;margin-left:2px"><polyline points="6 9 12 15 18 9"/></svg>';
-
-    const megaMenu = el("div", "topnav__mega");
-    const megaLeft  = el("div", "topnav__mega-col");
-    const megaRight = el("div", "topnav__mega-col");
-
-    const catHead = el("div", "topnav__mega-head"); catHead.textContent = "Browse";
-    megaLeft.appendChild(catHead);
-    BROWSE_CATS.forEach(function(c) {
-      const a = el("a", "topnav__mega-link" + (active === c.k ? " topnav__mega-link--active" : ""));
-      a.href = c.href;
-      a.textContent = c.label;
-      megaLeft.appendChild(a);
-    });
-
-    const genreHead = el("div", "topnav__mega-head"); genreHead.textContent = "Genres";
-    megaRight.appendChild(genreHead);
-    const genreGrid = el("div", "topnav__mega-genres");
-    BROWSE_GENRES.forEach(function(g) {
-      const a = el("a", "topnav__mega-genre");
-      a.href = g.href;
-      a.textContent = g.label;
-      genreGrid.appendChild(a);
-    });
-    megaRight.appendChild(genreGrid);
-
-    megaMenu.appendChild(megaLeft);
-    megaMenu.appendChild(megaRight);
-    browseWrap.appendChild(browseBtn);
-    browseWrap.appendChild(megaMenu);
-    navLinks.appendChild(browseWrap);
-
-    // Remaining top-level links
     [
-      { k: "mylist",  label: "My List",  href: "mylist.html" },
-      { k: "contact", label: "Feedback", href: "contact.html" },
-      { k: "updates", label: "Updates",  href: "updates.html" },
+      { k: "home",    label: tNav("home",    "Home"),     href: "index.html"   },
+      { k: "movies",  label: tNav("movies",  "Movies"),   href: "movies.html"  },
+      { k: "tvshows", label: tNav("tvshows", "TV Shows"), href: "tvshows.html" },
+      { k: "anime",   label: tNav("anime",   "Anime"),    href: "anime.html"   },
+      { k: "live",    label: tNav("live",    "Sports"),   href: "live.html"    },
+      { k: "mylist",  label: tNav("mylist",  "My List"),  href: "mylist.html"  },
     ].forEach(function(l) {
       const a = el("a", "topnav__link" + (active === l.k ? " topnav__link--active" : ""));
       a.href = l.href;
       a.textContent = l.label;
       navLinks.appendChild(a);
-    });
-
-    // Close mega on outside click
-    document.addEventListener("click", function(e) {
-      if (!browseWrap.contains(e.target)) megaMenu.classList.remove("topnav__mega--open");
-    });
-    browseBtn.addEventListener("click", function(e) {
-      e.stopPropagation();
-      megaMenu.classList.toggle("topnav__mega--open");
     });
 
     left.appendChild(logo);
