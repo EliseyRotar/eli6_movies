@@ -114,10 +114,13 @@ function isoDay(ciDate) {
 }
 
 // Filter commits that shouldn't appear on the public changelog.
+//
+// The `[skip changelog]` marker is matched only against the SUBJECT, not the
+// body — otherwise a real commit that just MENTIONS the marker in its body
+// (e.g. a feat commit documenting the convention) gets swallowed.
 function isSkippable(c) {
   const subj = c.subject;
-  const body = c.body;
-  if (/\[skip changelog\]/i.test(subj) || /\[skip changelog\]/i.test(body)) return true;
+  if (/\[skip changelog\]/i.test(subj)) return true;
   if (/^(merge|revert|wip|chore: update changelog)\b/i.test(subj)) return true;
   if (/^dependabot\[bot\]/i.test(subj)) return true;
   // Skip non-user-facing meta commits

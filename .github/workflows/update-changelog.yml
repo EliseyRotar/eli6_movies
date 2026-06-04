@@ -13,9 +13,12 @@ permissions:
 jobs:
   generate:
     runs-on: ubuntu-latest
-    # Skip when the pushed commit was authored by this workflow itself
-    # (so the auto-update commit doesn't trigger another run).
-    if: "!contains(github.event.head_commit.message, '[skip changelog]')"
+    # No `if:` guard here. The marker check used to be
+    #   if: !contains(head_commit.message, '[skip changelog]')
+    # but that also matches the marker inside commit bodies, so a real
+    # commit that just MENTIONS [skip changelog] in its body was being
+    # skipped by accident. The loop-prevention is now handled inside
+    # the generator's isSkippable(), which checks the SUBJECT only.
 
     steps:
       - name: Check out full history
