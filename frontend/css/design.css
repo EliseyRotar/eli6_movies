@@ -169,7 +169,7 @@ html[data-theme="marquee"] .topnav__link--active::after { display: none; }
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
 }
 html[data-theme="pulse"] .bottomnav {
   margin: 10px 12px 14px;
@@ -184,16 +184,16 @@ html[data-theme="marquee"] .bottomnav {
 }
 @media (min-width: 900px) { .bottomnav { display: none; } }
 .bottomnav__item {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--fg-muted); font-size: 20px; background: transparent; border: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--fg-muted); font-size: 18px; background: transparent; border: 0;
   text-decoration: none;
   transition: color 150ms ease;
 }
-.bottomnav__item-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+.bottomnav__item svg { width: 20px !important; height: 20px !important; }
+.bottomnav__item-label { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; }
 html[data-theme="marquee"] .bottomnav__item { font-family: var(--font-mono); }
 html[data-theme="marquee"] .bottomnav__item-label { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; }
 .bottomnav__item--active { color: var(--accent); }
-.bottomnav__item svg { display: block; }
 .topnav__icon-btn svg { display: block; }
 .topnav__search-wide svg { display: block; }
 
