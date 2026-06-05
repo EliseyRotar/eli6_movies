@@ -43,10 +43,15 @@ class PlayerActivity : ComponentActivity() {
                 mediaPlaybackRequiresUserGesture = false
                 useWideViewPort = true
                 loadWithOverviewMode = true
-                userAgentString = settings.userAgentString + " eli6movies-android/${BuildConfig.VERSION_NAME}"
+                // Strip the "; wv)" WebView marker so embed providers don't blocklist us
+                userAgentString = settings.userAgentString
+                    .replace(Regex("\\s*;\\s*wv\\)"), ")") +
+                    " eli6movies/${BuildConfig.VERSION_NAME}"
                 allowFileAccess = false
                 allowContentAccess = false
             }
+            android.webkit.CookieManager.getInstance().setAcceptCookie(true)
+            android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
             webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val url = request.url ?: return false

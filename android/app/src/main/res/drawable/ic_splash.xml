@@ -1,12 +1,18 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="200dp"
-    android:height="200dp"
-    android:viewportWidth="200"
-    android:viewportHeight="200">
+    android:width="240dp"
+    android:height="240dp"
+    android:viewportWidth="240"
+    android:viewportHeight="240">
+    <!-- Rounded background, matches the favicon -->
     <path
-        android:fillColor="#7C6FF7"
-        android:pathData="M50,60 L150,60 L150,90 L80,90 L80,90 L150,90 L150,140 L50,140 Z"/>
+        android:fillColor="#0A0A0E"
+        android:pathData="M0,40 C0,18 18,0 40,0 L200,0 C222,0 240,18 240,40 L240,200 C240,222 222,240 200,240 L40,240 C18,240 0,222 0,200 Z" />
+    <!-- "E" -->
     <path
-        android:fillColor="#FFD93D"
-        android:pathData="M85,100 L120,100 L120,120 L85,120 Z"/>
+        android:fillColor="#E5FF00"
+        android:pathData="M55,75 L55,165 L115,165 L115,148 L73,148 L73,128 L108,128 L108,112 L73,112 L73,92 L115,92 L115,75 Z" />
+    <!-- "6" -->
+    <path
+        android:fillColor="#E5FF00"
+        android:pathData="M138,75 L185,75 L185,92 L160,92 L160,108 L172,108 C181,108 187,116 187,128 C187,150 178,165 161,165 C144,165 135,150 135,128 L135,103 C135,88 138,75 138,75 Z M161,123 L161,148 C167,148 169,140 169,128 C169,118 167,123 161,123 Z" />
 </vector>

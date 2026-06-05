@@ -26,9 +26,9 @@ interface ApiService {
     @GET("tmdb/movie/top_rated")
     suspend fun topRatedMovies(@Query("page") page: Int = 1): CatalogResponse
 
-    // Anime via Jikan proxy
-    @GET("anime/top")
-    suspend fun topAnime(): CatalogResponse
+    // Anime via AniList proxy
+    @GET("anime/trending")
+    suspend fun topAnime(): List<CatalogItem>
 
     // Auth
     @POST("auth/login")

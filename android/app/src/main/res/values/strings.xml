@@ -5,7 +5,7 @@
     <!-- Bottom nav -->
     <string name="nav_home">Home</string>
     <string name="nav_browse">Browse</string>
-    <string name="nav_live">Live</string>
+    <string name="nav_live">Sports</string>
     <string name="nav_mylist">My List</string>
     <string name="nav_profile">Profile</string>
 

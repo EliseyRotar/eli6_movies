@@ -45,12 +45,13 @@ router.get('/trending', async (req, res) => {
                 ? [sd.year, String(sd.month || 1).padStart(2, '0'), String(sd.day || 1).padStart(2, '0')].join('-')
                 : '';
             return {
-                id:             String(a.id),
+                id:             a.id,
                 title:          a.title?.english || a.title?.romaji || '',
                 poster_path:    a.coverImage?.large || null,
                 overview:       (a.description || '').replace(/<[^>]*>/g, '').slice(0, 500),
                 vote_average:   a.averageScore ? +(a.averageScore / 10).toFixed(1) : null,
                 first_air_date: dateStr,
+                type:           'anime',
                 link_url:       null,
             };
         });
