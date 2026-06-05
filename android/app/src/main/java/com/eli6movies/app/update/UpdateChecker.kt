@@ -129,18 +129,61 @@ object UpdateChecker {
         return false
     }
 
-    private fun downloadApk(activity: androidx.activity.ComponentActivity, url: String, tag: String): File? = try {
+    private fun downloadApk(activity: androidx.activity.ComponentActivity, url: String, tag: String): File? {
+      return try {
         val out = File(activity.cacheDir, "updates").also { it.mkdirs() }
+        // Write to a .part file first; rename only after we verify the byte
+        // count matches Content-Length. Stops a truncated download from
+        // turning into a "problem parsing the package" install attempt.
         val target = File(out, "eli6movies-$tag.apk")
+        val part = File(out, "eli6movies-$tag.apk.part")
+        if (target.exists()) target.delete()
+        if (part.exists()) part.delete()
+
         val req = Request.Builder().url(url).build()
         val resp = RetrofitClient.client.newCall(req).execute()
+        if (!resp.isSuccessful) {
+            Log.w(TAG, "download HTTP ${resp.code}")
+            resp.close()
+            return null
+        }
+        val expected = resp.body?.contentLength() ?: -1L
+        var written = 0L
         resp.body?.byteStream()?.use { input ->
-            target.outputStream().use { input.copyTo(it) }
+            part.outputStream().use { output ->
+                val buf = ByteArray(64 * 1024)
+                while (true) {
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    output.write(buf, 0, n)
+                    written += n
+                }
+            }
         }
         resp.close()
+        if (expected > 0 && written != expected) {
+            Log.w(TAG, "download truncated: $written / $expected bytes")
+            part.delete()
+            return null
+        }
+        // APKs are ZIP archives — verify the local-file-header magic.
+        val header = ByteArray(4)
+        part.inputStream().use { it.read(header) }
+        if (!(header[0] == 0x50.toByte() && header[1] == 0x4B.toByte() &&
+              header[2] == 0x03.toByte() && header[3] == 0x04.toByte())) {
+            Log.w(TAG, "download not a valid APK/ZIP")
+            part.delete()
+            return null
+        }
+        if (!part.renameTo(target)) {
+            Log.w(TAG, "could not rename .part to .apk")
+            return null
+        }
+        Log.i(TAG, "downloaded $written bytes ok")
         target
-    } catch (e: Exception) {
+      } catch (e: Exception) {
         Log.e(TAG, "download error", e); null
+      }
     }
 
     private fun installApk(activity: androidx.activity.ComponentActivity, apk: File) {
