@@ -15,9 +15,11 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updatePadding
 import com.eli6movies.app.BuildConfig
 import com.eli6movies.app.util.AdBlock
 
@@ -98,6 +100,16 @@ class PlayerActivity : ComponentActivity() {
         }
         setContentView(webView)
 
+        // Edge-to-edge in landscape only. In portrait, inset the WebView so the
+        // status and nav bars don't sit on top of the video / back button.
+        ViewCompat.setOnApplyWindowInsetsListener(webView) { v, insets ->
+            val sys = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val landscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+            if (landscape) v.updatePadding(0, 0, 0, 0)
+            else v.updatePadding(sys.left, sys.top, sys.right, sys.bottom)
+            insets
+        }
+
         val url = intent?.data?.toString() ?: buildUrl()
         webView.loadUrl(url)
     }
@@ -132,6 +144,7 @@ class PlayerActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         applyImmersiveForOrientation()
+        ViewCompat.requestApplyInsets(webView)
     }
 
     override fun onUserLeaveHint() {

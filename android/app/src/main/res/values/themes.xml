@@ -16,7 +16,8 @@
     </style>
 
     <style name="Theme.Eli6Movies.Player" parent="Theme.Eli6Movies">
-        <item name="android:windowFullscreen">true</item>
         <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:statusBarColor">#000000</item>
+        <item name="android:navigationBarColor">#000000</item>
     </style>
 </resources>
