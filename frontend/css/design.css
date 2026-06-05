@@ -39,6 +39,12 @@ html[data-theme="marquee"][data-mode="light"] body::before {
   .app { padding-bottom: 60px; }
 }
 
+/* embedded inside the Android app — host shell provides chrome */
+html.from-app .app { padding-bottom: 16px; }
+html.from-app .cookie-banner,
+html.from-app .e6-toast,
+html.from-app .mylist-undo-toast { display: none !important; }
+
 /* top-nav */
 .topnav {
   position: sticky; top: 0; z-index: 50;

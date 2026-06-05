@@ -1,7 +1,54 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ELI6 Movies</string>
-    <string name="title_activity_main">ELI6 Movies</string>
-    <string name="package_name">com.eli6.movies</string>
-    <string name="custom_url_scheme">com.eli6.movies</string>
+
+    <!-- Bottom nav -->
+    <string name="nav_home">Home</string>
+    <string name="nav_browse">Browse</string>
+    <string name="nav_live">Live</string>
+    <string name="nav_mylist">My List</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Home -->
+    <string name="row_trending">Trending now</string>
+    <string name="row_popular_movies">Popular movies</string>
+    <string name="row_popular_tv">Popular TV</string>
+    <string name="row_popular_anime">Top anime</string>
+    <string name="row_continue_watching">Continue watching</string>
+
+    <!-- Browse -->
+    <string name="browse_all">All</string>
+    <string name="browse_movies">Movies</string>
+    <string name="browse_tv">TV Shows</string>
+    <string name="browse_anime">Anime</string>
+
+    <!-- Buttons -->
+    <string name="btn_watch">Watch</string>
+    <string name="btn_my_list">My List</string>
+    <string name="btn_share">Share</string>
+
+    <!-- Auth -->
+    <string name="auth_email">Email</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_username">Username</string>
+    <string name="auth_login">Sign in</string>
+    <string name="auth_register">Create account</string>
+    <string name="auth_logout">Sign out</string>
+    <string name="auth_switch_to_register">No account? Create one</string>
+    <string name="auth_switch_to_login">Already have an account? Sign in</string>
+
+    <!-- Update -->
+    <string name="update_title">Update available</string>
+    <string name="update_body">Version %1$s is out. You\'re on %2$s.</string>
+    <string name="update_now">Update</string>
+    <string name="update_later">Later</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_uptodate">You\'re on the latest version</string>
+
+    <!-- Generic -->
+    <string name="loading">Loading…</string>
+    <string name="empty_mylist">Nothing here yet. Add something from Browse.</string>
+    <string name="empty_history">No watch history yet.</string>
+    <string name="offline_banner">You\'re offline — showing cached data</string>
+    <string name="error_generic">Something went wrong. Pull to retry.</string>
 </resources>

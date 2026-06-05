@@ -1,6 +1,24 @@
 // ELI6 Movies — shared vanilla JS component renderers
 // All components read CSS vars from the theme system (theme.js + theme.css + design.css)
 
+// Embedded-in-Android-app detection. When the URL has ?fromApp=1 (set by the WebView),
+// renderTopNav / renderBottomNav / renderFooter become no-ops so the host app's
+// chrome (bottom nav, status bar) is the only chrome shown.
+(function () {
+  try {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('fromApp') === '1') {
+      window._fromApp = true;
+      try { sessionStorage.setItem('_fromApp', '1'); } catch (e) {}
+      document.documentElement.classList.add('from-app');
+    } else if (sessionStorage.getItem('_fromApp') === '1') {
+      // sticky for the rest of the session so internal navigations stay app-mode
+      window._fromApp = true;
+      document.documentElement.classList.add('from-app');
+    }
+  } catch (e) {}
+})();
+
 // Inline SVG icon set — Lucide-style, MIT licensed paths
 // Available globally as window.ICONS so every page script can use them
 (function () {
@@ -112,6 +130,8 @@
     const mountId = "topnav-mount";
     const mount = document.getElementById(mountId);
     if (!mount) return;
+    // Embedded in the Android app — host app provides nav, hide the web nav.
+    if (window._fromApp) { mount.innerHTML = ""; return; }
 
     active = active || activePage();
     const theme = currentTheme();
@@ -230,6 +250,7 @@
     const mountId = "bottomnav-mount";
     const mount = document.getElementById(mountId);
     if (!mount) return;
+    if (window._fromApp) { mount.innerHTML = ""; return; }
 
     active = active || activePage();
 
@@ -977,6 +998,7 @@
   function renderFooter(mountId) {
     const mount = document.getElementById(mountId || "footer-mount");
     if (!mount) return;
+    if (window._fromApp) { mount.innerHTML = ""; return; }
 
     const footer = el("footer", "footer");
 
