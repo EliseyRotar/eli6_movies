@@ -34,6 +34,7 @@ import com.eli6movies.app.ui.screens.home.HomeScreen
 import com.eli6movies.app.ui.screens.live.LiveScreen
 import com.eli6movies.app.ui.screens.mylist.MyListScreen
 import com.eli6movies.app.ui.screens.profile.ProfileScreen
+import com.eli6movies.app.ui.screens.search.SearchScreen
 import androidx.compose.runtime.LaunchedEffect
 
 sealed class Tab(val route: String, val labelRes: Int, val icon: @Composable () -> Unit) {
@@ -56,8 +57,11 @@ fun AppRoot() {
         if (currentRoute != null) Beacon.trackPath("/" + currentRoute)
     }
 
+    val showBottomBar = currentRoute != "search"
+
     Scaffold(
         bottomBar = {
+            if (!showBottomBar) return@Scaffold
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
                 tonalElevation = 0.dp,
@@ -92,11 +96,12 @@ fun AppRoot() {
             startDestination = Tab.Home.route,
             modifier = Modifier.fillMaxSize().padding(padding),
         ) {
-            composable(Tab.Home.route)    { HomeScreen() }
+            composable(Tab.Home.route)    { HomeScreen(onSearch = { nav.navigate("search") }) }
             composable(Tab.Browse.route)  { BrowseScreen() }
             composable(Tab.Live.route)    { LiveScreen() }
             composable(Tab.MyList.route)  { MyListScreen() }
             composable(Tab.Profile.route) { ProfileScreen() }
+            composable("search")          { SearchScreen(onBack = { nav.popBackStack() }) }
         }
     }
 }

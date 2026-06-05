@@ -70,7 +70,7 @@ private val BRAND = Color(0xFFE5FF00)
 private val SURFACE = Color(0xFF15151E)
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onSearch: () -> Unit = {}) {
     val ctx = LocalContext.current
     var trending      by remember { mutableStateOf<List<CatalogItem>>(emptyList()) }
     var popularMovies by remember { mutableStateOf<List<CatalogItem>>(emptyList()) }
@@ -142,7 +142,7 @@ fun HomeScreen() {
             }
         }
 
-        TopBar(scrolled = scrolled, modifier = Modifier.align(Alignment.TopCenter))
+        TopBar(scrolled = scrolled, onSearch = onSearch, modifier = Modifier.align(Alignment.TopCenter))
     }
 }
 
@@ -157,7 +157,7 @@ private fun PosterRow(items: List<CatalogItem>, onClick: (CatalogItem) -> Unit) 
 }
 
 @Composable
-private fun TopBar(scrolled: Boolean, modifier: Modifier = Modifier) {
+private fun TopBar(scrolled: Boolean, onSearch: () -> Unit, modifier: Modifier = Modifier) {
     val bg = if (scrolled) Color(0xFF0A0A0E).copy(alpha = 0.92f) else Color.Transparent
     Row(
         modifier
@@ -186,7 +186,13 @@ private fun TopBar(scrolled: Boolean, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(start = 8.dp),
             )
         }
-        Row {
+        Box(
+            Modifier
+                .size(40.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .clickable { onSearch() },
+            contentAlignment = Alignment.Center,
+        ) {
             Icon(Icons.Outlined.Search, contentDescription = "Search", tint = FG_HI)
         }
     }

@@ -30,6 +30,14 @@ interface ApiService {
     @GET("anime/trending")
     suspend fun topAnime(): List<CatalogItem>
 
+    // Multi-search (movies + TV)
+    @GET("tmdb/search/multi")
+    suspend fun searchMulti(
+        @Query("query") query: String,
+        @Query("include_adult") includeAdult: Boolean = false,
+        @Query("page") page: Int = 1,
+    ): CatalogResponse
+
     // Auth
     @POST("auth/login")
     suspend fun login(@Body body: AuthRequest): AuthResponse
