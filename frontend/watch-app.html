@@ -442,8 +442,12 @@
     const IMG = 'https://image.tmdb.org/t/p';
 
     const PARAMS = new URLSearchParams(location.search);
-    const TYPE = PARAMS.get('type') || 'movie';   // movie | tv | anime
-    const ID = PARAMS.get('id') || '';
+    // Vercel rewrites are server-side, so location.search keeps the *original*
+    // URL's query string (?fromApp=1). The type/id live in the path:
+    //   /app/watch/<type>/<id>   or   /watch-app.html?type=<type>&id=<id>
+    const PATH_MATCH = location.pathname.match(/\/(?:app\/)?watch(?:-app\.html)?\/(movie|tv|anime)\/(\d+)/);
+    const TYPE = (PATH_MATCH && PATH_MATCH[1]) || PARAMS.get('type') || 'movie';
+    const ID   = (PATH_MATCH && PATH_MATCH[2]) || PARAMS.get('id') || '';
     const FROM_APP = PARAMS.get('fromApp') === '1';
 
     // The TMDB endpoint root (anime is fetched as tv, but server URLs may use anime)
@@ -668,7 +672,8 @@
       document.getElementById('similarList').innerHTML = list.map(x => {
         const yr = (x.release_date || x.first_air_date || '').slice(0, 4);
         const name = escapeHtml(x.title || x.name || '');
-        return `<a class="sim-card" href="?type=${t}&id=${x.id}${FROM_APP ? '&fromApp=1' : ''}">
+        const href = `/app/watch/${t}/${x.id}${FROM_APP ? '?fromApp=1' : ''}`;
+        return `<a class="sim-card" href="${href}">
           <img class="sim-card__img" src="${IMG}/w342${x.poster_path}" alt="" loading="lazy">
           <div class="sim-card__title">${name}</div>
           <div class="sim-card__year">${yr}</div>
