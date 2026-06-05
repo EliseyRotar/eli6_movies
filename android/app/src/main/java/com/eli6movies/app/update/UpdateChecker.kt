@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -17,41 +19,73 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-/**
- * Polls the GitHub Releases API for tags prefixed `android-v` and prompts the user to install
- * a newer APK. Works because the project ships releases via the GitHub Actions workflow.
- */
 object UpdateChecker {
 
-    suspend fun checkAndPrompt(activity: androidx.activity.ComponentActivity) {
-        val latest = withContext(Dispatchers.IO) { fetchLatestRelease() } ?: return
-        val (tag, apkUrl, releaseBody) = latest
-        val current = BuildConfig.VERSION_NAME.removeSuffix("-debug")
-        if (!isNewer(tag, current)) return
+    private const val TAG = "Eli6Update"
 
-        activity.runOnUiThread {
-            AlertDialog.Builder(activity)
-                .setTitle("Update available")
-                .setMessage("v$tag is out. You're on $current.\n\n$releaseBody")
-                .setPositiveButton("Update") { _, _ ->
-                    (activity as LifecycleOwner).lifecycleScope.launch {
-                        val file = withContext(Dispatchers.IO) { downloadApk(activity, apkUrl, tag) }
-                        if (file != null) installApk(activity, file)
-                    }
+    suspend fun checkAndPrompt(
+        activity: androidx.activity.ComponentActivity,
+        verbose: Boolean = false,
+    ) {
+        val current = BuildConfig.VERSION_NAME.removeSuffix("-debug")
+        Log.i(TAG, "checking for update; current=$current repo=${BuildConfig.GITHUB_REPO}")
+        val result = withContext(Dispatchers.IO) { fetchLatestRelease() }
+        when (result) {
+            is FetchResult.Error -> {
+                Log.w(TAG, "fetch failed: ${result.reason}")
+                if (verbose) activity.runOnUiThread {
+                    Toast.makeText(activity, "Update check failed: ${result.reason}", Toast.LENGTH_LONG).show()
                 }
-                .setNegativeButton("Later", null)
-                .show()
+                return
+            }
+            is FetchResult.Ok -> {
+                val tag = result.tag
+                val apkUrl = result.apkUrl
+                val releaseBody = result.notes
+                Log.i(TAG, "latest=$tag asset=$apkUrl")
+                if (!isNewer(tag, current)) {
+                    if (verbose) activity.runOnUiThread {
+                        Toast.makeText(activity, "You're on the latest version ($current)", Toast.LENGTH_SHORT).show()
+                    }
+                    return
+                }
+                activity.runOnUiThread {
+                    AlertDialog.Builder(activity)
+                        .setTitle("Update available")
+                        .setMessage("v$tag is out. You're on $current.\n\n$releaseBody")
+                        .setPositiveButton("Update") { _, _ ->
+                            Toast.makeText(activity, "Downloading v$tag…", Toast.LENGTH_SHORT).show()
+                            (activity as LifecycleOwner).lifecycleScope.launch {
+                                val file = withContext(Dispatchers.IO) { downloadApk(activity, apkUrl, tag) }
+                                if (file != null) installApk(activity, file)
+                                else Toast.makeText(activity, "Download failed", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        .setNegativeButton("Later", null)
+                        .show()
+                }
+            }
         }
     }
 
-    private fun fetchLatestRelease(): Triple<String, String, String>? {
+    private sealed class FetchResult {
+        data class Ok(val tag: String, val apkUrl: String, val notes: String) : FetchResult()
+        data class Error(val reason: String) : FetchResult()
+    }
+
+    private fun fetchLatestRelease(): FetchResult {
         return try {
             val req = Request.Builder()
                 .url("https://api.github.com/repos/${BuildConfig.GITHUB_REPO}/releases")
                 .addHeader("Accept", "application/vnd.github+json")
+                .addHeader("User-Agent", "eli6movies-android/${BuildConfig.VERSION_NAME}")
                 .build()
             val resp = RetrofitClient.client.newCall(req).execute()
-            if (!resp.isSuccessful) { resp.close(); return null }
+            if (!resp.isSuccessful) {
+                val code = resp.code
+                resp.close()
+                return FetchResult.Error("HTTP $code")
+            }
             val body = resp.body?.string().orEmpty()
             resp.close()
             val arr = JSONArray(body)
@@ -64,7 +98,7 @@ object UpdateChecker {
                     pick = item; break
                 }
             }
-            val r = pick ?: return null
+            val r = pick ?: return FetchResult.Error("no matching release")
             val tag = r.getString("tag_name").removePrefix(BuildConfig.GITHUB_RELEASE_PREFIX)
             val assets = r.getJSONArray("assets")
             var apk: String? = null
@@ -75,8 +109,12 @@ object UpdateChecker {
                 }
             }
             val notes = r.optString("body").take(500)
-            if (apk == null) null else Triple(tag, apk, notes)
-        } catch (_: Exception) { null }
+            if (apk == null) FetchResult.Error("no APK asset")
+            else FetchResult.Ok(tag, apk, notes)
+        } catch (e: Exception) {
+            Log.e(TAG, "fetch error", e)
+            FetchResult.Error(e.javaClass.simpleName + ": " + (e.message ?: ""))
+        }
     }
 
     private fun isNewer(remote: String, local: String): Boolean {
@@ -101,7 +139,9 @@ object UpdateChecker {
         }
         resp.close()
         target
-    } catch (_: Exception) { null }
+    } catch (e: Exception) {
+        Log.e(TAG, "download error", e); null
+    }
 
     private fun installApk(activity: androidx.activity.ComponentActivity, apk: File) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !activity.packageManager.canRequestPackageInstalls()) {
