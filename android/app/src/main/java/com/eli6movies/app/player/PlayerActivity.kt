@@ -6,10 +6,12 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Message
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
@@ -17,6 +19,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.eli6movies.app.BuildConfig
+import com.eli6movies.app.util.AdBlock
 
 class PlayerActivity : ComponentActivity() {
 
@@ -48,6 +51,10 @@ class PlayerActivity : ComponentActivity() {
                     " eli6movies/${BuildConfig.VERSION_NAME}"
                 allowFileAccess = false
                 allowContentAccess = false
+                // Pop-ad defence: iframe scripts can't auto-popup, and any window.open
+                // is routed through onCreateWindow below where we silently drop it.
+                javaScriptCanOpenWindowsAutomatically = false
+                setSupportMultipleWindows(true)
             }
             android.webkit.CookieManager.getInstance().setAcceptCookie(true)
             android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
@@ -55,13 +62,24 @@ class PlayerActivity : ComponentActivity() {
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val url = request.url ?: return false
                     val host = url.host ?: return false
+                    // Always allow our own pages
                     if (host.endsWith("eli6movies.vercel.app")) return false
-                    // External link → open in browser, do not navigate inside player
-                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, url)) }
+                    // Sub-frame nav (the embed iframe loading its own content) — allow
+                    if (!request.isForMainFrame) return false
+                    // Anything else trying to take over the top window is a pop-ad
+                    // (window.open / top.location from inside the embed). Drop silently.
                     return true
+                }
+
+                override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+                    return if (AdBlock.isBlocked(request.url?.host)) AdBlock.emptyResponse() else null
                 }
             }
             webChromeClient = object : WebChromeClient() {
+                override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message): Boolean {
+                    // Always drop popup attempts (`<a target="_blank">` inside ads, window.open, etc.)
+                    return false
+                }
                 override fun onShowCustomView(view: View, callback: CustomViewCallback) {
                     if (customView != null) { callback.onCustomViewHidden(); return }
                     customView = view

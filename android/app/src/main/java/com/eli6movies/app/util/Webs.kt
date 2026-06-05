@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.webkit.CookieManager
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import com.eli6movies.app.BuildConfig
@@ -42,16 +43,30 @@ class Eli6WebViewClient(private val context: Context) : WebViewClient() {
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val url = request.url ?: return false
         val host = url.host ?: return false
-        if (!host.endsWith("eli6movies.vercel.app")) return false
-        val m = WATCH_PATH.matchEntire(url.path ?: "") ?: return false
-        val (type, id) = m.destructured
-        context.startActivity(
-            Intent(context, PlayerActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                putExtra(PlayerActivity.EXTRA_TYPE, type)
-                putExtra(PlayerActivity.EXTRA_ID, id)
+        if (host.endsWith("eli6movies.vercel.app")) {
+            // /watch/<type>/<id> → hand off to the native PlayerActivity instead
+            // of loading the page inside this WebView
+            val m = WATCH_PATH.matchEntire(url.path ?: "")
+            if (m != null) {
+                val (type, id) = m.destructured
+                context.startActivity(
+                    Intent(context, PlayerActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        putExtra(PlayerActivity.EXTRA_TYPE, type)
+                        putExtra(PlayerActivity.EXTRA_ID, id)
+                    }
+                )
+                return true
             }
-        )
+            return false
+        }
+        // Sub-frame nav (embed iframe loading itself) — allow
+        if (!request.isForMainFrame) return false
+        // External top-level nav from a tab WebView = pop-ad. Block silently.
         return true
+    }
+
+    override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
+        return if (AdBlock.isBlocked(request.url?.host)) AdBlock.emptyResponse() else null
     }
 }
