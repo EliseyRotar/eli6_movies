@@ -1,9 +1,14 @@
 package com.eli6movies.app.util
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent
 import android.webkit.CookieManager
+import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import android.webkit.WebViewClient
 import com.eli6movies.app.BuildConfig
+import com.eli6movies.app.player.PlayerActivity
 
 // Shared WebView setup: enable JS/storage, strip the "; wv)" UA marker so embed
 // providers don't blocklist us, and accept third-party cookies so the cross-origin
@@ -23,4 +28,30 @@ fun WebView.applyEli6Defaults() {
 
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
+}
+
+// Regex matches both /watch/<type>/<id> (existing) and /app/watch/<type>/<id> (mobile player).
+private val WATCH_PATH = Regex("""^/(?:app/)?watch/(movie|tv|anime)/(\d+)$""")
+
+/**
+ * WebViewClient that opens any /watch/<type>/<id> link inside PlayerActivity
+ * instead of loading it inside the same WebView. External http(s) hosts that
+ * aren't ours fall through to the default behaviour.
+ */
+class Eli6WebViewClient(private val context: Context) : WebViewClient() {
+    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        val url = request.url ?: return false
+        val host = url.host ?: return false
+        if (!host.endsWith("eli6movies.vercel.app")) return false
+        val m = WATCH_PATH.matchEntire(url.path ?: "") ?: return false
+        val (type, id) = m.destructured
+        context.startActivity(
+            Intent(context, PlayerActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(PlayerActivity.EXTRA_TYPE, type)
+                putExtra(PlayerActivity.EXTRA_ID, id)
+            }
+        )
+        return true
+    }
 }

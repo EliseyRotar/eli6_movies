@@ -27,9 +27,8 @@ class PlayerActivity : ComponentActivity() {
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        hideSystemBars()
 
         webView = WebView(this).apply {
             layoutParams = ViewGroup.LayoutParams(
@@ -91,7 +90,7 @@ class PlayerActivity : ComponentActivity() {
         val live = intent.getStringExtra(EXTRA_LIVE_ID)
         return when {
             live != null -> BuildConfig.SITE_BASE_URL + "/live.html?match=" + Uri.encode(live) + "&fromApp=1"
-            id.isNotBlank() -> BuildConfig.SITE_BASE_URL + "/watch/" + type + "/" + id + "?fromApp=1"
+            id.isNotBlank() -> BuildConfig.SITE_BASE_URL + "/app/watch/" + type + "/" + id + "?fromApp=1"
             else -> BuildConfig.SITE_BASE_URL + "/?fromApp=1"
         }
     }
@@ -101,6 +100,20 @@ class PlayerActivity : ComponentActivity() {
             systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             hide(WindowInsetsCompat.Type.systemBars())
         }
+    }
+
+    private fun showSystemBars() {
+        WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
+    }
+
+    private fun applyImmersiveForOrientation() {
+        val landscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        if (landscape) hideSystemBars() else showSystemBars()
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyImmersiveForOrientation()
     }
 
     override fun onUserLeaveHint() {
@@ -118,7 +131,7 @@ class PlayerActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         webView.onResume(); webView.resumeTimers()
-        hideSystemBars()
+        applyImmersiveForOrientation()
     }
 
     override fun onDestroy() {

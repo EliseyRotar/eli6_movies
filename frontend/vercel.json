@@ -3,6 +3,9 @@
   "cleanUrls": false,
   "trailingSlash": false,
   "routes": [
+    { "src": "/app/watch/movie/([0-9]+)", "dest": "/watch-app.html?type=movie&id=$1" },
+    { "src": "/app/watch/tv/([0-9]+)",    "dest": "/watch-app.html?type=tv&id=$1"    },
+    { "src": "/app/watch/anime/([0-9]+)", "dest": "/watch-app.html?type=anime&id=$1" },
     { "src": "/watch/movie/([0-9]+)", "dest": "/player.html?type=movie&id=$1" },
     { "src": "/watch/tv/([0-9]+)",    "dest": "/player.html?type=tv&id=$1"    },
     { "src": "/watch/anime/([0-9]+)", "dest": "/player.html?type=anime&id=$1" },

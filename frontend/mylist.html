@@ -520,6 +520,49 @@
       .ml-pick-btn { display: none; }
       .ml-row__overview { display: none; }
       .ml-sort { font-size: 12px; padding: 8px 10px; }
+
+      /* Tighter 2-column poster grid on phones */
+      .ml-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 12px 0 24px;
+      }
+      .ml-card__info { padding: 6px 0 0; }
+      .ml-card__title { font-size: 12.5px; }
+      .ml-card__year, .ml-card__rating { font-size: 10.5px; }
+      .ml-card__badges { margin-bottom: 2px; }
+      .ml-badge { font-size: 8.5px; padding: 1px 6px; }
+
+      /* Always-visible remove button (no hover on touch) */
+      .ml-card__rm-btn {
+        opacity: 1;
+        background: rgba(0,0,0,0.65);
+        width: 24px; height: 24px;
+        top: 6px; right: 6px;
+        font-size: 14px;
+      }
+
+      /* Always-visible overlay on touch — tap-to-play primary action */
+      .ml-card__overlay { padding: 8px; gap: 5px; }
+      .ml-card__play-btn, .ml-card__cont-btn {
+        padding: 6px 8px; font-size: 11px;
+      }
+
+      /* Tighter page head + toolbar */
+      .pagehead { padding-top: 16px; padding-bottom: 4px; }
+      .pagehead__title { font-size: 24px; }
+      .ml-toolbar { gap: 10px; }
+    }
+
+    /* Tighter 3-col on tiny widths */
+    @media (max-width: 360px) {
+      .ml-grid { gap: 8px; }
+      .ml-card__title { font-size: 11.5px; }
+    }
+
+    /* Tablet 3-col */
+    @media (min-width: 641px) and (max-width: 900px) {
+      .ml-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
