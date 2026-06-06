@@ -86,146 +86,10 @@
     } catch (e) { return false; }
   }
 
-  // === TEAM-IMG CACHE (sessionStorage, v2 after property-name fix) ===
-  var _teamImgCache = null;
-  var TEAM_CACHE_KEY = 'eli6.teamImgs.v2';
-  function teamImgCache() {
-    if (!_teamImgCache) {
-      try { _teamImgCache = JSON.parse(sessionStorage.getItem(TEAM_CACHE_KEY) || '{}'); } catch (e) { _teamImgCache = {}; }
-      try { sessionStorage.removeItem('eli6.teamImgs'); } catch (e) {}
-    }
-    return _teamImgCache;
-  }
-  function saveTeamImgCache() {
-    try { sessionStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(_teamImgCache)); } catch (e) {}
-  }
-
-  var _fetchInFlight = {};
-  async function fetchTeamBanner(teamName) {
-    var key = teamName.toLowerCase().trim();
-    var cache = teamImgCache();
-    if (key in cache) return cache[key];
-    if (_fetchInFlight[key]) return _fetchInFlight[key];
-
-    var controller = new AbortController();
-    var timer = setTimeout(function () { controller.abort(); }, 5000);
-
-    _fetchInFlight[key] = fetch(TSDB + '/searchteams.php?t=' + encodeURIComponent(teamName), { signal: controller.signal })
-      .then(function (r) { clearTimeout(timer); return r.ok ? r.json() : null; })
-      .then(function (d) {
-        var team = d && d.teams && d.teams[0];
-        var url = team && (team.strFanart1 || team.strFanart2 || team.strFanart3 || team.strFanart4 || team.strBanner || team.strBadge || team.strLogo || null);
-        cache[key] = url || null;
-        saveTeamImgCache();
-        delete _fetchInFlight[key];
-        return cache[key];
-      })
-      .catch(function () { clearTimeout(timer); cache[key] = null; delete _fetchInFlight[key]; return null; });
-
-    return _fetchInFlight[key];
-  }
-
-  function applyCardImage(card, imgUrl, cat) {
-    if (!imgUrl || !card.isConnected) return;
-    // Replace the lower-tier composite/icon with a real fanart photo
-    card.classList.remove('match-card--vs-composite', 'match-card--empty-bg');
-    var grad = CAT_GRAD[cat] || CAT_GRAD['other'];
-    // Only a soft fade near the bottom so the title stays readable; let the
-    // image show through cleanly everywhere else.
-    card.style.backgroundImage =
-      'linear-gradient(180deg,transparent 0%,transparent 55%,rgba(0,0,0,.35) 100%),url(' + imgUrl + '),' + grad;
-    card.style.backgroundSize = 'cover,cover,cover';
-    card.style.backgroundPosition = 'center,center top,center';
-    card.style.backgroundRepeat = '';
-  }
-
-  // Apply the streamed.pk two-badge composite as the card background.
-  function applyBadgeComposite(card, m) {
-    if (!card.isConnected) return;
-    var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
-    card.style.backgroundImage =
-      'linear-gradient(180deg,transparent 0%,transparent 60%,rgba(0,0,0,.3) 100%),' +
-      'url(' + m.homeBadgeUrl + '),' +
-      'url(' + m.awayBadgeUrl + '),' + grad;
-    card.style.backgroundSize = 'cover,90px,90px,cover';
-    card.style.backgroundPosition = 'center,18% 38%,82% 38%,center';
-    card.style.backgroundRepeat = 'no-repeat,no-repeat,no-repeat,no-repeat';
-    card.classList.remove('match-card--pending-bg');
-  }
-
-  // Throttle badge loads — streamed.pk DDoS-guards parallel image bursts and
-  // ~half of requests fail with ERR_HTTP2_PROTOCOL_ERROR if we fire >5 at once.
-  // Probe each badge via new Image() so we can detect failure and fall back to
-  // the sport-icon overlay instead of leaving the card mid-state.
-  var _badgeQueue = [];
-  var _badgeInFlight = 0;
-  var BADGE_MAX_CONCURRENT = 3;
-  var _badgeProbed = Object.create(null);
-
-  function probeImage(url) {
-    if (!url) return Promise.resolve(false);
-    if (_badgeProbed[url] !== undefined) return Promise.resolve(_badgeProbed[url]);
-    return new Promise(function (resolve) {
-      var img = new Image();
-      var done = false;
-      var to = setTimeout(function () { if (!done) { done = true; _badgeProbed[url] = false; resolve(false); } }, 7000);
-      img.onload = function () { if (!done) { done = true; clearTimeout(to); _badgeProbed[url] = true; resolve(true); } };
-      img.onerror = function () { if (!done) { done = true; clearTimeout(to); _badgeProbed[url] = false; resolve(false); } };
-      img.src = url;
-    });
-  }
-  function _drainBadgeQueue() {
-    while (_badgeInFlight < BADGE_MAX_CONCURRENT && _badgeQueue.length) {
-      var task = _badgeQueue.shift();
-      _badgeInFlight++;
-      (function (t) {
-        Promise.all([probeImage(t.m.homeBadgeUrl), probeImage(t.m.awayBadgeUrl)])
-          .then(function (results) {
-            if (!t.card.isConnected) return;
-            if (results[0] && results[1]) {
-              applyBadgeComposite(t.card, t.m);
-            } else {
-              // Both badges failed → degrade to the sport-icon overlay
-              t.card.classList.remove('match-card--vs-composite', 'match-card--pending-bg');
-              t.card.classList.add('match-card--empty-bg');
-            }
-          })
-          .then(function () { _badgeInFlight--; _drainBadgeQueue(); }, function () { _badgeInFlight--; _drainBadgeQueue(); });
-      })(task);
-    }
-  }
-  function queueBadgeComposite(card, m) {
-    _badgeQueue.push({ card: card, m: m });
-    _drainBadgeQueue();
-  }
-
-  // IntersectionObserver — only triggers when card is near viewport. Two phases:
-  //   1. If the match has streamed.pk team badges, apply the badge composite first
-  //      (lazy so DDoS-guard doesn't 503 a hundred parallel requests).
-  //   2. If the title is "X vs Y" and the sport supports team fanart, fetch TSDB
-  //      strFanart for the home team and upgrade to that. Falls back to away team.
-  var _cardObserver = new IntersectionObserver(function (entries) {
-    entries.forEach(function (entry) {
-      if (!entry.isIntersecting) return;
-      _cardObserver.unobserve(entry.target);
-      var card = entry.target;
-      var m = card.__match;
-      if (!m || m.poster) return;
-      // Phase 1: badge composite (queued + probed so failures don't leave the
-      // card in a half-broken state and bursts don't trip streamed.pk's DDoS-guard)
-      if (m.homeBadgeUrl && m.awayBadgeUrl && card.classList.contains('match-card--pending-bg')) {
-        queueBadgeComposite(card, m);
-      }
-      // Phase 2: TSDB fanart upgrade (only for team sports with "X vs Y" titles)
-      if (!TEAM_SPORTS[m.category]) return;
-      var vs = (m.title || '').match(/^(.+?)\s+vs\.?\s+(.+)$/i);
-      if (!vs) return;
-      fetchTeamBanner(vs[1].trim()).then(function (url) {
-        if (url) return applyCardImage(card, url, m.category);
-        return fetchTeamBanner(vs[2].trim()).then(function (u2) { applyCardImage(card, u2, m.category); });
-      });
-    });
-  }, { rootMargin: '200px' });
+  // v3 redesign: poster fetching + IntersectionObserver removed. Cards are
+  // minimal and use only the small team badges that streamed.pk and TSDB
+  // already give us (no extra network round-trips to TheSportsDB fanart).
+  var _cardObserver = { observe: function () {}, unobserve: function () {}, disconnect: function () {} };
 
   // ESX sport key → internal category
   var ESX_CAT = {
@@ -362,6 +226,10 @@
   var liveScores = {}; // norm title → { home, away, status, time, badgeHome, badgeAway }
   var reminders = {};  // matchKey → timeoutId
   var _scoreTickInterval = null;
+
+  // v3 view state: 'home' (sport-grouped), 'sport' (single grid), 'match' (detail)
+  var view = 'home';
+  var detailMatch = null;
 
   // === PERSISTENCE ===
   function loadJSON(key, fallback) {
@@ -819,6 +687,8 @@
     return allMatches.filter(function (m) {
       if (currentSport === '__fav') {
         if (!matchHasFavorite(m)) return false;
+      } else if (currentSport === '__live') {
+        if (!m.isLive) return false;
       } else if (currentSport !== 'all' && m.category !== currentSport) {
         return false;
       }
@@ -829,6 +699,136 @@
       }
       return true;
     });
+  }
+
+  // === ROUTING ===
+
+  function parseRoute() {
+    var qs = new URLSearchParams(location.search);
+    if (qs.get('match')) return { view: 'match', matchId: qs.get('match') };
+    if (qs.get('sport')) return { view: 'sport', sport: qs.get('sport') };
+    return { view: 'home' };
+  }
+
+  function applyRoute(pushHist) {
+    var r = parseRoute();
+    view = r.view;
+    if (view === 'sport') {
+      currentSport = r.sport || 'all';
+      currentLeague = 'all';
+      detailMatch = null;
+    } else if (view === 'home') {
+      currentSport = 'all';
+      detailMatch = null;
+    } else if (view === 'match') {
+      // detailMatch is populated by renderDetail() once we find it in allMatches
+    }
+    renderForView();
+  }
+
+  function goToHome() {
+    history.pushState({}, '', 'live.html');
+    applyRoute(true);
+  }
+  function goToSport(sportId) {
+    history.pushState({}, '', 'live.html?sport=' + encodeURIComponent(sportId));
+    applyRoute(true);
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+  function goToMatch(m) {
+    var mid = m.id || normalizeTitle(m.title) || 'unknown';
+    detailMatch = m;
+    history.pushState({}, '', 'live.html?match=' + encodeURIComponent(mid));
+    view = 'match';
+    renderForView();
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
+  }
+  function goBack() {
+    if (history.length > 1) history.back();
+    else goToHome();
+  }
+
+  // Dispatcher — renders the right chrome + body for the current view
+  function renderForView() {
+    var stickybar = document.querySelector('.live-stickybar');
+    if (view === 'match') {
+      if (stickybar) stickybar.style.display = 'none';
+      hideAuxBars(true);
+      renderPageHead();
+      renderDetailView();
+    } else if (view === 'sport') {
+      if (stickybar) stickybar.style.display = '';
+      hideAuxBars(false);
+      renderPageHead();
+      renderTabs();
+      renderLeagueFilter();
+      renderMatches();
+    } else {
+      if (stickybar) stickybar.style.display = '';
+      hideAuxBars(false);
+      renderPageHead();
+      renderTabs();
+      renderLeagueFilter();
+      renderMatches();
+    }
+  }
+
+  function hideAuxBars(hide) {
+    var ids = ['live-date-mount', 'live-league-mount', 'live-search-mount', 'live-refresh-mount'];
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = hide ? 'none' : '';
+    });
+  }
+
+  // === PAGE HEAD (changes per view) ===
+  function renderPageHead() {
+    var mount = document.getElementById('live-page-head');
+    if (!mount) return;
+    mount.innerHTML = '';
+
+    if (view === 'home') {
+      var head = document.createElement('div');
+      head.className = 'pagehead';
+      head.innerHTML =
+        '<div class="pagehead__eyebrow">' + lt('live.page.eyebrow', 'Live') + '</div>' +
+        '<h1 class="pagehead__title">' + lt('live.page.title', 'Sports') + '</h1>' +
+        '<p class="pagehead__sub">' + lt('live.page.subtitle', "Live matches and today's schedule — football, NBA, NFL, F1, and more.") + '</p>';
+      mount.appendChild(head);
+    } else if (view === 'sport') {
+      var icon = currentSport === '__fav' ? '⭐' : currentSport === '__live' ? '' : catIcon(currentSport);
+      var label = currentSport === '__fav' ? lt('live.tabs.favorites', 'My Teams')
+                 : currentSport === '__live' ? lt('live.sections.liveNow', 'Live Now')
+                 : catLabel(currentSport);
+      var count = filtered().length;
+
+      var head = document.createElement('div');
+      head.className = 'live-sport-header';
+
+      var eyebrow = document.createElement('div');
+      eyebrow.className = 'live-sport-header__eyebrow';
+      eyebrow.innerHTML = '<a href="#" class="live-detail__back" style="margin:0 0 8px;display:inline-flex">' + lt('live.back', 'Back to live') + '</a>';
+      eyebrow.querySelector('a').addEventListener('click', function (e) { e.preventDefault(); goToHome(); });
+      head.appendChild(eyebrow);
+
+      var title = document.createElement('h1');
+      title.className = 'live-sport-header__title';
+      if (icon) {
+        var ico = document.createElement('span');
+        ico.className = 'live-sport-header__title-icon';
+        ico.textContent = icon;
+        title.appendChild(ico);
+      }
+      title.appendChild(document.createTextNode(label));
+      head.appendChild(title);
+
+      var sub = document.createElement('div');
+      sub.className = 'live-sport-header__sub';
+      sub.textContent = count + ' ' + (count === 1 ? lt('live.sport.match', 'match') : lt('live.sport.matches', 'matches')) + ' ' + (currentDate === 'today' ? lt('live.date.today', 'today') : currentDate === 'tomorrow' ? lt('live.date.tomorrow', 'tomorrow') : lt('live.date.yesterday', 'yesterday'));
+      head.appendChild(sub);
+      mount.appendChild(head);
+    }
+    // 'match' view doesn't use a pagehead — its header lives in the detail view
   }
 
   // === DATE PICKER ===
@@ -854,9 +854,10 @@
         if (currentDate === d.id) return;
         currentDate = d.id;
         currentLeague = 'all';
+        renderDatePicker();
         showSkeleton();
         Promise.all([loadMatches(), refreshLiveScores()]).then(function () {
-          renderTabs(); renderLeagueFilter(); renderDatePicker(); renderMatches();
+          renderForView();
         });
       });
       wrap.appendChild(btn);
@@ -903,11 +904,9 @@
       btn.setAttribute('aria-selected', tab.id === currentSport ? 'true' : 'false');
       btn.innerHTML = tab.label + ' <span class="live-tab__count">' + tab.count + '</span>';
       btn.addEventListener('click', function () {
-        currentSport = tab.id;
         currentLeague = 'all';
-        renderTabs();
-        renderLeagueFilter();
-        renderMatches();
+        if (tab.id === 'all') goToHome();
+        else goToSport(tab.id);
       });
       wrap.appendChild(btn);
     });
@@ -1003,9 +1002,13 @@
       _searchDebounce = setTimeout(function () {
         searchQuery = input.value;
         // Searching should look across all sports — narrow sport tab + search is confusing.
-        if (searchQuery && currentSport !== 'all' && currentSport !== '__fav') {
+        if (searchQuery && view === 'sport' && currentSport !== '__fav') {
+          // jump back to home view (URL change) but keep the search applied
+          history.replaceState({}, '', 'live.html');
+          view = 'home';
           currentSport = 'all';
           currentLeague = 'all';
+          renderPageHead();
           renderTabs();
           renderLeagueFilter();
         }
@@ -1023,20 +1026,49 @@
   function showSkeleton() {
     var mount = document.getElementById('matches-mount');
     if (!mount) return;
-    _cardObserver.disconnect();
-    var html = '<div class="live-section"><div class="row__head"><h2 class="row__title"><span class="skeleton skeleton-text" style="width:140px;height:22px;display:inline-block"></span></h2></div><div class="match-grid">';
-    for (var i = 0; i < 8; i++) {
-      html += '<div class="match-card match-card--skeleton"><div class="skeleton skeleton-line" style="width:60%"></div><div class="skeleton skeleton-line" style="width:80%;height:18px"></div><div class="skeleton skeleton-line" style="width:40%"></div></div>';
+    var html = '';
+    for (var k = 0; k < 2; k++) {
+      html += '<div class="live-section"><div class="row__head" style="padding:0 var(--pad-x);margin-bottom:12px"><span class="skeleton" style="width:170px;height:24px"></span></div><div class="match-grid">';
+      for (var i = 0; i < 4; i++) {
+        html += '<div class="match-card"><div class="skeleton skeleton-line" style="width:50%;height:10px"></div><div class="skeleton skeleton-line" style="width:90%;height:14px"></div><div class="skeleton skeleton-line" style="width:70%;height:11px"></div><div class="skeleton skeleton-line" style="width:60%;height:11px"></div><div class="skeleton skeleton-line" style="width:40%;height:10px"></div></div>';
+      }
+      html += '</div></div>';
     }
-    html += '</div></div>';
     mount.innerHTML = html;
   }
 
-  // === MATCHES ===
+  // === VIEW: HOME (sport-grouped) / SPORT (single grid) ===
+
+  // small helper to render an empty-state block
+  function renderEmpty(mount, kind) {
+    var empty = document.createElement('div');
+    empty.className = 'live-empty';
+    var icon = document.createElement('span');
+    icon.className = 'live-empty__icon';
+    icon.textContent = kind === 'fav' ? '⭐'
+                     : kind === 'search' ? '🔍'
+                     : '📺';
+    empty.appendChild(icon);
+    var title = document.createElement('div');
+    title.className = 'live-empty__title';
+    title.textContent = kind === 'search' ? (lt('live.empty.noResults', 'No matches found for') + ' "' + searchQuery + '"')
+                      : kind === 'fav' ? lt('live.empty.noFavorites', 'No matches for your favorite teams today.')
+                      : lt('live.empty.noMatches', 'No matches scheduled right now.');
+    empty.appendChild(title);
+    var sub = document.createElement('div');
+    sub.className = 'live-empty__sub';
+    sub.textContent = kind === 'fav' ? lt('live.empty.favHint', 'Star a team on any card to track it here.')
+                    : kind === 'search' ? lt('live.empty.searchHint', 'Try a different team, league, or sport.')
+                    : lt('live.empty.checkBack', 'Check back later or pick a different date.');
+    empty.appendChild(sub);
+    mount.appendChild(empty);
+  }
 
   function renderMatches() {
     var mount = document.getElementById('matches-mount');
     if (!mount) return;
+    mount.innerHTML = '';
+
     var list = filtered();
     list.sort(function (a, b) {
       var aFav = matchHasFavorite(a) ? 1 : 0;
@@ -1046,108 +1078,153 @@
       return (a.date || 0) - (b.date || 0);
     });
 
-    _cardObserver.disconnect();
-    mount.innerHTML = '';
-
     if (!list.length) {
-      var empty = document.createElement('div');
-      empty.className = 'live-empty';
-      if (searchQuery) {
-        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.search : '';
-        empty.appendChild(icon);
-        empty.appendChild(document.createElement('br'));
-        empty.appendChild(document.createTextNode(' ' + lt('live.empty.noResults', 'No matches found for') + ' “' + searchQuery + '”'));
-      } else if (currentSport === '__fav') {
-        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.star : '';
-        empty.appendChild(icon);
-        empty.appendChild(document.createElement('br'));
-        empty.appendChild(document.createTextNode(' ' + lt('live.empty.noFavorites', 'No matches for your favorite teams today.')));
-      } else {
-        var icon = document.createElement('span'); icon.style.cssText = 'display:block;margin-bottom:8px'; icon.innerHTML = window.ICONS ? window.ICONS.tv : '';
-        empty.appendChild(icon);
-        empty.appendChild(document.createElement('br'));
-        empty.appendChild(document.createTextNode(' ' + lt('live.empty.noMatches', 'No matches scheduled right now.')));
-      }
-      mount.appendChild(empty);
+      var kind = searchQuery ? 'search' : currentSport === '__fav' ? 'fav' : 'none';
+      renderEmpty(mount, kind);
       return;
     }
 
-    // Group: favorites pinned, then live, then upcoming
+    // SPORT VIEW or SEARCH or FAVS — flat grid, no sport-grouping
+    if (currentSport !== 'all' || searchQuery) {
+      renderFlatSection(mount, list);
+      return;
+    }
+
+    // HOME VIEW — Live Now section + per-sport sections
     var favs = list.filter(matchHasFavorite);
     var rest = list.filter(function (m) { return !matchHasFavorite(m); });
-    var live = rest.filter(function (m) { return m.isLive; });
-    var upcoming = rest.filter(function (m) { return !m.isLive; });
+    var liveMatches = rest.filter(function (m) { return m.isLive; });
+    var upcoming   = rest.filter(function (m) { return !m.isLive; });
 
-    if (favs.length) appendSection(mount, (window.ICONS ? window.ICONS.star + ' ' : '') + lt('live.sections.favorites', 'My Teams'), favs, true);
-    if (live.length) appendSection(mount, lt('live.sections.liveNow', 'Live Now'), live, true);
-    if (upcoming.length) appendSection(mount, lt('live.sections.todaySchedule', "Today's Schedule"), upcoming, false);
+    if (favs.length) {
+      appendSection(mount, {
+        title: lt('live.sections.favorites', 'My Teams'),
+        icon: '⭐',
+        kind: 'fav',
+        items: favs,
+        max: 8,
+      });
+    }
+    if (liveMatches.length) {
+      appendSection(mount, {
+        title: lt('live.sections.liveNow', 'Live Now'),
+        icon: null,
+        kind: 'live',
+        items: liveMatches,
+        max: 8,
+      });
+    }
+
+    // group upcoming by sport, ordered by sport count desc
+    var bySport = {};
+    upcoming.forEach(function (m) {
+      var c = m.category || 'other';
+      if (!bySport[c]) bySport[c] = [];
+      bySport[c].push(m);
+    });
+    var sportOrder = Object.keys(bySport).sort(function (a, b) { return bySport[b].length - bySport[a].length; });
+    sportOrder.forEach(function (s) {
+      appendSection(mount, {
+        title: catLabel(s),
+        icon: catIcon(s),
+        kind: 'sport',
+        items: bySport[s],
+        max: 4,
+        sportId: s,
+      });
+    });
   }
 
-  function appendSection(mount, titleText, items, withDot) {
-    var sec = document.createElement('div');
-    sec.className = 'live-section';
-    var head = document.createElement('div');
-    head.className = 'row__head';
-    var t = document.createElement('h2');
-    t.className = 'row__title';
-    if (withDot) {
-      t.innerHTML = '<span class="live-section-dot"></span> ';
-    }
-    t.appendChild(document.createTextNode(titleText + ' '));
-    var cnt = document.createElement('span');
-    cnt.className = 'live-section-cnt';
-    cnt.textContent = items.length;
-    t.appendChild(cnt);
-    head.appendChild(t);
-    sec.appendChild(head);
+  function renderFlatSection(mount, items) {
     var grid = document.createElement('div');
     grid.className = 'match-grid';
     items.forEach(function (m) { grid.appendChild(makeCard(m)); });
+    mount.appendChild(grid);
+  }
+
+  function appendSection(mount, opts) {
+    var sec = document.createElement('div');
+    sec.className = 'live-section' + (opts.kind === 'live' ? ' live-section--live' : '');
+
+    var head = document.createElement('div');
+    head.className = 'row__head';
+
+    var titleEl = document.createElement('h2');
+    titleEl.className = 'live-section__title';
+    var iconEl = document.createElement('span');
+    iconEl.className = 'live-section__icon';
+    if (opts.kind === 'live') {
+      // styled via CSS as a pulsing red dot
+    } else if (opts.icon) {
+      iconEl.textContent = opts.icon;
+    }
+    titleEl.appendChild(iconEl);
+    titleEl.appendChild(document.createTextNode(' ' + opts.title + ' '));
+    var cnt = document.createElement('span');
+    cnt.className = 'live-section__count';
+    cnt.textContent = opts.items.length;
+    titleEl.appendChild(cnt);
+    head.appendChild(titleEl);
+
+    // "View all" link — only when there's more than `max` items, and we have a sport to link to
+    if (opts.items.length > opts.max && (opts.sportId || opts.kind === 'fav' || opts.kind === 'live')) {
+      var see = document.createElement('a');
+      see.className = 'live-section__viewall';
+      see.href = '#';
+      see.textContent = lt('live.viewAll', 'View all');
+      see.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (opts.sportId) goToSport(opts.sportId);
+        else if (opts.kind === 'fav') goToSport('__fav');
+        else if (opts.kind === 'live') goToSport('__live');
+      });
+      head.appendChild(see);
+    }
+    sec.appendChild(head);
+
+    var grid = document.createElement('div');
+    grid.className = 'match-grid';
+    opts.items.slice(0, opts.max).forEach(function (m) { grid.appendChild(makeCard(m)); });
     sec.appendChild(grid);
     mount.appendChild(sec);
   }
 
+  // small umbrella rerender (used after favorite toggles)
+  function rerenderAll() {
+    renderTabs();
+    if (view === 'home' || view === 'sport') renderMatches();
+  }
+
   function makeCard(m) {
-    var card = document.createElement('div');
+    var card = document.createElement('article');
     card.className = 'match-card' + (m.isLive ? ' match-card--live' : '');
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', (m.title || '') + (m.league ? ', ' + m.league : ''));
-
-    var grad = CAT_GRAD[m.category] || CAT_GRAD['other'];
-    card.classList.add('match-card--has-poster');
-    card.style.backgroundColor = '#0a0a0a';
+    card.dataset.sport = m.category || 'other';
     card.dataset.sportIcon = catIcon(m.category);
+    card.__match = m;
 
     var liveData = scoreFor(m);
-    if (m.poster) {
-      // Tier 1: real match-promo image from streamed.pk or ESX (loaded upfront).
-      // Soft fade only at the bottom so the title stays readable on bright
-      // posters — no heavy darkening over the artwork.
-      card.style.backgroundImage =
-        'linear-gradient(180deg,transparent 0%,transparent 55%,rgba(0,0,0,.35) 100%),url(' + m.poster + '),' + grad;
-      card.style.backgroundSize = 'cover,cover,cover';
-      card.style.backgroundPosition = 'center,center top,center';
-    } else if (m.homeBadgeUrl && m.awayBadgeUrl) {
-      // Tier 2: two team badges → composite (applied lazily on intersect so
-      // streamed.pk's DDoS-guard doesn't 503 a hundred parallel badge requests).
-      card.classList.add('match-card--vs-composite', 'match-card--pending-bg');
-      card.style.backgroundImage = grad;
-    } else {
-      // Tier 3: gradient + big faded sport icon centered. Looks intentional
-      // rather than empty for events like F1, UFC, golf, single-player tennis.
-      card.classList.add('match-card--empty-bg');
-      card.style.backgroundImage = grad;
-    }
+    var teams = extractTeams(m.title);
 
-    // top: sport badge + status pill + favorite star
+    // --- TOP ROW: sport tag + status pill + (favorite star pushed to right) ---
     var top = document.createElement('div');
     top.className = 'match-card__top';
-    var sportBadge = document.createElement('span');
-    sportBadge.className = 'match-card__sport';
-    sportBadge.textContent = catIcon(m.category) + ' ' + catLabel(m.category);
-    top.appendChild(sportBadge);
 
+    var sportEl = document.createElement('span');
+    sportEl.className = 'match-card__sport';
+    var sportIco = document.createElement('span');
+    sportIco.className = 'match-card__sport-ico';
+    sportIco.textContent = catIcon(m.category);
+    var sportText = document.createElement('span');
+    sportText.className = 'match-card__sport-text';
+    sportText.textContent = catLabel(m.category);
+    sportEl.appendChild(sportIco);
+    sportEl.appendChild(sportText);
+    top.appendChild(sportEl);
+
+    // status pill OR upcoming time
     var status = statusBadgeFor(m);
     if (status) {
       var statusEl = document.createElement('span');
@@ -1158,10 +1235,18 @@
         statusEl.textContent = status.label;
       }
       top.appendChild(statusEl);
+    } else if (m.date) {
+      // upcoming: show absolute time in the pill slot
+      var timePill = document.createElement('span');
+      timePill.className = 'match-card__status';
+      timePill.textContent = fmtAbsTime(m.date);
+      if ((m.date - Date.now()) < 30 * 60000 && (m.date - Date.now()) > 0) {
+        timePill.style.color = 'var(--accent)';
+      }
+      top.appendChild(timePill);
     }
 
-    // favorite star
-    var teams = extractTeams(m.title);
+    // favorite star (only when we have two-team title)
     if (teams.length === 2) {
       var star = document.createElement('button');
       var anyFav = teams.some(isFavoriteTeam);
@@ -1172,94 +1257,72 @@
       star.addEventListener('click', function (e) {
         e.stopPropagation();
         teams.forEach(toggleFavoriteTeam);
-        renderTabs();
-        renderMatches();
+        rerenderAll();
       });
       top.appendChild(star);
     }
     card.appendChild(top);
 
-    // score row (if we have it)
-    if (liveData && (liveData.home != null || liveData.away != null)) {
-      var scoreRow = document.createElement('div');
-      scoreRow.className = 'match-card__score';
-      scoreRow.dataset.scoreKey = normalizeTitle(m.title);
-      var homeBlock = document.createElement('div');
-      homeBlock.className = 'match-card__team';
-      if (liveData.badgeHome) {
-        var bh = document.createElement('img');
-        bh.src = liveData.badgeHome; bh.alt = ''; bh.loading = 'lazy';
-        bh.className = 'match-card__badge';
-        homeBlock.appendChild(bh);
-      }
-      var homeName = document.createElement('span');
-      homeName.className = 'match-card__teamname';
-      homeName.textContent = liveData.homeName || teams[0] || '';
-      homeBlock.appendChild(homeName);
+    // --- TITLE ---
+    var title = document.createElement('h3');
+    title.className = 'match-card__title';
+    title.textContent = m.title || lt('live.player.fallbackTitle', 'Live Stream');
+    card.appendChild(title);
 
-      var awayBlock = document.createElement('div');
-      awayBlock.className = 'match-card__team';
-      var awayName = document.createElement('span');
-      awayName.className = 'match-card__teamname';
-      awayName.textContent = liveData.awayName || teams[1] || '';
-      awayBlock.appendChild(awayName);
-      if (liveData.badgeAway) {
-        var ba = document.createElement('img');
-        ba.src = liveData.badgeAway; ba.alt = ''; ba.loading = 'lazy';
-        ba.className = 'match-card__badge';
-        awayBlock.appendChild(ba);
-      }
+    // --- TEAM ROWS (only when we have two teams) ---
+    if (teams.length === 2) {
+      var teamsWrap = document.createElement('div');
+      teamsWrap.className = 'match-card__teams';
+      teamsWrap.dataset.scoreKey = normalizeTitle(m.title);
 
-      var scoreCenter = document.createElement('div');
-      scoreCenter.className = 'match-card__scorenum';
-      scoreCenter.dataset.scoreKey = normalizeTitle(m.title);
-      scoreCenter.textContent = (liveData.home == null ? '–' : liveData.home) + ' : ' + (liveData.away == null ? '–' : liveData.away);
+      var homeBadge = (liveData && liveData.badgeHome) || m.homeBadgeUrl;
+      var awayBadge = (liveData && liveData.badgeAway) || m.awayBadgeUrl;
+      var homeName = (liveData && liveData.homeName) || teams[0];
+      var awayName = (liveData && liveData.awayName) || teams[1];
 
-      scoreRow.appendChild(homeBlock);
-      scoreRow.appendChild(scoreCenter);
-      scoreRow.appendChild(awayBlock);
-      card.appendChild(scoreRow);
-    } else {
-      // title (teams)
-      var title = document.createElement('div');
-      title.className = 'match-card__title';
-      title.textContent = m.title || '';
-      card.appendChild(title);
+      var ico = catIcon(m.category);
+      teamsWrap.appendChild(makeTeamRow(homeName, homeBadge, liveData ? liveData.home : null, ico));
+      teamsWrap.appendChild(makeTeamRow(awayName, awayBadge, liveData ? liveData.away : null, ico));
+      card.appendChild(teamsWrap);
     }
 
-    // league
+    // --- LEAGUE ---
     if ((m.league || '').trim()) {
       var league = document.createElement('div');
       league.className = 'match-card__league';
-      league.textContent = m.league || '';
+      league.textContent = m.league;
       card.appendChild(league);
     }
 
-    // footer
+    // --- FOOTER: source count + Watch + small action icons ---
     var bot = document.createElement('div');
     bot.className = 'match-card__bot';
-    var timeEl = document.createElement('span');
-    timeEl.className = 'match-card__time' + (m.isLive ? ' match-card__time--live' : '');
-    if (m.isLive) {
-      timeEl.textContent = lt('live.time.liveNow', 'Live now');
-    } else {
-      var rel = fmtRelTime(m.date);
-      var abs = fmtAbsTime(m.date);
-      timeEl.textContent = abs;
-      timeEl.title = rel;
-      if (m.date && (m.date - Date.now()) < 30 * 60000 && (m.date - Date.now()) > 0) {
-        timeEl.classList.add('match-card__time--soon');
-      }
-    }
-    bot.appendChild(timeEl);
 
-    // action buttons for upcoming matches
+    var srcCount = m.sources ? m.sources.length : (m.iframes ? m.iframes.length : (m.channels ? m.channels.length : 0));
+    var hasHD = (m.sources || []).some(function (s) { return s.hd; }) || (m.iframes || []).some(function (s) { return s.hd; });
+
+    var srcEl = document.createElement('span');
+    srcEl.className = 'match-card__src-count';
+    if (currentDate === 'yesterday' && !srcCount) {
+      srcEl.textContent = lt('live.streams.finished', 'Finished');
+    } else if (srcCount > 0) {
+      srcEl.innerHTML = '<strong>' + srcCount + '</strong> ' + (srcCount === 1
+        ? lt('live.streams.sourceOne', 'source')
+        : lt('live.streams.sources', 'sources'));
+    } else {
+      srcEl.textContent = '';
+    }
+    bot.appendChild(srcEl);
+
+    var rightGroup = document.createElement('span');
+    rightGroup.style.cssText = 'display:inline-flex;align-items:center;gap:8px';
+
+    // tiny action icons (only when relevant)
     var isUpcoming = !m.isLive && m.date && (m.date - Date.now()) > 0 && currentDate !== 'yesterday';
     if (isUpcoming) {
       var actGroup = document.createElement('span');
       actGroup.className = 'match-card__actions';
 
-      // bell reminder button
       var matchKey = m.id || normalizeTitle(m.title);
       var hasReminder = !!(reminders[matchKey] || savedReminders[matchKey]);
       var bellBtn = document.createElement('button');
@@ -1270,54 +1333,60 @@
       bellBtn.title = bellBtn.getAttribute('aria-label');
       bellBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleReminder(m, bellBtn); });
       actGroup.appendChild(bellBtn);
-
-      // add-to-calendar button
-      var calBtn = document.createElement('button');
-      calBtn.className = 'match-card__act-btn';
-      calBtn.innerHTML = CAL_SVG;
-      calBtn.setAttribute('aria-label', lt('live.cal.add', 'Add to calendar'));
-      calBtn.title = calBtn.getAttribute('aria-label');
-      calBtn.addEventListener('click', function (e) { e.stopPropagation(); addToCalendar(m); });
-      actGroup.appendChild(calBtn);
-
-      bot.appendChild(actGroup);
+      rightGroup.appendChild(actGroup);
     }
 
-    // share button (all matches)
-    var shareBtn = document.createElement('button');
-    shareBtn.className = 'match-card__act-btn match-card__share';
-    shareBtn.innerHTML = SHARE_SVG;
-    shareBtn.setAttribute('aria-label', lt('live.share.share', 'Share'));
-    shareBtn.title = shareBtn.getAttribute('aria-label');
-    shareBtn.addEventListener('click', function (e) { e.stopPropagation(); shareMatch(m); });
-
-    var srcCount = m.sources ? m.sources.length : (m.iframes ? m.iframes.length : 0);
-    var hasHD = (m.sources || []).some(function (s) { return s.hd; }) || (m.iframes || []).some(function (s) { return s.hd; });
-
-    var playEl = document.createElement('span');
-    playEl.className = 'match-card__play';
-    if (currentDate === 'yesterday' && !srcCount) {
-      playEl.textContent = lt('live.streams.finished', 'Finished');
-    } else {
-      var streamTxt = srcCount > 1 ? srcCount + ' ' + lt('live.streams.streams', 'streams') : lt('live.streams.watch', 'Watch');
-      playEl.innerHTML = (hasHD ? '<span class="match-card__hd">HD</span> ' : '') + '&#9654; ' + streamTxt;
+    // Watch CTA
+    if (srcCount > 0 || currentDate !== 'yesterday') {
+      var watch = document.createElement('span');
+      watch.className = 'match-card__watch';
+      var hdTag = hasHD ? '<span class="match-card__hd">HD</span> ' : '';
+      watch.innerHTML = hdTag + '<span class="match-card__watch-icon">▶</span> ' + lt('live.streams.watch', 'Watch');
+      rightGroup.appendChild(watch);
     }
-
-    var rightGroup = document.createElement('span');
-    rightGroup.className = 'match-card__right';
-    rightGroup.appendChild(shareBtn);
-    rightGroup.appendChild(playEl);
     bot.appendChild(rightGroup);
     card.appendChild(bot);
 
-    card.addEventListener('click', function () { openPlayer(m); });
+    card.addEventListener('click', function () { goToMatch(m); });
     card.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(m); }
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToMatch(m); }
     });
 
-    card.__match = m;
-    _cardObserver.observe(card);
     return card;
+  }
+
+  // small helper for the two team rows on a card
+  function makeTeamRow(name, badgeUrl, score, sportIcon) {
+    var row = document.createElement('div');
+    row.className = 'match-card__team';
+    if (badgeUrl) {
+      var img = document.createElement('img');
+      img.src = badgeUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.className = 'match-card__team-badge';
+      img.onerror = function () { img.replaceWith(makePlaceholderBadge(sportIcon)); };
+      row.appendChild(img);
+    } else {
+      row.appendChild(makePlaceholderBadge(sportIcon));
+    }
+    var n = document.createElement('span');
+    n.className = 'match-card__team-name';
+    n.textContent = name || '';
+    row.appendChild(n);
+    if (score != null) {
+      var s = document.createElement('span');
+      s.className = 'match-card__team-score';
+      s.textContent = score;
+      row.appendChild(s);
+    }
+    return row;
+  }
+  function makePlaceholderBadge(sportIcon) {
+    var d = document.createElement('span');
+    d.className = 'match-card__team-badge-placeholder';
+    if (sportIcon) d.textContent = sportIcon;
+    return d;
   }
 
   // === CARD ACTION ICONS ===
@@ -1523,7 +1592,7 @@
     if (btn) { btn.textContent = lt('live.refresh.refreshing', '↻ Refreshing…'); btn.disabled = true; }
     try {
       await Promise.all([loadMatches(), refreshLiveScores()]);
-      renderTabs(); renderLeagueFilter(); renderMatches();
+      renderForView();
     } finally {
       if (btn) { btn.textContent = lt('live.refresh.button', '↻ Refresh now'); btn.disabled = false; }
       _refreshInFlight = false;
@@ -1531,97 +1600,9 @@
     }
   }
 
-  // === PLAYER MODAL ===
+  // === PLAYER (inline detail page — no modal in v3) ===
 
-  function ensureModal() {
-    var existing = document.getElementById('live-modal');
-    if (existing) return existing;
-
-    var modal = document.createElement('div');
-    modal.id = 'live-modal'; modal.className = 'live-modal'; modal.hidden = true;
-    modal.setAttribute('role', 'dialog');
-    modal.setAttribute('aria-modal', 'true');
-
-    var inner = document.createElement('div');
-    inner.className = 'live-modal__inner';
-
-    var hdr = document.createElement('div');
-    hdr.className = 'live-modal__hdr';
-    var info = document.createElement('div');
-    info.className = 'live-modal__info';
-    var sport = document.createElement('div');
-    sport.className = 'live-modal__sport'; sport.id = 'live-modal-sport';
-    var titleEl = document.createElement('div');
-    titleEl.className = 'live-modal__title'; titleEl.id = 'live-modal-title';
-    var leagueEl = document.createElement('div');
-    leagueEl.className = 'live-modal__league'; leagueEl.id = 'live-modal-league';
-    info.appendChild(sport); info.appendChild(titleEl); info.appendChild(leagueEl);
-
-    var actions = document.createElement('div');
-    actions.className = 'live-modal__actions';
-
-    var theaterBtn = document.createElement('button');
-    theaterBtn.className = 'live-modal__theater';
-    theaterBtn.id = 'live-modal-theater';
-    theaterBtn.innerHTML = '⛶';
-    theaterBtn.title = lt('live.player.theater', 'Theater mode (F)');
-    theaterBtn.setAttribute('aria-label', theaterBtn.title);
-    theaterBtn.addEventListener('click', toggleTheater);
-
-    var closeBtn = document.createElement('button');
-    closeBtn.className = 'live-modal__close';
-    closeBtn.innerHTML = '&#10005;';
-    closeBtn.setAttribute('aria-label', lt('live.player.close', 'Close (Esc)'));
-    closeBtn.addEventListener('click', closePlayer);
-
-    actions.appendChild(theaterBtn);
-    actions.appendChild(closeBtn);
-
-    hdr.appendChild(info); hdr.appendChild(actions);
-
-    var playerWrap = document.createElement('div');
-    playerWrap.className = 'live-modal__player';
-    var loading = document.createElement('div');
-    loading.className = 'live-modal__player-loading'; loading.id = 'live-player-loading';
-    loading.textContent = lt('live.player.loading', 'Loading stream…');
-    playerWrap.id = 'live-player-wrap';
-    playerWrap.appendChild(loading);
-
-    var srcBar = document.createElement('div');
-    srcBar.className = 'live-modal__srcbar';
-    var srcLabel = document.createElement('span');
-    srcLabel.className = 'live-modal__src-label';
-    srcLabel.textContent = lt('live.player.sources', 'Sources:');
-    var srcBtns = document.createElement('div');
-    srcBtns.className = 'live-modal__sources'; srcBtns.id = 'live-sources';
-    srcBar.appendChild(srcLabel); srcBar.appendChild(srcBtns);
-
-    inner.appendChild(hdr);
-    inner.appendChild(playerWrap);
-    inner.appendChild(srcBar);
-    modal.appendChild(inner);
-    document.body.appendChild(modal);
-
-    modal.addEventListener('click', function (e) { if (e.target === modal) closePlayer(); });
-    function _modalKeydown(e) {
-      if (modal.hidden) return;
-      if (e.key === 'Escape') closePlayer();
-      else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleTheater(); }
-      else if (e.key === 'ArrowRight') { switchSourceByOffset(1); }
-      else if (e.key === 'ArrowLeft') { switchSourceByOffset(-1); }
-    }
-    document.addEventListener('keydown', _modalKeydown);
-    modal._keydownHandler = _modalKeydown;
-
-    return modal;
-  }
-
-  function toggleTheater() {
-    var modal = document.getElementById('live-modal');
-    if (!modal) return;
-    modal.classList.toggle('live-modal--theater');
-  }
-
+  // Switch active source via keyboard ←/→
   function switchSourceByOffset(offset) {
     var btns = document.querySelectorAll('#live-sources .live-src-btn');
     if (!btns.length) return;
@@ -1631,15 +1612,22 @@
     btns[next].click();
   }
 
-  async function openPlayer(match) {
-    var seq = ++_openPlayerSeq;
-    var modal = ensureModal();
-    modal.hidden = false;
-    document.body.style.overflow = 'hidden';
+  // Toggle theater mode (CSS class on the detail player frame)
+  function toggleTheater() {
+    var wrap = document.getElementById('live-player-wrap');
+    if (wrap) wrap.parentElement.classList.toggle('live-detail--theater');
+  }
 
-    document.getElementById('live-modal-sport').textContent = catIcon(match.category) + ' ' + catLabel(match.category);
-    document.getElementById('live-modal-title').textContent = match.title || lt('live.player.fallbackTitle', 'Live Stream');
-    document.getElementById('live-modal-league').textContent = match.league || '';
+  // Populates the player + source picker in the detail view. Requires the
+  // detail DOM (built by renderDetailView) to already exist in the page.
+  async function _populatePlayer(match) {
+    var seq = ++_openPlayerSeq;
+    var sportEl = document.getElementById('live-detail-sport');
+    var titleEl = document.getElementById('live-detail-title');
+    var leagueEl = document.getElementById('live-detail-league');
+    if (sportEl) sportEl.textContent = catIcon(match.category) + ' ' + catLabel(match.category);
+    if (titleEl) titleEl.textContent = match.title || lt('live.player.fallbackTitle', 'Live Stream');
+    if (leagueEl) leagueEl.textContent = match.league || '';
 
     var sourcesEl = document.getElementById('live-sources');
     var loading = document.getElementById('live-player-loading');
@@ -1862,19 +1850,239 @@
     renderFilteredSources();
   }
 
-  function closePlayer() {
-    var modal = document.getElementById('live-modal');
-    if (modal) {
-      modal.hidden = true;
-      modal.classList.remove('live-modal--theater');
-      if (modal._keydownHandler) {
-        document.removeEventListener('keydown', modal._keydownHandler);
-        delete modal._keydownHandler;
-      }
+  // === DETAIL VIEW (replaces matches-mount with the match page) ===
+
+  // Look up a match in allMatches by stable ID (or normalized title fallback)
+  function findMatchById(id) {
+    if (!id) return null;
+    for (var i = 0; i < allMatches.length; i++) {
+      var m = allMatches[i];
+      var mid = m.id || normalizeTitle(m.title);
+      if (mid === id) return m;
     }
-    var fr = document.querySelector('#live-player-wrap iframe');
-    if (fr) fr.remove();
-    document.body.style.overflow = '';
+    return null;
+  }
+
+  function renderDetailView() {
+    var mount = document.getElementById('matches-mount');
+    if (!mount) return;
+
+    var match = detailMatch;
+    if (!match) {
+      // Was loaded from a deep link — try to find by URL param now that matches are loaded
+      var qs = new URLSearchParams(location.search);
+      match = findMatchById(qs.get('match'));
+      detailMatch = match;
+    }
+
+    if (!match) {
+      // Still no match — show a "match not found" state
+      mount.innerHTML = '';
+      var notFound = document.createElement('div');
+      notFound.className = 'live-detail';
+      notFound.innerHTML =
+        '<button class="live-detail__back" type="button">' + lt('live.back', 'Back to live') + '</button>' +
+        '<div class="live-empty">' +
+          '<span class="live-empty__icon">🔍</span>' +
+          '<div class="live-empty__title">' + lt('live.detail.notFound', 'Match not found') + '</div>' +
+          '<div class="live-empty__sub">' + lt('live.detail.notFoundSub', 'It may have ended or been removed.') + '</div>' +
+        '</div>';
+      notFound.querySelector('.live-detail__back').addEventListener('click', goToHome);
+      mount.appendChild(notFound);
+      return;
+    }
+
+    mount.innerHTML = '';
+    var detail = document.createElement('div');
+    detail.className = 'live-detail';
+
+    // back button
+    var back = document.createElement('button');
+    back.className = 'live-detail__back';
+    back.type = 'button';
+    back.textContent = lt('live.back', 'Back to live');
+    back.addEventListener('click', goBack);
+    detail.appendChild(back);
+
+    // sport tag
+    var sportEl = document.createElement('div');
+    sportEl.className = 'live-detail__sport';
+    sportEl.id = 'live-detail-sport';
+    sportEl.textContent = catIcon(match.category) + ' ' + catLabel(match.category);
+    detail.appendChild(sportEl);
+
+    // title
+    var titleEl = document.createElement('h1');
+    titleEl.className = 'live-detail__title';
+    titleEl.id = 'live-detail-title';
+    titleEl.textContent = match.title || lt('live.player.fallbackTitle', 'Live Stream');
+    detail.appendChild(titleEl);
+
+    // meta row: league / time / status
+    var meta = document.createElement('div');
+    meta.className = 'live-detail__meta';
+    if (match.league) {
+      var leaguePill = document.createElement('span');
+      leaguePill.className = 'live-detail__meta-pill';
+      leaguePill.id = 'live-detail-league';
+      leaguePill.textContent = match.league;
+      meta.appendChild(leaguePill);
+    }
+    var status = statusBadgeFor(match);
+    if (status && status.key === 'live.status.live') {
+      var livePill = document.createElement('span');
+      livePill.className = 'live-detail__meta-pill live-detail__meta-pill--live';
+      livePill.innerHTML = '<span class="live-dot"></span>' + status.label;
+      meta.appendChild(livePill);
+    } else if (match.date) {
+      var timePill = document.createElement('span');
+      timePill.className = 'live-detail__meta-pill';
+      var diff = match.date - Date.now();
+      var rel = fmtRelTime(match.date);
+      // Don't say "Live now" in the meta pill when match isn't actually flagged live
+      if (diff < 0) timePill.textContent = fmtAbsTime(match.date);
+      else timePill.textContent = fmtAbsTime(match.date) + ' · ' + rel;
+      meta.appendChild(timePill);
+    }
+    detail.appendChild(meta);
+
+    // teams display
+    var teams = extractTeams(match.title);
+    if (teams.length === 2) {
+      var liveData = scoreFor(match);
+      var teamsRow = document.createElement('div');
+      teamsRow.className = 'live-detail__teams';
+      var homeBadge = (liveData && liveData.badgeHome) || match.homeBadgeUrl;
+      var awayBadge = (liveData && liveData.badgeAway) || match.awayBadgeUrl;
+      var homeName = (liveData && liveData.homeName) || teams[0];
+      var awayName = (liveData && liveData.awayName) || teams[1];
+
+      teamsRow.appendChild(makeDetailTeam(homeName, homeBadge, 'home', match.category));
+      var center = document.createElement('div');
+      if (liveData && (liveData.home != null || liveData.away != null)) {
+        center.className = 'live-detail__score';
+        center.textContent = (liveData.home == null ? '–' : liveData.home) + ' : ' + (liveData.away == null ? '–' : liveData.away);
+      } else {
+        center.className = 'live-detail__score live-detail__score--vs';
+        center.textContent = 'VS';
+      }
+      teamsRow.appendChild(center);
+      teamsRow.appendChild(makeDetailTeam(awayName, awayBadge, 'away', match.category));
+      detail.appendChild(teamsRow);
+    }
+
+    // player frame
+    var playerWrap = document.createElement('div');
+    playerWrap.className = 'live-detail__player';
+    playerWrap.id = 'live-player-wrap';
+    var loading = document.createElement('div');
+    loading.className = 'live-detail__player-loading';
+    loading.id = 'live-player-loading';
+    loading.textContent = lt('live.player.loading', 'Loading stream…');
+    playerWrap.appendChild(loading);
+    detail.appendChild(playerWrap);
+
+    // source picker bar
+    var srcBar = document.createElement('div');
+    srcBar.className = 'live-detail__srcbar';
+    var srcLabel = document.createElement('span');
+    srcLabel.className = 'live-detail__src-label';
+    srcLabel.textContent = lt('live.player.sources', 'Sources');
+    var srcBtns = document.createElement('div');
+    srcBtns.className = 'live-detail__sources';
+    srcBtns.id = 'live-sources';
+    srcBar.appendChild(srcLabel);
+    srcBar.appendChild(srcBtns);
+    detail.appendChild(srcBar);
+
+    // action row: theater / share / calendar / remind
+    var actions = document.createElement('div');
+    actions.className = 'live-detail__actions';
+
+    var theaterBtn = document.createElement('button');
+    theaterBtn.className = 'live-detail__action';
+    theaterBtn.type = 'button';
+    theaterBtn.innerHTML = '⛶ ' + lt('live.player.theater', 'Theater');
+    theaterBtn.title = lt('live.player.theaterHint', 'Theater mode (F)');
+    theaterBtn.addEventListener('click', toggleTheater);
+    actions.appendChild(theaterBtn);
+
+    var shareBtn = document.createElement('button');
+    shareBtn.className = 'live-detail__action';
+    shareBtn.type = 'button';
+    shareBtn.innerHTML = SHARE_SVG + ' ' + lt('live.share.share', 'Share');
+    shareBtn.addEventListener('click', function () { shareMatch(match); });
+    actions.appendChild(shareBtn);
+
+    if (match.date && (match.date - Date.now()) > 0) {
+      var calBtn = document.createElement('button');
+      calBtn.className = 'live-detail__action';
+      calBtn.type = 'button';
+      calBtn.innerHTML = CAL_SVG + ' ' + lt('live.cal.add', 'Add to calendar');
+      calBtn.addEventListener('click', function () { addToCalendar(match); });
+      actions.appendChild(calBtn);
+
+      var matchKey = match.id || normalizeTitle(match.title);
+      var hasReminder = !!(reminders[matchKey] || savedReminders[matchKey]);
+      var bellBtn = document.createElement('button');
+      bellBtn.className = 'live-detail__action' + (hasReminder ? ' live-detail__action--active' : '');
+      bellBtn.type = 'button';
+      bellBtn.innerHTML = (hasReminder ? BELL_ACTIVE_SVG : BELL_SVG) + ' ' + (hasReminder ? lt('live.remind.cancel', 'Cancel reminder') : lt('live.remind.set', 'Remind me'));
+      bellBtn.addEventListener('click', function () {
+        toggleReminder(match, bellBtn);
+        renderDetailView(); // redraw to update label
+      });
+      actions.appendChild(bellBtn);
+    }
+    detail.appendChild(actions);
+
+    // related matches (same sport, excluding this one)
+    var related = allMatches.filter(function (m) {
+      return m.category === match.category && (m.id || normalizeTitle(m.title)) !== (match.id || normalizeTitle(match.title));
+    }).slice(0, 8);
+    if (related.length) {
+      var relTitle = document.createElement('h2');
+      relTitle.className = 'live-detail__related-title';
+      relTitle.textContent = lt('live.detail.related', 'More in ') + catLabel(match.category);
+      detail.appendChild(relTitle);
+
+      var relGrid = document.createElement('div');
+      relGrid.className = 'match-grid';
+      relGrid.style.padding = '0';
+      related.forEach(function (m) { relGrid.appendChild(makeCard(m)); });
+      detail.appendChild(relGrid);
+    }
+
+    mount.appendChild(detail);
+
+    // Now hand off to the existing source-fetching pipeline
+    _populatePlayer(match);
+  }
+
+  function makeDetailTeam(name, badgeUrl, side, category) {
+    var t = document.createElement('div');
+    t.className = 'live-detail__team' + (side === 'away' ? ' live-detail__team--away' : '');
+    if (badgeUrl) {
+      var img = document.createElement('img');
+      img.src = badgeUrl;
+      img.alt = '';
+      img.className = 'live-detail__team-badge';
+      img.onerror = function () { img.replaceWith(makeDetailPlaceholder(category)); };
+      t.appendChild(img);
+    } else {
+      t.appendChild(makeDetailPlaceholder(category));
+    }
+    var n = document.createElement('div');
+    n.className = 'live-detail__team-name';
+    n.textContent = name || '';
+    t.appendChild(n);
+    return t;
+  }
+  function makeDetailPlaceholder(category) {
+    var p = document.createElement('div');
+    p.className = 'live-detail__team-badge-placeholder';
+    p.textContent = catIcon(category || 'other');
+    return p;
   }
 
   // === INIT ===
@@ -1890,19 +2098,45 @@
     showSkeleton();
     restoreReminders();
 
+    // Render the initial chrome based on URL before data lands so layout is stable
+    var initialRoute = parseRoute();
+    view = initialRoute.view;
+    if (view === 'sport') {
+      currentSport = initialRoute.sport || 'all';
+    }
+    renderPageHead();
+
     await Promise.all([loadMatches(), refreshLiveScores()]);
-    renderTabs();
-    renderLeagueFilter();
-    renderMatches();
+
+    applyRoute(false);
     startRefreshCountdown();
     startScoreTicker();
+
+    // History navigation
+    window.addEventListener('popstate', function () {
+      // tear down any iframe before route changes
+      var fr = document.querySelector('#live-player-wrap iframe');
+      if (fr) fr.remove();
+      detailMatch = null;
+      applyRoute(false);
+    });
+
+    // Keyboard shortcuts on detail view
+    document.addEventListener('keydown', function (e) {
+      if (view !== 'match') return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'Escape') goBack();
+      else if (e.key === 'f' || e.key === 'F') { e.preventDefault(); toggleTheater(); }
+      else if (e.key === 'ArrowRight') switchSourceByOffset(1);
+      else if (e.key === 'ArrowLeft') switchSourceByOffset(-1);
+    });
 
     // re-render dynamic text when user switches language
     window.addEventListener('eli6.langChanged', function () {
       if (window.renderTopNav) renderTopNav('live');
       if (window.renderBottomNav) renderBottomNav('live');
       renderDatePicker(); renderSearch(); renderRefreshBar();
-      renderTabs(); renderLeagueFilter(); renderMatches();
+      renderForView();
     });
 
     // PWA service worker

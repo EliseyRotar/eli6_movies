@@ -24,6 +24,7 @@
 
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/design.css" />
+  <link rel="stylesheet" href="css/live.css" />
 
   <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="theme-color" content="#0a0a0a" />
@@ -34,17 +35,16 @@
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml" />
 </head>
 <body>
-  <div class="app">
+  <div class="app live-shell">
     <div id="topnav-mount"></div>
 
-    <div class="pagehead">
-      <div class="pagehead__eyebrow" data-i18n="live.page.eyebrow">Live</div>
-      <h1 class="pagehead__title" data-i18n="live.page.title">Sports</h1>
-      <p class="pagehead__sub" data-i18n="live.page.subtitle">Live matches and today's schedule — football, NBA, NFL, F1, and more.</p>
+    <div id="live-page-head"></div>
+
+    <div class="live-stickybar">
+      <div id="sport-tabs-mount"></div>
     </div>
 
     <div id="live-date-mount"></div>
-    <div id="sport-tabs-mount"></div>
     <div id="live-league-mount"></div>
     <div id="live-search-mount"></div>
     <div id="live-refresh-mount"></div>
