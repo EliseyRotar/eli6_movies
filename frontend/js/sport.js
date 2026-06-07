@@ -2031,55 +2031,160 @@
     filterBar.className = 'live-src-langbar';
     var visibleSources;
 
-    function renderFilteredSources() {
-      // Remove existing source boxes (keep the filter bar)
-      Array.prototype.slice.call(wrap.querySelectorAll('.live-src-box')).forEach(function (n) { n.remove(); });
-      visibleSources = sortSourcesByVotes(initialLang === 'all'
-        ? sources
-        : sources.filter(function (s) { return s._lang && s._lang.code === initialLang; }));
-      if (!visibleSources.length) {
-        // No source for this language → fall back to all
-        visibleSources = sortSourcesByVotes(sources);
-      }
-      loading.style.display = 'none';
-      spawnIframe(visibleSources[0].url);
-      visibleSources.forEach(function (src, i) {
-        var box = document.createElement('div');
-        box.className = 'live-src-box';
+    // Collapsible source picker: a single "current source" button that
+    // expands a scrollable list. Replaces the wrap-of-pills row that ate
+    // half the mobile screen.
+    var currentUrl = null;
+    var picker = null;
+    var pickerCurrent = null;
+    var pickerList = null;
 
-        var btn = document.createElement('button');
-        btn.className = 'live-src-btn' + (i === 0 ? ' live-src-btn--active' : '') + (src.hd ? ' live-src-btn--hd' : '');
-        function paint() {
-          var score = voteScore(src.url);
-          var scoreLabel = score !== 0 ? ' (' + (score > 0 ? '+' + score : score) + ')' : '';
-          var flag = src._lang ? src._lang.flag + ' ' : '';
-          btn.textContent = flag + src.label + scoreLabel;
-        }
-        paint();
-        btn.addEventListener('click', function () {
-          wrap.querySelectorAll('.live-src-btn').forEach(function (b) { b.classList.remove('live-src-btn--active'); });
-          btn.classList.add('live-src-btn--active');
-          spawnIframe(src.url);
-        });
+    function buildSourceMeta(src) {
+      // Build a styled label fragment (flag + HD chip + name + vote score).
+      var frag = document.createDocumentFragment();
+      if (src._lang && src._lang.flag) {
+        var f = document.createElement('span');
+        f.className = 'live-src-flag';
+        f.textContent = src._lang.flag;
+        frag.appendChild(f);
+      }
+      if (src.hd) {
+        var hd = document.createElement('span');
+        hd.className = 'live-src-hd';
+        hd.textContent = 'HD';
+        frag.appendChild(hd);
+      }
+      var name = document.createElement('span');
+      name.className = 'live-src-name';
+      name.textContent = src.label;
+      frag.appendChild(name);
+      var score = voteScore(src.url);
+      if (score !== 0) {
+        var s = document.createElement('span');
+        s.className = 'live-src-score live-src-score--' + (score > 0 ? 'up' : 'down');
+        s.textContent = score > 0 ? '+' + score : String(score);
+        frag.appendChild(s);
+      }
+      return frag;
+    }
+
+    function setOpen(open) {
+      if (!picker) return;
+      picker.classList.toggle('live-src-picker--open', !!open);
+      pickerCurrent.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    function selectSource(src) {
+      currentUrl = src.url;
+      spawnIframe(src.url);
+      paintCurrent(src);
+      paintList();
+      setOpen(false);
+    }
+
+    function paintCurrent(src) {
+      pickerCurrent.innerHTML = '';
+      var meta = document.createElement('span');
+      meta.className = 'live-src-picker__meta';
+      meta.appendChild(buildSourceMeta(src));
+      pickerCurrent.appendChild(meta);
+      var chev = document.createElement('span');
+      chev.className = 'live-src-picker__chev';
+      chev.setAttribute('aria-hidden', 'true');
+      chev.textContent = '▾';
+      pickerCurrent.appendChild(chev);
+    }
+
+    function paintList() {
+      pickerList.innerHTML = '';
+      visibleSources.forEach(function (src) {
+        var row = document.createElement('div');
+        row.className = 'live-src-row' + (src.url === currentUrl ? ' live-src-row--active' : '');
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', src.url === currentUrl ? 'true' : 'false');
+
+        var pickBtn = document.createElement('button');
+        pickBtn.type = 'button';
+        pickBtn.className = 'live-src-row__pick';
+        pickBtn.appendChild(buildSourceMeta(src));
+        pickBtn.addEventListener('click', function () { selectSource(src); });
 
         var voteUp = document.createElement('button');
+        voteUp.type = 'button';
         voteUp.className = 'live-src-vote live-src-vote--up';
         voteUp.textContent = '👍';
         voteUp.title = lt('live.vote.up', 'This stream works');
         voteUp.setAttribute('aria-label', voteUp.title);
-        voteUp.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'up'); paint(); });
+        voteUp.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'up'); paintCurrent(visibleSources.find(function (x) { return x.url === currentUrl; }) || src); paintList(); });
 
         var voteDown = document.createElement('button');
+        voteDown.type = 'button';
         voteDown.className = 'live-src-vote live-src-vote--down';
         voteDown.textContent = '👎';
         voteDown.title = lt('live.vote.down', 'This stream is broken');
         voteDown.setAttribute('aria-label', voteDown.title);
-        voteDown.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'down'); paint(); });
+        voteDown.addEventListener('click', function (e) { e.stopPropagation(); voteSource(src.url, 'down'); paintCurrent(visibleSources.find(function (x) { return x.url === currentUrl; }) || src); paintList(); });
 
-        box.appendChild(btn);
-        box.appendChild(voteUp);
-        box.appendChild(voteDown);
-        wrap.appendChild(box);
+        row.appendChild(pickBtn);
+        row.appendChild(voteUp);
+        row.appendChild(voteDown);
+        pickerList.appendChild(row);
+      });
+    }
+
+    function renderFilteredSources() {
+      // Remove existing picker (keep the language filter bar)
+      var existing = wrap.querySelector('.live-src-picker');
+      if (existing) existing.remove();
+
+      visibleSources = sortSourcesByVotes(initialLang === 'all'
+        ? sources
+        : sources.filter(function (s) { return s._lang && s._lang.code === initialLang; }));
+      if (!visibleSources.length) visibleSources = sortSourcesByVotes(sources);
+
+      loading.style.display = 'none';
+
+      // Pick first source; reuse current selection if it survived the filter
+      var keep = currentUrl && visibleSources.find(function (s) { return s.url === currentUrl; });
+      var initial = keep || visibleSources[0];
+      currentUrl = initial.url;
+      spawnIframe(initial.url);
+
+      picker = document.createElement('div');
+      picker.className = 'live-src-picker';
+      pickerCurrent = document.createElement('button');
+      pickerCurrent.type = 'button';
+      pickerCurrent.className = 'live-src-picker__current';
+      pickerCurrent.setAttribute('aria-haspopup', 'listbox');
+      pickerCurrent.setAttribute('aria-expanded', 'false');
+      pickerCurrent.setAttribute('aria-label', lt('live.player.sources', 'Sources'));
+      pickerCurrent.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setOpen(!picker.classList.contains('live-src-picker--open'));
+      });
+      pickerList = document.createElement('div');
+      pickerList.className = 'live-src-picker__list';
+      pickerList.setAttribute('role', 'listbox');
+
+      picker.appendChild(pickerCurrent);
+      picker.appendChild(pickerList);
+      wrap.appendChild(picker);
+
+      paintCurrent(initial);
+      paintList();
+    }
+
+    // Close on outside click + Escape (set up once per render)
+    if (!wrap.__pickerHandlers) {
+      wrap.__pickerHandlers = true;
+      document.addEventListener('click', function (e) {
+        if (picker && !picker.contains(e.target)) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && picker && picker.classList.contains('live-src-picker--open')) {
+          setOpen(false);
+          pickerCurrent.focus();
+        }
       });
     }
 
