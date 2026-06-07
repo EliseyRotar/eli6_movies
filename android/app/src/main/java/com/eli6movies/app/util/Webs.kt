@@ -39,7 +39,7 @@ private val WATCH_PATH = Regex("""^/(?:app/)?watch/(movie|tv|anime)/(\d+)$""")
  * instead of loading it inside the same WebView. External http(s) hosts that
  * aren't ours fall through to the default behaviour.
  */
-class Eli6WebViewClient(private val context: Context) : WebViewClient() {
+open class Eli6WebViewClient(private val context: Context) : WebViewClient() {
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         val url = request.url ?: return false
         val host = url.host ?: return false
