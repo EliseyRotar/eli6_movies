@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Sport — ELI6 Movies</title>
+  <!-- Vercel rewrites /app/sport → /sport-app.html server-side, so the browser URL
+       stays at /app/sport and relative paths would resolve to /app/css/... and 404.
+       The base href forces every relative path to resolve from /. -->
+  <base href="/" />
 
   <script>
     (function () {

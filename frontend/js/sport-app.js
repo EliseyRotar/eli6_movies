@@ -464,14 +464,14 @@
   function goToMatch(m) {
     var mid = m.id || normalizeTitle(m.title) || 'unknown';
     detailMatch = m;
-    history.pushState({}, '', 'sport-app.html?match=' + encodeURIComponent(mid));
+    history.pushState({}, '', '/app/sport?match=' + encodeURIComponent(mid));
     view = 'detail';
     render();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
   function goBack() {
     if (history.length > 1) history.back();
-    else { history.replaceState({}, '', 'sport-app.html'); view = 'list'; render(); }
+    else { history.replaceState({}, '', '/app/sport'); view = 'list'; render(); }
   }
   window.addEventListener('popstate', function () { applyRoute(); });
 
