@@ -14,6 +14,9 @@ class I18nManager {
             it: 'Italiano',
             ru: 'Русский',
         };
+        // Resolves once first translation bundle is loaded; pages can await
+        // window.i18n.ready before rendering localised content.
+        this.ready = new Promise((resolve) => { this._resolveReady = resolve; });
         this.init();
     }
 
@@ -27,6 +30,7 @@ class I18nManager {
         // Load translations for current language
         await this.loadTranslations();
         console.log('Loaded language:', this.currentLanguage, this.translations); // DEBUG LOG
+        if (this._resolveReady) { this._resolveReady(this.currentLanguage); this._resolveReady = null; }
 
         // Apply translations once DOM is ready (translations may load before body is parsed)
         if (document.readyState === 'loading') {

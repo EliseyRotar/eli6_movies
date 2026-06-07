@@ -361,12 +361,33 @@
             "title": "Sports",
             "subtitle": "Live matches and today's schedule — football, NBA, NFL, F1, and more."
         },
-        "search": { "placeholder": "Search matches, leagues, sports…", "clear": "Clear search" },
-        "tabs": { "all": "All", "favorites": "My Teams", "label": "Sport" },
-        "date": { "label": "Match date", "yesterday": "Yesterday", "today": "Today", "tomorrow": "Tomorrow" },
-        "league": { "label": "League", "all": "All leagues" },
-        "fav": { "add": "Add to favorites", "remove": "Remove from favorites" },
-        "vote": { "up": "This stream works", "down": "This stream is broken" },
+        "search": {
+            "placeholder": "Search matches, leagues, sports…",
+            "clear": "Clear search"
+        },
+        "tabs": {
+            "all": "All",
+            "favorites": "My Teams",
+            "label": "Sport"
+        },
+        "date": {
+            "label": "Match date",
+            "yesterday": "Yesterday",
+            "today": "Today",
+            "tomorrow": "Tomorrow"
+        },
+        "league": {
+            "label": "League",
+            "all": "All leagues"
+        },
+        "fav": {
+            "add": "Add to favorites",
+            "remove": "Remove from favorites"
+        },
+        "vote": {
+            "up": "This stream works",
+            "down": "This stream is broken"
+        },
         "status": {
             "live": "Live",
             "ht": "HT",
@@ -389,7 +410,10 @@
             "noResults": "No matches found for",
             "noMatches": "No matches scheduled right now.",
             "noFavorites": "No matches for your favorite teams today.",
-            "fetching": "Fetching live matches…"
+            "fetching": "Fetching live matches…",
+            "checkBack": "Check back later or pick a different date.",
+            "favHint": "Star a team on any card to track it here.",
+            "searchHint": "Try a different team, league, or sport."
         },
         "refresh": {
             "autoRefresh": "Auto-refreshing in",
@@ -406,7 +430,8 @@
             "close": "Close (Esc)",
             "blocked": "Stream URL blocked for safety.",
             "matchFinished": "This match has ended.",
-            "watchHighlights": "Watch highlights on YouTube"
+            "watchHighlights": "Watch highlights on YouTube",
+            "theaterHint": "Theater mode (F)"
         },
         "categories": {
             "football": "Football",
@@ -430,7 +455,10 @@
         "streams": {
             "watch": "Watch",
             "streams": "streams",
-            "finished": "Finished"
+            "finished": "Finished",
+            "sourceOne": "source",
+            "sources": "sources",
+            "watchLive": "Watch live"
         },
         "remind": {
             "set": "Remind me",
@@ -450,6 +478,17 @@
         "lang": {
             "label": "Language:",
             "all": "All"
+        },
+        "back": "Back to sports",
+        "viewAll": "View all",
+        "detail": {
+            "notFound": "Match not found",
+            "notFoundSub": "It may have ended or been removed.",
+            "related": "More in "
+        },
+        "sport": {
+            "match": "match",
+            "matches": "matches"
         }
     }
 }

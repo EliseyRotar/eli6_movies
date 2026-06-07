@@ -361,12 +361,33 @@
             "title": "Sport",
             "subtitle": "Partite in diretta e programma di oggi — calcio, NBA, NFL, F1 e altro."
         },
-        "search": { "placeholder": "Cerca partite, leghe, sport…", "clear": "Cancella ricerca" },
-        "tabs": { "all": "Tutti", "favorites": "Le mie squadre", "label": "Sport" },
-        "date": { "label": "Data partita", "yesterday": "Ieri", "today": "Oggi", "tomorrow": "Domani" },
-        "league": { "label": "Lega", "all": "Tutte le leghe" },
-        "fav": { "add": "Aggiungi ai preferiti", "remove": "Rimuovi dai preferiti" },
-        "vote": { "up": "Questo stream funziona", "down": "Questo stream è rotto" },
+        "search": {
+            "placeholder": "Cerca partite, leghe, sport…",
+            "clear": "Cancella ricerca"
+        },
+        "tabs": {
+            "all": "Tutti",
+            "favorites": "Le mie squadre",
+            "label": "Sport"
+        },
+        "date": {
+            "label": "Data partita",
+            "yesterday": "Ieri",
+            "today": "Oggi",
+            "tomorrow": "Domani"
+        },
+        "league": {
+            "label": "Lega",
+            "all": "Tutte le leghe"
+        },
+        "fav": {
+            "add": "Aggiungi ai preferiti",
+            "remove": "Rimuovi dai preferiti"
+        },
+        "vote": {
+            "up": "Questo stream funziona",
+            "down": "Questo stream è rotto"
+        },
         "status": {
             "live": "Live",
             "ht": "INT",
@@ -389,7 +410,10 @@
             "noResults": "Nessun risultato per",
             "noMatches": "Nessuna partita in programma adesso.",
             "noFavorites": "Nessuna partita oggi per le tue squadre preferite.",
-            "fetching": "Caricamento partite in diretta…"
+            "fetching": "Caricamento partite in diretta…",
+            "checkBack": "Torna più tardi o scegli una data diversa.",
+            "favHint": "Tocca la stella su una scheda per seguire la squadra.",
+            "searchHint": "Prova con una squadra, lega o sport diverso."
         },
         "refresh": {
             "autoRefresh": "Aggiornamento automatico tra",
@@ -406,7 +430,8 @@
             "close": "Chiudi (Esc)",
             "blocked": "URL streaming bloccato per sicurezza.",
             "matchFinished": "Questa partita è finita.",
-            "watchHighlights": "Guarda gli highlights su YouTube"
+            "watchHighlights": "Guarda gli highlights su YouTube",
+            "theaterHint": "Modalità cinema (F)"
         },
         "categories": {
             "football": "Calcio",
@@ -430,7 +455,10 @@
         "streams": {
             "watch": "Guarda",
             "streams": "stream",
-            "finished": "Terminata"
+            "finished": "Terminata",
+            "sourceOne": "fonte",
+            "sources": "fonti",
+            "watchLive": "Guarda live"
         },
         "remind": {
             "set": "Ricordami",
@@ -450,6 +478,17 @@
         "lang": {
             "label": "Lingua:",
             "all": "Tutte"
+        },
+        "back": "Torna allo sport",
+        "viewAll": "Vedi tutto",
+        "detail": {
+            "notFound": "Partita non trovata",
+            "notFoundSub": "Potrebbe essere terminata o stata rimossa.",
+            "related": "Altro in "
+        },
+        "sport": {
+            "match": "partita",
+            "matches": "partite"
         }
     }
 }
