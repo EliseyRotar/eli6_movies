@@ -17,7 +17,7 @@ fun LiveScreen() {
             WebView(ctx).apply {
                 webViewClient = WebViewClient()
                 applyEli6Defaults()
-                loadUrl(BuildConfig.SITE_BASE_URL + "/live.html?fromApp=1")
+                loadUrl(BuildConfig.SITE_BASE_URL + "/sport.html?fromApp=1")
             }
         },
     )

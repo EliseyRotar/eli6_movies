@@ -119,7 +119,7 @@ class PlayerActivity : ComponentActivity() {
         val id = intent.getStringExtra(EXTRA_ID) ?: ""
         val live = intent.getStringExtra(EXTRA_LIVE_ID)
         return when {
-            live != null -> BuildConfig.SITE_BASE_URL + "/live.html?match=" + Uri.encode(live) + "&fromApp=1"
+            live != null -> BuildConfig.SITE_BASE_URL + "/sport.html?match=" + Uri.encode(live) + "&fromApp=1"
             id.isNotBlank() -> BuildConfig.SITE_BASE_URL + "/app/watch/" + type + "/" + id + "?fromApp=1"
             else -> BuildConfig.SITE_BASE_URL + "/?fromApp=1"
         }

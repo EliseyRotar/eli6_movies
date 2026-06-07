@@ -157,7 +157,7 @@
       { k: "movies",  label: tNav("movies",  "Movies"),   href: "movies.html"  },
       { k: "tvshows", label: tNav("tvshows", "TV Shows"), href: "tvshows.html" },
       { k: "anime",   label: tNav("anime",   "Anime"),    href: "anime.html"   },
-      { k: "live",    label: tNav("live",    "Sports"),   href: "live.html"    },
+      { k: "live",    label: tNav("live",    "Sports"),   href: "sport.html"   },
       { k: "mylist",  label: tNav("mylist",  "My List"),  href: "mylist.html"  },
     ].forEach(function(l) {
       const a = el("a", "topnav__link" + (active === l.k ? " topnav__link--active" : ""));
@@ -258,7 +258,7 @@
       { k: "home",    i: NAV_ICONS.home,     l: "Home",    href: "index.html" },
       { k: "movies",  i: NAV_ICONS.film,     l: "Movies",  href: "movies.html" },
       { k: "search",  i: NAV_ICONS.search,   l: "Search",  href: "search.html" },
-      { k: "live",    i: NAV_ICONS.trophy,   l: "Sports",  href: "live.html" },
+      { k: "live",    i: NAV_ICONS.trophy,   l: "Sports",  href: "sport.html" },
       { k: "mylist",  i: NAV_ICONS.bookmark, l: "List",    href: "mylist.html" },
       { k: "account", i: NAV_ICONS.user,     l: "Profile", href: "account.html" },
     ];

@@ -3,6 +3,10 @@
   "outputDirectory": "frontend",
   "cleanUrls": false,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/live.html", "destination": "/sport.html", "permanent": true },
+    { "source": "/live", "destination": "/sport.html", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/(.*)",

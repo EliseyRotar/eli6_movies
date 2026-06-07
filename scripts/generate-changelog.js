@@ -179,8 +179,10 @@ function classify(subj) {
 
 // Pretty-print a scope as a display name: "live.js" → "Live page"
 const SCOPE_LABELS = {
-  'live.js': 'Live page',
-  'live.html': 'Live page',
+  'sport.js': 'Sport page',
+  'sport.html': 'Sport page',
+  'live.js': 'Sport page',
+  'live.html': 'Sport page',
   'design.css': 'Design',
   'theme.css': 'Theme',
   'vercel.json': 'Hosting config',

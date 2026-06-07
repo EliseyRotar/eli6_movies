@@ -31,7 +31,7 @@
     { "name": "Movies", "url": "/movies.html", "description": "Browse movies" },
     { "name": "TV Shows", "url": "/tvshows.html", "description": "Browse TV shows" },
     { "name": "Anime", "url": "/anime.html", "description": "Browse anime" },
-    { "name": "Live Sports", "url": "/live.html", "description": "Live sports streams" }
+    { "name": "Sport", "url": "/sport.html", "description": "Live sports streams" }
   ],
   "related_applications": [],
   "prefer_related_applications": false
