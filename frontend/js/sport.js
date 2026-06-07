@@ -61,6 +61,7 @@
     /(^|\.)embedsportex\.site$/i,
     /(^|\.)embedme\.top$/i,
     /(^|\.)embed\.su$/i,
+    /(^|\.)embed\.st$/i,
     /(^|\.)vidsrc\.[a-z]{2,}$/i,
     /(^|\.)vixsrc\.to$/i,
     /(^|\.)autoembed\.co$/i,

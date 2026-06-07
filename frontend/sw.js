@@ -2,7 +2,7 @@
 // Network-first for our own JS/CSS/JSON so feature shipping isn't blocked by
 // the previous-visit cache; cache-only fallback if the user is offline.
 // HTML and other shell files still use stale-while-revalidate for fast nav.
-var CACHE_NAME = 'eli6-shell-v3';
+var CACHE_NAME = 'eli6-shell-v4';
 var SHELL_ASSETS = [
   '/sport.html',
   '/css/theme.css',
