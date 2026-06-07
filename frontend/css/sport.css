@@ -826,8 +826,275 @@
   font-size: 13px;
 }
 
+/* ============================================================
+   v3.2 — DAZN-tier polish: hero banner, LIVE NOW rail,
+   league-color card strip + tint, league-color hero gradients.
+   ============================================================ */
+
+/* ----- league color variable -------------------------------- */
+.match-card { --league-color: var(--sport-color); }
+.match-card[data-league-color] { --league-color: attr(data-league-color); }
+
+/* left-edge color strip + soft sport tint on every card */
+.match-card {
+  border-left: 3px solid color-mix(in srgb, var(--league-color) 70%, var(--border)) !important;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--league-color) 6%, var(--surface)) 0%,
+    var(--surface) 65%
+  ) !important;
+}
+.match-card:hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--league-color) 12%, var(--surface-hi)) 0%,
+    var(--surface-hi) 70%
+  ) !important;
+  border-left-color: var(--league-color) !important;
+}
+.match-card--live {
+  border-left-color: #e84040 !important;
+  background: linear-gradient(
+    180deg,
+    rgba(232,64,64,0.10) 0%,
+    var(--surface) 65%
+  ) !important;
+}
+.match-card--live:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(232,64,64,0.16) 0%,
+    var(--surface-hi) 70%
+  ) !important;
+}
+
+/* ----- HERO BANNER (home view, top) ------------------------- */
+
+.live-hero {
+  position: relative;
+  margin: 6px var(--pad-x) 18px;
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  min-height: 220px;
+  display: grid;
+  grid-template-columns: 1fr;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.live-hero:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 48px -20px rgba(0,0,0,0.6);
+}
+
+/* gradient backdrop driven by league color */
+.live-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, var(--league-color) 55%, transparent) 0%, transparent 60%),
+    radial-gradient(80% 60% at 0% 100%, color-mix(in srgb, var(--league-color) 35%, transparent) 0%, transparent 55%),
+    linear-gradient(135deg, color-mix(in srgb, var(--league-color) 18%, #0b0d12) 0%, #0b0d12 70%);
+  z-index: 0;
+}
+
+/* faded sport glyph in corner */
+.live-hero::after {
+  content: attr(data-sport-glyph);
+  position: absolute;
+  bottom: -40px;
+  right: -30px;
+  font-size: 280px;
+  line-height: 1;
+  opacity: 0.10;
+  transform: rotate(-12deg);
+  pointer-events: none;
+  z-index: 1;
+  filter: blur(0.5px);
+}
+
+.live-hero__inner {
+  position: relative;
+  z-index: 2;
+  padding: 24px 28px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 220px;
+}
+
+.live-hero__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.live-hero__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+}
+.live-hero__chip--live {
+  background: rgba(232,64,64,0.22);
+  color: #ff8585;
+}
+.live-hero__chip--league {
+  background: color-mix(in srgb, var(--league-color) 28%, transparent);
+  color: #fff;
+}
+
+.live-hero__title {
+  font-family: var(--font-head);
+  font-weight: var(--head-weight);
+  font-size: clamp(22px, 3.6vw, 38px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: #fff;
+  margin: 0;
+  max-width: 720px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.4);
+}
+
+.live-hero__teams {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.live-hero__team {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #fff;
+  font-weight: 600;
+  font-size: clamp(13px, 1.4vw, 16px);
+}
+.live-hero__team-badge {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.10);
+  border-radius: 8px;
+  padding: 4px;
+}
+.live-hero__team-badge--ph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  background: color-mix(in srgb, var(--league-color) 40%, rgba(255,255,255,0.10));
+}
+.live-hero__vs {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  opacity: 0.6;
+  color: #fff;
+  letter-spacing: 0.12em;
+}
+.live-hero__score {
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: clamp(20px, 2.6vw, 28px);
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.live-hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+  flex-wrap: wrap;
+}
+.live-hero__meta strong { color: #fff; font-weight: 600; }
+
+.live-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 20px;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  align-self: flex-start;
+  margin-top: 4px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+.live-hero__cta:hover { transform: translateY(-1px); box-shadow: 0 12px 32px -10px color-mix(in srgb, var(--accent) 60%, transparent); }
+.live-hero__cta-icon {
+  display: inline-flex;
+  width: 18px; height: 18px;
+  align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.18);
+  border-radius: 50%;
+  font-size: 9px;
+  padding-left: 1px;
+}
+
+@media (max-width: 720px) {
+  .live-hero { margin-left: 14px; margin-right: 14px; min-height: 0; }
+  .live-hero__inner { padding: 18px 18px 18px; gap: 11px; min-height: 0; }
+  .live-hero::after { font-size: 200px; bottom: -25px; right: -20px; }
+}
+
+/* ----- LIVE NOW rail (horizontal scroll, larger cards) ----- */
+
+.live-rail {
+  margin: 6px 0 16px;
+}
+.live-rail .row__head {
+  align-items: center;
+  margin-bottom: 10px;
+  padding-left: var(--pad-x);
+  padding-right: var(--pad-x);
+}
+.live-rail__scroller {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px var(--pad-x) 12px;
+  scrollbar-width: thin;
+}
+.live-rail__scroller::-webkit-scrollbar { height: 6px; }
+.live-rail__scroller::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+.live-rail__scroller > .match-card {
+  scroll-snap-align: start;
+  flex: 0 0 320px;
+  max-width: 360px;
+}
+@media (max-width: 720px) {
+  .live-rail__scroller { padding-left: 14px; padding-right: 14px; }
+  .live-rail__scroller > .match-card { flex-basis: 270px; }
+}
+
 /* ----- marquee theme tweaks -------------------------------- */
 html[data-theme="marquee"] .match-card { border-radius: 0 !important; }
+html[data-theme="marquee"] .live-hero { border-radius: 0; }
+html[data-theme="marquee"] .live-hero__title { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
 html[data-theme="marquee"] .match-card__title,
 html[data-theme="marquee"] .live-section__title,
 html[data-theme="marquee"] .live-detail__title,

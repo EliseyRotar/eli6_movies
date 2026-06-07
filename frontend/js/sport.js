@@ -148,6 +148,71 @@
     'darts': '🎯', 'other': '📺',
   };
 
+  // === LEAGUE COLORS ===
+  // Maps the most common leagues/competitions to their brand color. Falls
+  // back to the sport color when nothing matches. Patterns are matched against
+  // the lowercased league + title string (so "EPL", "Premier League", or
+  // "Manchester United vs Liverpool — Premier League" all hit the same entry).
+  var LEAGUE_COLORS = [
+    // football / soccer
+    { rx: /\b(premier ?league|epl|english premier)\b/i,                color: '#3D195B' },
+    { rx: /\b(la ?liga|laliga|spanish (?:primera|la liga))\b/i,         color: '#EE8707' },
+    { rx: /\b(serie ?a|italian (?:serie a|league))\b/i,                 color: '#008FD7' },
+    { rx: /\b(bundesliga|german (?:bundesliga|league))\b/i,             color: '#D20515' },
+    { rx: /\b(ligue ?1|french (?:ligue 1|league))\b/i,                  color: '#091C3E' },
+    { rx: /\b(champions ?league|uefa cl|ucl|champ\.? league)\b/i,       color: '#0B1F47' },
+    { rx: /\b(europa ?league|uel)\b/i,                                  color: '#FF6900' },
+    { rx: /\b(conference ?league|uecl)\b/i,                             color: '#00A859' },
+    { rx: /\b(world ?cup|fifa)\b/i,                                     color: '#1A237E' },
+    { rx: /\b(mls|major league soccer)\b/i,                             color: '#001A57' },
+    { rx: /\b(eredivisie|dutch (?:eredivisie|league))\b/i,              color: '#FF6900' },
+    { rx: /\b(primeira ?liga|portuguese (?:primeira|league))\b/i,       color: '#006A4E' },
+    { rx: /\b(saudi (?:pro|league)|spl)\b/i,                            color: '#006C35' },
+    { rx: /\b(brasileir[ãa]o|brazilian (?:serie a|league))\b/i,         color: '#FFCB05' },
+    { rx: /\b(argentin[ea]|liga profesional|primera division)\b/i,      color: '#74ACDF' },
+    // basketball
+    { rx: /\b(nba|national basketball)\b/i,                             color: '#C9082A' },
+    { rx: /\b(wnba)\b/i,                                                color: '#F57B20' },
+    { rx: /\b(euroleague|euro ?cup)\b/i,                                color: '#FF7900' },
+    { rx: /\b(ncaa)\b/i,                                                color: '#0033A0' },
+    // american football
+    { rx: /\b(nfl|national football league)\b/i,                        color: '#013369' },
+    { rx: /\b(cfl|canadian football)\b/i,                               color: '#A6192E' },
+    // baseball
+    { rx: /\b(mlb|major league baseball)\b/i,                           color: '#002D72' },
+    { rx: /\b(npb|nippon professional)\b/i,                             color: '#C8102E' },
+    // hockey
+    { rx: /\b(nhl|national hockey)\b/i,                                 color: '#000000' },
+    { rx: /\b(khl)\b/i,                                                 color: '#D52B1E' },
+    // motorsports
+    { rx: /\b(formula ?1|formula one|f1|grand prix)\b/i,                color: '#E10600' },
+    { rx: /\b(motogp|moto2|moto3)\b/i,                                  color: '#CC0000' },
+    { rx: /\b(nascar)\b/i,                                              color: '#FFD200' },
+    { rx: /\b(indycar|indy 500)\b/i,                                    color: '#003DA5' },
+    { rx: /\b(wec|world endurance|le mans)\b/i,                         color: '#00843D' },
+    { rx: /\b(rally|wrc)\b/i,                                           color: '#0033A0' },
+    // combat
+    { rx: /\b(ufc|ultimate fighting)\b/i,                               color: '#D20A11' },
+    { rx: /\b(bellator|pfl)\b/i,                                        color: '#1A1A1A' },
+    { rx: /\b(boxing|wbc|wba|ibf|wbo|matchroom|top rank)\b/i,           color: '#B71C1C' },
+    // tennis
+    { rx: /\b(atp|wta|grand slam|wimbledon|us open|french open|roland|australian open)\b/i, color: '#0F4D2D' },
+    // golf
+    { rx: /\b(pga|liv golf|the open|masters|ryder cup)\b/i,             color: '#006633' },
+    // cricket
+    { rx: /\b(ipl|indian premier league)\b/i,                           color: '#004B8D' },
+    { rx: /\b(t20|test (?:match|series)|odi)\b/i,                       color: '#1B5E20' },
+    // rugby
+    { rx: /\b(six nations|super rugby|nrl|super league|rugby world cup)\b/i, color: '#1B5E20' },
+  ];
+  function leagueColor(text) {
+    if (!text) return null;
+    for (var i = 0; i < LEAGUE_COLORS.length; i++) {
+      if (LEAGUE_COLORS[i].rx.test(text)) return LEAGUE_COLORS[i].color;
+    }
+    return null;
+  }
+
   // === LANGUAGE DETECTION (for stream source labels) ===
   // Heuristic: parse channel/server names → {flag, code, name}.
   // 'code' is ISO-639-1 (or 'multi' for European feeds). Used to group sources in the player modal.
@@ -727,18 +792,18 @@
   }
 
   function goToHome() {
-    history.pushState({}, '', 'live.html');
+    history.pushState({}, '', 'sport.html');
     applyRoute(true);
   }
   function goToSport(sportId) {
-    history.pushState({}, '', 'live.html?sport=' + encodeURIComponent(sportId));
+    history.pushState({}, '', 'sport.html?sport=' + encodeURIComponent(sportId));
     applyRoute(true);
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
   function goToMatch(m) {
     var mid = m.id || normalizeTitle(m.title) || 'unknown';
     detailMatch = m;
-    history.pushState({}, '', 'live.html?match=' + encodeURIComponent(mid));
+    history.pushState({}, '', 'sport.html?match=' + encodeURIComponent(mid));
     view = 'match';
     renderForView();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -1004,7 +1069,7 @@
         // Searching should look across all sports — narrow sport tab + search is confusing.
         if (searchQuery && view === 'sport' && currentSport !== '__fav') {
           // jump back to home view (URL change) but keep the search applied
-          history.replaceState({}, '', 'live.html');
+          history.replaceState({}, '', 'sport.html');
           view = 'home';
           currentSport = 'all';
           currentLeague = 'all';
@@ -1090,11 +1155,25 @@
       return;
     }
 
-    // HOME VIEW — Live Now section + per-sport sections
+    // HOME VIEW — Hero + Live rail + per-sport sections
     var favs = list.filter(matchHasFavorite);
     var rest = list.filter(function (m) { return !matchHasFavorite(m); });
     var liveMatches = rest.filter(function (m) { return m.isLive; });
     var upcoming   = rest.filter(function (m) { return !m.isLive; });
+
+    // Pick a hero match: prefer a live match with a recognised league + sources,
+    // else the soonest upcoming match with sources.
+    var heroPool = liveMatches.concat(upcoming);
+    var heroMatch = heroPool.find(function (m) {
+      return leagueColor((m.league || '') + ' ' + (m.title || ''))
+          && srcCountFor(m) > 0;
+    }) || heroPool.find(function (m) { return srcCountFor(m) > 0; }) || heroPool[0];
+    if (heroMatch && currentDate === 'today') {
+      appendHero(mount, heroMatch);
+      // Avoid duplicating the hero card lower on the page
+      liveMatches = liveMatches.filter(function (m) { return m !== heroMatch; });
+      upcoming    = upcoming.filter(function (m) { return m !== heroMatch; });
+    }
 
     if (favs.length) {
       appendSection(mount, {
@@ -1106,13 +1185,7 @@
       });
     }
     if (liveMatches.length) {
-      appendSection(mount, {
-        title: lt('live.sections.liveNow', 'Live Now'),
-        icon: null,
-        kind: 'live',
-        items: liveMatches,
-        max: 8,
-      });
+      appendLiveRail(mount, liveMatches);
     }
 
     // group upcoming by sport, ordered by sport count desc
@@ -1189,6 +1262,203 @@
     mount.appendChild(sec);
   }
 
+  function srcCountFor(m) {
+    if (!m) return 0;
+    if (m.sources && m.sources.length) return m.sources.length;
+    if (m.iframes && m.iframes.length) return m.iframes.length;
+    if (m.channels && m.channels.length) return m.channels.length;
+    return 0;
+  }
+
+  // === HERO BANNER (home view, featured match) ===
+  function appendHero(mount, m) {
+    var hero = document.createElement('div');
+    hero.className = 'live-hero';
+    hero.setAttribute('role', 'button');
+    hero.setAttribute('tabindex', '0');
+    hero.setAttribute('aria-label', 'Featured: ' + (m.title || 'live match'));
+    hero.dataset.sportGlyph = catIcon(m.category);
+
+    var lc = leagueColor((m.league || '') + ' ' + (m.title || ''));
+    if (lc) hero.style.setProperty('--league-color', lc);
+    else {
+      // fall back to the sport color from CSS
+      var sportColors = {
+        football: '#22c55e', basketball: '#f97316', 'american-football': '#ef4444',
+        tennis: '#a3e635', baseball: '#f59e0b', hockey: '#3b82f6',
+        motorsports: '#f87171', fight: '#ec4899', rugby: '#d97706',
+        cricket: '#10b981', volleyball: '#8b5cf6', badminton: '#eab308',
+        golf: '#4ade80', afl: '#c2410c', darts: '#f43f5e',
+      };
+      hero.style.setProperty('--league-color', sportColors[m.category] || '#94a3b8');
+    }
+
+    var inner = document.createElement('div');
+    inner.className = 'live-hero__inner';
+
+    // top chips: LIVE / sport / league
+    var top = document.createElement('div');
+    top.className = 'live-hero__top';
+
+    if (m.isLive) {
+      var liveChip = document.createElement('span');
+      liveChip.className = 'live-hero__chip live-hero__chip--live';
+      liveChip.innerHTML = '<span class="live-dot"></span> ' + lt('live.status.live', 'LIVE');
+      top.appendChild(liveChip);
+    } else if (m.date) {
+      var diff = m.date - Date.now();
+      if (diff > 0) {
+        var startsIn = document.createElement('span');
+        startsIn.className = 'live-hero__chip';
+        startsIn.textContent = fmtStartsIn(diff) + ' · ' + fmtAbsTime(m.date);
+        top.appendChild(startsIn);
+      }
+    }
+
+    var sportChip = document.createElement('span');
+    sportChip.className = 'live-hero__chip';
+    sportChip.textContent = catIcon(m.category) + ' ' + catLabel(m.category);
+    top.appendChild(sportChip);
+
+    if ((m.league || '').trim()) {
+      var leagueChip = document.createElement('span');
+      leagueChip.className = 'live-hero__chip live-hero__chip--league';
+      leagueChip.textContent = m.league;
+      top.appendChild(leagueChip);
+    }
+    inner.appendChild(top);
+
+    // title + teams
+    var title = document.createElement('h2');
+    title.className = 'live-hero__title';
+    title.textContent = m.title || lt('live.player.fallbackTitle', 'Live Stream');
+    inner.appendChild(title);
+
+    var teams = extractTeams(m.title);
+    var liveData = scoreFor(m);
+    if (teams.length === 2) {
+      var teamsRow = document.createElement('div');
+      teamsRow.className = 'live-hero__teams';
+
+      var hb = (liveData && liveData.badgeHome) || m.homeBadgeUrl;
+      var ab = (liveData && liveData.badgeAway) || m.awayBadgeUrl;
+      var hn = (liveData && liveData.homeName) || teams[0];
+      var an = (liveData && liveData.awayName) || teams[1];
+
+      teamsRow.appendChild(makeHeroTeam(hn, hb));
+      if (liveData && (liveData.home != null || liveData.away != null)) {
+        var score = document.createElement('span');
+        score.className = 'live-hero__score';
+        score.textContent = (liveData.home != null ? liveData.home : '–') + ' – ' + (liveData.away != null ? liveData.away : '–');
+        teamsRow.appendChild(score);
+      } else {
+        var vs = document.createElement('span');
+        vs.className = 'live-hero__vs';
+        vs.textContent = 'VS';
+        teamsRow.appendChild(vs);
+      }
+      teamsRow.appendChild(makeHeroTeam(an, ab));
+      inner.appendChild(teamsRow);
+    }
+
+    // meta line
+    var meta = document.createElement('div');
+    meta.className = 'live-hero__meta';
+    var src = srcCountFor(m);
+    if (src > 0) {
+      meta.innerHTML = '<strong>' + src + '</strong> ' + (src === 1
+        ? lt('live.streams.sourceOne', 'source')
+        : lt('live.streams.sources', 'sources'));
+    }
+    inner.appendChild(meta);
+
+    // CTA
+    var cta = document.createElement('span');
+    cta.className = 'live-hero__cta';
+    cta.innerHTML = '<span class="live-hero__cta-icon">▶</span> ' +
+      (m.isLive ? lt('live.streams.watchLive', 'Watch live') : lt('live.streams.watch', 'Watch'));
+    inner.appendChild(cta);
+
+    hero.appendChild(inner);
+    hero.addEventListener('click', function () { goToMatch(m); });
+    hero.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToMatch(m); }
+    });
+    mount.appendChild(hero);
+  }
+
+  function makeHeroTeam(name, badgeUrl) {
+    var t = document.createElement('span');
+    t.className = 'live-hero__team';
+    if (badgeUrl) {
+      var img = document.createElement('img');
+      img.src = badgeUrl;
+      img.alt = '';
+      img.loading = 'lazy';
+      img.className = 'live-hero__team-badge';
+      img.onerror = function () {
+        var ph = document.createElement('span');
+        ph.className = 'live-hero__team-badge live-hero__team-badge--ph';
+        ph.textContent = (name || '?').slice(0, 2).toUpperCase();
+        img.replaceWith(ph);
+      };
+      t.appendChild(img);
+    } else {
+      var ph = document.createElement('span');
+      ph.className = 'live-hero__team-badge live-hero__team-badge--ph';
+      ph.textContent = (name || '?').slice(0, 2).toUpperCase();
+      t.appendChild(ph);
+    }
+    var n = document.createElement('span');
+    n.textContent = name || '';
+    t.appendChild(n);
+    return t;
+  }
+
+  function fmtStartsIn(ms) {
+    var mins = Math.round(ms / 60000);
+    if (mins < 60) return mins + 'm';
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return h + 'h' + (m ? (' ' + m + 'm') : '');
+  }
+
+  // === LIVE NOW horizontal rail ===
+  function appendLiveRail(mount, items) {
+    var sec = document.createElement('div');
+    sec.className = 'live-section live-section--live live-rail';
+
+    var head = document.createElement('div');
+    head.className = 'row__head';
+    var titleEl = document.createElement('h2');
+    titleEl.className = 'live-section__title';
+    var iconEl = document.createElement('span');
+    iconEl.className = 'live-section__icon';
+    titleEl.appendChild(iconEl);
+    titleEl.appendChild(document.createTextNode(' ' + lt('live.sections.liveNow', 'Live Now') + ' '));
+    var cnt = document.createElement('span');
+    cnt.className = 'live-section__count';
+    cnt.textContent = items.length;
+    titleEl.appendChild(cnt);
+    head.appendChild(titleEl);
+
+    if (items.length > 8) {
+      var see = document.createElement('a');
+      see.className = 'live-section__viewall';
+      see.href = '#';
+      see.textContent = lt('live.viewAll', 'View all');
+      see.addEventListener('click', function (e) { e.preventDefault(); goToSport('__live'); });
+      head.appendChild(see);
+    }
+    sec.appendChild(head);
+
+    var scroller = document.createElement('div');
+    scroller.className = 'live-rail__scroller';
+    items.slice(0, 12).forEach(function (m) { scroller.appendChild(makeCard(m)); });
+    sec.appendChild(scroller);
+    mount.appendChild(sec);
+  }
+
   // small umbrella rerender (used after favorite toggles)
   function rerenderAll() {
     renderTabs();
@@ -1204,6 +1474,10 @@
     card.dataset.sport = m.category || 'other';
     card.dataset.sportIcon = catIcon(m.category);
     card.__match = m;
+
+    // league color tint (falls back to sport color via CSS var inheritance)
+    var lc = leagueColor((m.league || '') + ' ' + (m.title || ''));
+    if (lc) card.style.setProperty('--league-color', lc);
 
     var liveData = scoreFor(m);
     var teams = extractTeams(m.title);
@@ -2088,6 +2362,11 @@
   // === INIT ===
 
   async function init() {
+    // Wait for translations so the first render isn't full of English fallbacks
+    if (window.i18n && window.i18n.ready) {
+      try { await window.i18n.ready; } catch (e) { /* fall through with fallbacks */ }
+    }
+
     if (window.renderTopNav) renderTopNav('live');
     if (window.renderBottomNav) renderBottomNav('live');
     if (window.renderFooter) renderFooter('footer-mount');
