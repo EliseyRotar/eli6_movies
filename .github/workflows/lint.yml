@@ -1,0 +1,64 @@
+name: lint
+
+on:
+  pull_request:
+    paths:
+      - "frontend/**/*.js"
+      - "frontend/**/*.html"
+      - "backend/**/*.js"
+      - ".eslintrc.json"
+      - "package.json"
+      - ".github/workflows/lint.yml"
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**/*.js"
+      - "frontend/**/*.html"
+      - "backend/**/*.js"
+      - ".eslintrc.json"
+      - "package.json"
+      - ".github/workflows/lint.yml"
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Parse-check every JS file so a syntax error can never reach prod.
+      # node --check is enough to catch the bulk of "the JS is broken"
+      # regressions; it ran a few seconds.
+      - name: node --check
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r f; do
+            if ! node --check "$f"; then
+              echo "::error file=$f::syntax error"
+              fail=1
+            fi
+          done < <(find frontend/js backend -type f -name '*.js' -not -path '*/node_modules/*')
+          exit "$fail"
+
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci --ignore-scripts || npm install --ignore-scripts
+
+      # Run the existing eslint config. Non-blocking for now (continue-on-error)
+      # so the lint workflow surfaces warnings without gating merges on
+      # pre-existing violations.
+      - name: eslint
+        continue-on-error: true
+        run: npx eslint frontend/js backend --max-warnings=0
