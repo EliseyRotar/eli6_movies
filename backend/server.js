@@ -1,4 +1,18 @@
 require('dotenv').config();
+
+// Sentry has to be initialised before any other require that we want to
+// instrument (express, mongoose, http). No-op when SENTRY_DSN isn't set.
+const Sentry = require('@sentry/node');
+if (process.env.SENTRY_DSN) {
+    Sentry.init({
+        dsn: process.env.SENTRY_DSN,
+        environment: process.env.NODE_ENV || 'development',
+        tracesSampleRate: Number(process.env.SENTRY_TRACES_RATE || 0.1),
+        sendDefaultPii: false,
+        release: process.env.RENDER_GIT_COMMIT || undefined,
+    });
+}
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -9,6 +23,7 @@ const rateLimit = require('./middleware/rateLimit');
 const csrfProtect = require('./middleware/csrf');
 const errorHandler = require('./middleware/errorHandler');
 const authRoutes = require('./routes/auth');
+const googleAuthRoutes = require('./routes/googleAuth');
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
 const catalogRoutes = require('./routes/catalog');
@@ -95,6 +110,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 // Mount routers
 app.use('/api', authRoutes);
+app.use('/api', googleAuthRoutes);
 app.use('/api', userRoutes);
 app.use('/api', adminRoutes);
 app.use('/api', catalogRoutes);
@@ -109,6 +125,12 @@ app.use('/api', cronRoutes);
 app.use('/api', contactRoutes);
 app.use('/api', traktRoutes);
 
+// Sentry's express error handler must come BEFORE the app's errorHandler so
+// exceptions thrown in route handlers are captured before we send the JSON
+// response. No-op when SENTRY_DSN is unset (Sentry.init was a no-op too).
+if (process.env.SENTRY_DSN) {
+    Sentry.setupExpressErrorHandler(app);
+}
 app.use(errorHandler);
 
 // Start HTTP server immediately, connect DB in background with retries

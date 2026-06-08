@@ -8,6 +8,7 @@
         "dev": "nodemon server.js"
     },
     "dependencies": {
+        "@sentry/node": "^8.55.2",
         "axios": "^1.16.1",
         "bcryptjs": "^2.4.3",
         "cloudinary": "^2.10.0",
