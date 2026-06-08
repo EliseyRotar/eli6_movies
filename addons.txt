@@ -23,7 +23,11 @@ when im watching smth on the https://eli6movies.vercel.app/player.html, when i r
 
 create a dashboard to see what user logs on, the ip, when, every info about the user that uses this website  FATTO
 
+add login with google
 
+new bug - Whenever we select the season and episode from the first poster card - the seasons are correctly selected but the episode always defaults to 1
+
+add option to remove Campaign Traffic utm_source / utm_medium / utm_campaign / utm_content — all time content, like i wanna remove this one: WhatsApp 	Whatsapp 	WA Group Sharing 	WA Message from the campaign traffic, add this option
 
 
 
