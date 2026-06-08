@@ -14,7 +14,15 @@ const userSchema = new mongoose.Schema(
         },
         password: {
             type: String,
-            required: true,
+            // Optional for accounts created via OAuth (Google etc.) — those
+            // users authenticate via the provider and don't have a local
+            // password. They can later set one via the password-reset flow.
+            required: function () { return !this.googleId; },
+        },
+        googleId: {
+            type: String,
+            default: null,
+            index: { unique: true, sparse: true },
         },
         myList: {
             type: [
