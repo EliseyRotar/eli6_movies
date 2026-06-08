@@ -26,9 +26,11 @@ const auth = require('./middleware/auth');
 const { startBot } = require('./discord/bot');
 
 const app = express();
-// Render.com runs behind multiple internal proxy hops (all 10.x.x.x).
-// 'true' tells Express to treat the leftmost X-Forwarded-For IP as the real client IP.
-app.set('trust proxy', true);
+// Render runs behind multiple internal proxy hops (all RFC1918, 10.x/192.168.x/172.16-31.x).
+// Trust only those private ranges + loopback — public IPs sending forged
+// X-Forwarded-For headers are NOT trusted, so req.ip can't be spoofed
+// (defeats rate-limit bypass via XFF injection).
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
 const allowedOrigins = (
     process.env.FRONTEND_ORIGIN || 'http://localhost:5500,http://localhost:5173'
@@ -48,7 +50,22 @@ const corsOptions = {
 
 app.use(
     helmet({
-        contentSecurityPolicy: false,
+        // Backend renders JSON + occasional HTML for error/health pages only.
+        // Strict CSP so any reflected payload can't execute inline JS.
+        contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+                imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+                connectSrc: ["'self'"],
+                objectSrc: ["'none'"],
+                baseUri: ["'self'"],
+                frameAncestors: ["'none'"],
+            },
+        },
+        // COEP not enabled because the frontend embeds cross-origin video
+        // providers; reintroducing this would break the player iframes.
         crossOriginEmbedderPolicy: false,
         crossOriginOpenerPolicy: { policy: 'same-origin' },
         crossOriginResourcePolicy: { policy: 'cross-origin' },
