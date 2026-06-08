@@ -86,6 +86,29 @@ async function run() {
                 const existing = notifs.find(n => n.showId === showId);
                 if (existing && existing.lastEpisodeKey === key) continue;
 
+                // CLAIM the send BEFORE emailing — this is the dedup gate.
+                // If two cron runs race, only one matches the conditional and
+                // gets to send. The other sees matchedCount === 0 and exits.
+                let claimed;
+                if (existing) {
+                    claimed = await User.updateOne(
+                        {
+                            _id: user._id,
+                            tvNotifications: { $elemMatch: { showId, lastEpisodeKey: { $ne: key } } },
+                        },
+                        { $set: { 'tvNotifications.$.lastEpisodeKey': key } }
+                    );
+                } else {
+                    claimed = await User.updateOne(
+                        {
+                            _id: user._id,
+                            'tvNotifications.showId': { $ne: showId },
+                        },
+                        { $push: { tvNotifications: { showId, lastEpisodeKey: key } } }
+                    );
+                }
+                if (!claimed.matchedCount && !claimed.modifiedCount) continue;
+
                 try {
                     await resend.emails.send({
                         from:    FROM_EMAIL,
@@ -94,19 +117,19 @@ async function run() {
                         html:    newEpisodeEmail(user.username, show, ep),
                     });
                     results.emailsSent++;
-
-                    await User.updateOne(
-                        { _id: user._id, 'tvNotifications.showId': showId },
-                        { $set: { 'tvNotifications.$.lastEpisodeKey': key } }
-                    ).then(r => {
-                        if (r.matchedCount === 0) {
-                            return User.updateOne(
-                                { _id: user._id },
-                                { $push: { tvNotifications: { showId, lastEpisodeKey: key } } }
-                            );
-                        }
-                    });
                 } catch (emailErr) {
+                    // Rollback the claim so a retry can re-send this episode.
+                    if (existing) {
+                        await User.updateOne(
+                            { _id: user._id, 'tvNotifications.showId': showId },
+                            { $set: { 'tvNotifications.$.lastEpisodeKey': existing.lastEpisodeKey } }
+                        ).catch(() => {});
+                    } else {
+                        await User.updateOne(
+                            { _id: user._id },
+                            { $pull: { tvNotifications: { showId } } }
+                        ).catch(() => {});
+                    }
                     results.errors.push(`email to ${user.email}: ${emailErr.message}`);
                 }
             }
