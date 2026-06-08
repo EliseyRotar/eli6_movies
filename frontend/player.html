@@ -3057,17 +3057,25 @@
 
                     const trailerGrid = document.getElementById('trailerGrid');
                     if (trailerGrid && trailers.length > 0) {
-                        trailerGrid.innerHTML = trailers.map((trailer, index) => `
-                            <div class="trailer-item" onclick="playTrailer('${trailer.key}')">
+                        // YouTube IDs are exactly 11 chars from [A-Za-z0-9_-].
+                        // Reject anything else so a tampered TMDB response can't
+                        // inject HTML through the data-youtube-id attribute or
+                        // the <img src>.
+                        const safe = trailers.filter(t => /^[A-Za-z0-9_-]{11}$/.test(t.key || ''));
+                        trailerGrid.innerHTML = safe.map((trailer) => `
+                            <div class="trailer-item trailer-placeholder" data-youtube-id="${esc(trailer.key)}">
                                 <div class="trailer-thumbnail">
-                                    <img src="https://img.youtube.com/vi/${trailer.key}/mqdefault.jpg" alt="${esc(trailer.name)}">
+                                    <img src="https://img.youtube.com/vi/${esc(trailer.key)}/mqdefault.jpg" alt="${esc(trailer.name)}">
                                     <div class="trailer-play-overlay">▶</div>
                                 </div>
                                 <div class="trailer-title">${esc(trailer.name)}</div>
                             </div>
                         `).join('');
 
-                        // Add click handlers for lazy loading
+                        // Delegated lazy-load — single listener per render, no
+                        // inline onclick (the old onclick called an undefined
+                        // playTrailer and interpolated trailer.key into an HTML
+                        // attribute without escaping).
                         document.querySelectorAll('.trailer-placeholder').forEach(placeholder => {
                             placeholder.addEventListener('click', function () {
                                 const youtubeId = this.getAttribute('data-youtube-id');
@@ -3097,16 +3105,22 @@
         // Load individual trailer video
         function loadTrailerVideo(placeholder, youtubeId, trailerName) {
             try {
+                // Hard re-validate the YouTube ID — the placeholder data attribute
+                // came from a TMDB response we don't fully trust.
+                if (!/^[A-Za-z0-9_-]{11}$/.test(youtubeId || '')) {
+                    placeholder.innerHTML = '<div class="trailer-error"><div class="error-text">Invalid trailer</div></div>';
+                    return;
+                }
                 // Replace placeholder with iframe
                 placeholder.innerHTML = `
-                    <iframe class="trailer-video" 
-                            src="https://www.youtube.com/embed/${youtubeId}?autoplay=1" 
-                            frameborder="0" 
+                    <iframe class="trailer-video"
+                            src="https://www.youtube.com/embed/${youtubeId}?autoplay=1"
+                            frameborder="0"
                             allowfullscreen
                             allow="fullscreen; web-share">
                     </iframe>
                     <div class="trailer-info">
-                        <div class="trailer-title">${trailerName}</div>
+                        <div class="trailer-title">${esc(trailerName)}</div>
                         <div class="trailer-description">Playing...</div>
                     </div>
                 `;
