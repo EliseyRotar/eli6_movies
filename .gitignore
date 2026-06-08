@@ -72,6 +72,11 @@ Thumbs.db
 # Local infrastructure doc (contains live secrets — keep off GitHub)
 INFRASTRUCTURE.md
 
+# Discord setup scripts — historically contained hardcoded bot token, keep off GitHub
+discord/content.js
+discord/setup.js
+discord/DISCORD_SETUP.md
+
 # Design handoff (local reference only)
 design_handoff_eli6_movies/
 account.html/
