@@ -27,7 +27,13 @@ async function geoLookup(ip) {
 
     try {
         const { data } = await axios.get(
-            `http://ip-api.com/json/${encodeURIComponent(clean)}?fields=status,country,countryCode,city,org`,
+            // HTTPS to prevent MITM injection of country/ISP fields that end up
+            // in the admin analytics dashboard. NOTE: ip-api.com's free tier is
+            // HTTP-only; if the request 401s, set IPAPI_KEY (pro plan) or swap
+            // the host to a free HTTPS provider (ipinfo.io, freeipapi.com).
+            // The module already has a circuit breaker so failures degrade to
+            // empty-geo silently.
+            `https://ip-api.com/json/${encodeURIComponent(clean)}?fields=status,country,countryCode,city,org${process.env.IPAPI_KEY ? `&key=${process.env.IPAPI_KEY}` : ''}`,
             { timeout: 2500 }
         );
         if (data.status === 'success') {
