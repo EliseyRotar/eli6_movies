@@ -23,6 +23,23 @@ object UpdateChecker {
 
     private const val TAG = "Eli6Update"
 
+    // Hosts GitHub uses to serve release-asset binaries. Anything else gets
+    // rejected before we hand the URL to the installer.
+    private val TRUSTED_RELEASE_HOSTS = setOf(
+        "github.com",
+        "objects.githubusercontent.com",
+        "github-releases.githubusercontent.com",
+        "release-assets.githubusercontent.com",
+    )
+
+    private fun isTrustedReleaseUrl(raw: String?): Boolean {
+        if (raw.isNullOrBlank()) return false
+        return try {
+            val u = Uri.parse(raw)
+            u.scheme == "https" && (u.host?.lowercase() in TRUSTED_RELEASE_HOSTS)
+        } catch (_: Exception) { false }
+    }
+
     suspend fun checkAndPrompt(
         activity: androidx.activity.ComponentActivity,
         verbose: Boolean = false,
@@ -105,7 +122,14 @@ object UpdateChecker {
             for (i in 0 until assets.length()) {
                 val a = assets.getJSONObject(i)
                 if (a.optString("name").endsWith(".apk")) {
-                    apk = a.optString("browser_download_url"); break
+                    val url = a.optString("browser_download_url")
+                    // Only accept URLs that GitHub itself serves release assets
+                    // from. Defense-in-depth — Android still verifies the APK
+                    // signing certificate matches the installed one, but
+                    // pinning the host stops a rogue API response from sending
+                    // the installer to a third-party domain entirely.
+                    if (isTrustedReleaseUrl(url)) { apk = url; break }
+                    Log.w(TAG, "rejecting non-github release URL: $url")
                 }
             }
             val notes = r.optString("body").take(500)
