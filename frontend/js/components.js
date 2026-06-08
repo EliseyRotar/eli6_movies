@@ -1051,6 +1051,11 @@
     acceptBtn.style.cssText = "padding:8px 20px;font-size:13px";
     acceptBtn.addEventListener("click", function () {
       localStorage.setItem("eli6.cookies.accepted", "1");
+      // Analytics beacon is gated on consent (see config.js). Fire the load
+      // now that the user has agreed instead of forcing a reload.
+      if (typeof window.__loadEli6Analytics === "function") {
+        try { window.__loadEli6Analytics(); } catch (_) {}
+      }
       banner.style.transition = "opacity 200ms";
       banner.style.opacity = "0";
       setTimeout(function () { banner.remove(); }, 210);
