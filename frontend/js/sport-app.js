@@ -1,7 +1,6 @@
 /* sport-app.js — APK-only mobile sports page.
-   Standalone copy of the sport.js data layer with a fresh mobile-first render layer.
-   Source taps fire `eli6app://play?embed=<url>` which LiveScreen's WebViewClient
-   intercepts to launch PlayerActivity fullscreen. */
+   List view = sectioned Sofascore-style list.
+   Detail view = sticky 16:9 iframe + sources list + server picker (watch-app.html parity). */
 
 (function () {
   'use strict';
@@ -703,16 +702,70 @@
     return Promise.resolve([]);
   }
 
-  function playInPlayerActivity(url) {
-    if (!isAllowedStreamUrl(url)) {
-      alert('This stream URL is blocked.');
-      return;
+  // Detail-view session state — held alive while the user is on a match.
+  var _detailSources = [];
+  var _activeUrl = null;
+  var _activeLang = '';
+
+  function toast(msg) {
+    var t = document.getElementById('sa-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._tm);
+    t._tm = setTimeout(function () { t.classList.remove('show'); }, 2200);
+  }
+
+  function swapIframe(url) {
+    if (!isAllowedStreamUrl(url)) { toast('Source blocked'); return; }
+    var fr = document.getElementById('sa-frame');
+    var ph = document.getElementById('sa-placeholder');
+    var phText = document.getElementById('sa-placeholderText');
+    if (!fr) return;
+    _activeUrl = url;
+    if (ph) ph.style.display = 'flex';
+    if (phText) phText.textContent = 'Loading stream…';
+    fr.src = url;
+    fr.addEventListener('load', function () {
+      if (ph) ph.style.display = 'none';
+    }, { once: true });
+    // sync dropdown + source-list highlight
+    var sel = document.getElementById('sa-server-select');
+    if (sel && sel.value !== url) sel.value = url;
+    document.querySelectorAll('.sa-source').forEach(function (li) {
+      li.classList.toggle('is-playing', li.getAttribute('data-url') === url);
+    });
+  }
+
+  function visibleSourcesFor(langCode) {
+    var arr = (langCode && langCode !== 'all' && langCode !== '')
+      ? _detailSources.filter(function (s) { return s._lang && s._lang.code === langCode; })
+      : _detailSources.slice();
+    return sortSourcesByVotes(arr);
+  }
+
+  function nextSource() {
+    var visible = visibleSourcesFor(_activeLang);
+    if (!visible.length) return;
+    var idx = visible.findIndex(function (s) { return s.url === _activeUrl; });
+    var next = visible[(idx + 1) % visible.length];
+    if (next) { swapIframe(next.url); toast('Trying ' + next.label); }
+  }
+
+  function reloadFrame() {
+    if (_activeUrl) { swapIframe(_activeUrl); toast('Reloading…'); }
+  }
+
+  function shareMatch() {
+    if (!detailMatch) return;
+    var url = location.origin + '/app/sport?match=' + encodeURIComponent(detailMatch.id || normalizeTitle(detailMatch.title));
+    if (navigator.share) {
+      navigator.share({ title: detailMatch.title, url: url }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { toast('Link copied'); });
+    } else {
+      toast(url);
     }
-    // LiveScreen.kt intercepts this scheme in shouldOverrideUrlLoading
-    // and starts PlayerActivity with intent.data = url.
-    var deepLink = 'eli6app://play?embed=' + encodeURIComponent(url);
-    // Use location.href so the WebViewClient sees it as a top-frame navigation
-    location.href = deepLink;
   }
 
   function renderDetail() {
@@ -722,7 +775,7 @@
     var home = teams[0] || m.title;
     var away = teams[1] || null;
 
-    var titleEl = document.getElementById('sa-detail-title');
+    var titleEl = document.getElementById('sa-title');
     if (titleEl) titleEl.textContent = m.title || home;
 
     var favBtn = document.querySelector('[data-action="toggle-fav-team"]');
@@ -752,7 +805,7 @@
       }
     }
 
-    var metaEl = document.getElementById('sa-detail-meta');
+    var metaEl = document.getElementById('sa-meta');
     if (metaEl) {
       var bits = [];
       if (m.isLive) bits.push('<span class="sa-meta__pill is-live">● LIVE NOW</span>');
@@ -768,15 +821,38 @@
 
     var sourcesEl = document.getElementById('sa-sources');
     var langEl = document.getElementById('sa-langbar');
+    var serverSel = document.getElementById('sa-server-select');
     if (sourcesEl) sourcesEl.innerHTML = '<li style="padding:18px 14px;color:var(--fg-muted)">Loading streams…</li>';
     if (langEl) langEl.innerHTML = '';
+    if (serverSel) serverSel.innerHTML = '<option value="">Loading…</option>';
+    _detailSources = [];
+    _activeUrl = null;
 
     var seq = ++_openSeq;
     buildSources(m).then(function (sources) {
       if (seq !== _openSeq) return;
       sources.forEach(function (s) { s._lang = detectLang(s.language || s.label || s.raw); });
+      _detailSources = sources;
+      populateServerSelect(sources);
       renderSources(sources);
+      var first = sortSourcesByVotes(sources.slice())[0];
+      if (first) swapIframe(first.url);
     });
+  }
+
+  function populateServerSelect(sources) {
+    var sel = document.getElementById('sa-server-select');
+    if (!sel) return;
+    if (!sources.length) {
+      sel.innerHTML = '<option value="">No streams available</option>';
+      return;
+    }
+    var sorted = sortSourcesByVotes(sources.slice());
+    sel.innerHTML = sorted.map(function (s) {
+      var flag = s._lang ? s._lang.flag + ' ' : '';
+      var hd = s.hd ? ' · HD' : '';
+      return '<option value="' + escapeHtml(s.url) + '">' + flag + escapeHtml(s.label) + hd + '</option>';
+    }).join('');
   }
 
   function renderSources(sources) {
@@ -862,11 +938,11 @@
       var url = li.getAttribute('data-url');
       li.querySelector('[data-action="play"]').addEventListener('click', function (e) {
         e.stopPropagation();
-        playInPlayerActivity(url);
+        swapIframe(url);
       });
       li.addEventListener('click', function (e) {
         if (e.target.closest('.sa-vote') || e.target.closest('[data-action="play"]')) return;
-        playInPlayerActivity(url);
+        swapIframe(url);
       });
       li.querySelectorAll('.sa-vote').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
@@ -922,6 +998,19 @@
         var teams = extractTeams(detailMatch.title);
         teams.forEach(toggleFavoriteTeam);
         t.setAttribute('aria-pressed', String(matchHasFavorite(detailMatch)));
+      } else if (action === 'reload') {
+        reloadFrame();
+      } else if (action === 'share') {
+        shareMatch();
+      } else if (action === 'next-source') {
+        nextSource();
+      }
+    });
+
+    // server-select dropdown — change the active stream
+    document.body.addEventListener('change', function (e) {
+      if (e.target && e.target.id === 'sa-server-select' && e.target.value) {
+        swapIframe(e.target.value);
       }
     });
 

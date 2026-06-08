@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
   <title>Sport — ELI6 Movies</title>
   <!-- Vercel rewrites /app/sport → /sport-app.html server-side, so the browser URL
        stays at /app/sport and relative paths would resolve to /app/css/... and 404.
@@ -24,7 +24,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="css/sport-app.css" />
@@ -75,31 +75,61 @@
     </main>
   </section>
 
-  <!-- DETAIL VIEW -->
+  <!-- DETAIL VIEW (mirrors watch-app.html structure) -->
   <section id="view-detail" class="view view--detail" aria-hidden="true" hidden>
-    <header class="sa-detail-head">
-      <button class="sa-icon sa-back" type="button" data-action="back" aria-label="Back">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <div class="sa-detail-head__title" id="sa-detail-title">—</div>
-      <button class="sa-icon sa-fav-match" type="button" data-action="toggle-fav-team" aria-pressed="false" aria-label="Favorite this match">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 17.3l-5.5 3.2 1.5-6.2L3 9.9l6.3-.5L12 3.6l2.7 5.8 6.3.5-5 4.4 1.5 6.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-      </button>
-    </header>
 
-    <div class="sa-hero" id="sa-detail-hero"></div>
-    <div class="sa-meta" id="sa-detail-meta"></div>
-
-    <div class="sa-sources-head">
-      <h2>Streams</h2>
-      <div class="sa-langbar" id="sa-langbar"></div>
+    <div class="stage" id="sa-stage">
+      <button class="stage__back" type="button" data-action="back" aria-label="Back">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <iframe id="sa-frame" class="stage__iframe"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowfullscreen
+              referrerpolicy="origin"></iframe>
+      <div class="stage__placeholder" id="sa-placeholder">
+        <div class="stage__spinner"></div>
+        <div id="sa-placeholderText">Loading stream…</div>
+      </div>
     </div>
 
-    <ul class="sa-sources" id="sa-sources"></ul>
+    <div class="content">
+      <h1 class="title" id="sa-title">—</h1>
+      <div class="meta-row" id="sa-meta"></div>
+      <div class="genres" id="sa-genres"></div>
 
-    <div class="sa-detail-footnote">
-      Taps on a stream open the native fullscreen player.
+      <div class="actions">
+        <button class="action action--primary" type="button" data-action="toggle-fav-team" id="sa-favBtn" aria-pressed="false">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3l-5.5 3.2 1.5-6.2L3 9.9l6.3-.5L12 3.6l2.7 5.8 6.3.5-5 4.4 1.5 6.2z" fill="currentColor"/></svg>
+          <span id="sa-favBtnLabel">Favorite</span>
+        </button>
+        <button class="action" type="button" data-action="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 0 6 3 3 0 0 0 2.83-2zM6 14a3 3 0 1 1 2.83-4 3 3 0 0 1 0 4zm12 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Share</span>
+        </button>
+        <button class="action" type="button" data-action="reload" aria-label="Reload">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.4L21 3v6h-6l2.6-2.6A7 7 0 1 0 19 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Reload</span>
+        </button>
+      </div>
+
+      <div class="server-bar">
+        <select class="server-select" id="sa-server-select" aria-label="Stream source"></select>
+        <button class="server-next" type="button" data-action="next-source" aria-label="Try next source">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l10 8-10 8V4zM17 5h2v14h-2z" fill="currentColor"/></svg>
+          <span>Next</span>
+        </button>
+      </div>
     </div>
+
+    <div class="sources-pane">
+      <div class="sources-pane__head">
+        <div class="section-h">All streams</div>
+        <div class="sa-langbar" id="sa-langbar"></div>
+      </div>
+      <ul class="sa-sources" id="sa-sources"></ul>
+    </div>
+
+    <div class="toast" id="sa-toast"></div>
   </section>
 
   <script src="js/config.js" defer></script>
