@@ -543,23 +543,69 @@ img { max-width: 100%; display: block; }
 }
 .server-next svg { width: 14px; height: 14px; }
 
-.sources-pane {
-  padding: 18px 16px 24px;
-  border-top: 1px solid var(--sa-border);
-  margin-top: 14px;
-}
-.sources-pane__head {
+/* ─── Tabs (watch-app.html parity) ─── */
+.tabs {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 18px;
+  padding: 0 16px;
+  margin-top: 20px;
+  border-bottom: 1px solid var(--sa-border);
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  position: relative;
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sa-fg-mute);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.tab.active { color: var(--sa-fg); }
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--sa-accent);
+  border-radius: 1px;
+}
+
+.pane { padding: 16px; display: none; }
+.pane.active { display: block; }
+
+#sa-pane-streams.pane {
+  /* langbar sits flush above the source list */
+  padding-top: 12px;
+}
+#sa-pane-streams .sa-langbar {
+  margin-bottom: 10px;
+  max-width: 100%;
+}
+
 .section-h {
   font-size: 13px;
   font-weight: 700;
   color: var(--sa-fg);
   letter-spacing: 0.02em;
+  margin: 4px 0 6px;
+}
+.section-h + .info-row { margin-bottom: 14px; }
+.info-row {
+  font-size: 14px;
+  color: var(--sa-fg-mute);
+}
+
+.sa-source--placeholder {
+  list-style: none;
+  padding: 18px 14px;
+  color: var(--sa-fg-mute);
+  font-size: 13px;
+  text-align: center;
 }
 
 .sa-langbar {
@@ -731,13 +777,14 @@ img { max-width: 100%; display: block; }
   .view--detail { padding-bottom: 0; }
   .stage { aspect-ratio: unset; height: 100dvh; }
   .stage__iframe { height: 100%; }
-  .content, .sources-pane { display: none; }
+  .content, .tabs, .pane { display: none; }
 }
 
 /* Tablet */
 @media (min-width: 720px) {
   .content { padding: 24px 32px 12px; max-width: 880px; margin: 0 auto; }
-  .sources-pane { padding: 20px 32px; max-width: 880px; margin: 14px auto 0; }
+  .tabs { padding: 0 32px; max-width: 880px; margin: 24px auto 0; }
+  .pane { padding: 20px 32px; max-width: 880px; margin: 0 auto; }
   .title { font-size: 28px; }
 }
 

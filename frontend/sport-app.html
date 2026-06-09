@@ -75,12 +75,12 @@
     </main>
   </section>
 
-  <!-- DETAIL VIEW (mirrors watch-app.html structure) -->
+  <!-- DETAIL VIEW (watch-app.html parity) -->
   <section id="view-detail" class="view view--detail" aria-hidden="true" hidden>
 
     <div class="stage" id="sa-stage">
       <button class="stage__back" type="button" data-action="back" aria-label="Back">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <iframe id="sa-frame" class="stage__iframe"
               allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
@@ -95,7 +95,6 @@
     <div class="content">
       <h1 class="title" id="sa-title">—</h1>
       <div class="meta-row" id="sa-meta"></div>
-      <div class="genres" id="sa-genres"></div>
 
       <div class="actions">
         <button class="action action--primary" type="button" data-action="toggle-fav-team" id="sa-favBtn" aria-pressed="false">
@@ -103,30 +102,44 @@
           <span id="sa-favBtnLabel">Favorite</span>
         </button>
         <button class="action" type="button" data-action="share">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a3 3 0 1 0-2.83-4H15a3 3 0 0 0 0 6 3 3 0 0 0 2.83-2zM6 14a3 3 0 1 1 2.83-4 3 3 0 0 1 0 4zm12 6a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
           <span>Share</span>
         </button>
         <button class="action" type="button" data-action="reload" aria-label="Reload">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.4L21 3v6h-6l2.6-2.6A7 7 0 1 0 19 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span>Reload</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
       </div>
 
       <div class="server-bar">
         <select class="server-select" id="sa-server-select" aria-label="Stream source"></select>
         <button class="server-next" type="button" data-action="next-source" aria-label="Try next source">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4l10 8-10 8V4zM17 5h2v14h-2z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
           <span>Next</span>
         </button>
       </div>
     </div>
 
-    <div class="sources-pane">
-      <div class="sources-pane__head">
-        <div class="section-h">All streams</div>
-        <div class="sa-langbar" id="sa-langbar"></div>
-      </div>
-      <ul class="sa-sources" id="sa-sources"></ul>
+    <div class="tabs" id="sa-tabs">
+      <button class="tab active" type="button" data-pane="streams">All streams</button>
+      <button class="tab" type="button" data-pane="info">Match info</button>
+    </div>
+
+    <div class="pane active" id="sa-pane-streams">
+      <div class="sa-langbar" id="sa-langbar"></div>
+      <ul class="sa-sources" id="sa-sources">
+        <li class="sa-source--placeholder">Loading streams…</li>
+      </ul>
+    </div>
+
+    <div class="pane" id="sa-pane-info">
+      <div class="section-h">League</div>
+      <div class="info-row" id="sa-info-league">—</div>
+      <div class="section-h">Sport</div>
+      <div class="info-row" id="sa-info-sport">—</div>
+      <div class="section-h">Status</div>
+      <div class="info-row" id="sa-info-status">—</div>
+      <div class="section-h">Kick-off</div>
+      <div class="info-row" id="sa-info-time">—</div>
     </div>
 
     <div class="toast" id="sa-toast"></div>

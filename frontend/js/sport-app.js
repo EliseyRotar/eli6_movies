@@ -819,14 +819,24 @@
       metaEl.innerHTML = bits.join('');
     }
 
+    paintMatchInfo(m);
+    resetDetailTabs();
+
     var sourcesEl = document.getElementById('sa-sources');
     var langEl = document.getElementById('sa-langbar');
     var serverSel = document.getElementById('sa-server-select');
-    if (sourcesEl) sourcesEl.innerHTML = '<li style="padding:18px 14px;color:var(--fg-muted)">Loading streams…</li>';
+    if (sourcesEl) sourcesEl.innerHTML = '<li class="sa-source--placeholder">Loading streams…</li>';
     if (langEl) langEl.innerHTML = '';
     if (serverSel) serverSel.innerHTML = '<option value="">Loading…</option>';
     _detailSources = [];
     _activeUrl = null;
+
+    var fr = document.getElementById('sa-frame');
+    var ph = document.getElementById('sa-placeholder');
+    var phText = document.getElementById('sa-placeholderText');
+    if (fr) fr.src = 'about:blank';
+    if (ph) ph.style.display = 'flex';
+    if (phText) phText.textContent = 'Loading stream…';
 
     var seq = ++_openSeq;
     buildSources(m).then(function (sources) {
@@ -836,8 +846,46 @@
       populateServerSelect(sources);
       renderSources(sources);
       var first = sortSourcesByVotes(sources.slice())[0];
-      if (first) swapIframe(first.url);
+      if (first) {
+        swapIframe(first.url);
+      } else {
+        // No streams resolved — surface that to the user instead of leaving
+        // the placeholder hanging on "Loading stream…" forever. (Was the
+        // exact symptom reported on v0.1.10: text disappears after 3-5s,
+        // leaving an empty black iframe.)
+        if (phText) phText.textContent = 'No streams available for this match yet.';
+        if (serverSel) serverSel.innerHTML = '<option value="">No streams available</option>';
+      }
     });
+  }
+
+  function paintMatchInfo(m) {
+    var byId = function (id) { return document.getElementById(id); };
+    var league = byId('sa-info-league'); if (league) league.textContent = m.league || '—';
+    var sport = byId('sa-info-sport');
+    if (sport) sport.textContent = CAT_LABEL[m.category] || m.category || '—';
+    var status = byId('sa-info-status');
+    if (status) status.textContent = m.isLive ? 'Live now' : (m.date ? 'Scheduled' : 'TBD');
+    var time = byId('sa-info-time');
+    if (time) {
+      if (m.date) {
+        try { time.textContent = new Date(m.date).toLocaleString(); }
+        catch (e) { time.textContent = String(m.date); }
+      } else {
+        time.textContent = '—';
+      }
+    }
+  }
+
+  function resetDetailTabs() {
+    // Always land on "All streams" when a match opens.
+    document.querySelectorAll('#sa-tabs .tab').forEach(function (t) {
+      t.classList.toggle('active', t.getAttribute('data-pane') === 'streams');
+    });
+    var streamsPane = document.getElementById('sa-pane-streams');
+    var infoPane = document.getElementById('sa-pane-info');
+    if (streamsPane) streamsPane.classList.add('active');
+    if (infoPane) infoPane.classList.remove('active');
   }
 
   function populateServerSelect(sources) {
@@ -860,7 +908,7 @@
     var langEl = document.getElementById('sa-langbar');
     if (!sourcesEl) return;
     if (!sources.length) {
-      sourcesEl.innerHTML = '<li style="padding:20px 14px;color:var(--fg-muted)">No streams available right now.</li>';
+      sourcesEl.innerHTML = '<li class="sa-source--placeholder">No streams available right now.</li>';
       return;
     }
 
@@ -1013,6 +1061,23 @@
         swapIframe(e.target.value);
       }
     });
+
+    // detail-view tabs (All streams / Match info)
+    var tabsBar = document.getElementById('sa-tabs');
+    if (tabsBar) {
+      tabsBar.addEventListener('click', function (e) {
+        var t = e.target.closest('.tab');
+        if (!t) return;
+        var pane = t.getAttribute('data-pane');
+        tabsBar.querySelectorAll('.tab').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-pane') === pane);
+        });
+        var streamsPane = document.getElementById('sa-pane-streams');
+        var infoPane = document.getElementById('sa-pane-info');
+        if (streamsPane) streamsPane.classList.toggle('active', pane === 'streams');
+        if (infoPane) infoPane.classList.toggle('active', pane === 'info');
+      });
+    }
 
     // sport chips
     document.getElementById('sa-sports').addEventListener('click', function (e) {
