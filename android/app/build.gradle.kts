@@ -9,7 +9,7 @@ plugins {
 
 val versionMajor = 0
 val versionMinor = 1
-val versionPatch = 11
+val versionPatch = 12
 
 android {
     namespace = "com.eli6movies.app"
