@@ -12,25 +12,24 @@
   var ESX_ORIGIN = 'https://api.embedsportex.site';
   var DADDY = 'https://daddylive.eu';
 
-  // Defense-in-depth: only let these hosts through to PlayerActivity
-  var HOST_ALLOW = [
-    /(^|\.)streamed\.pk$/i,
-    /(^|\.)embedsports\.top$/i,
-    /(^|\.)embedsportex\.site$/i,
-    /(^|\.)embedme\.top$/i,
-    /(^|\.)embed\.su$/i,
-    /(^|\.)embed\.st$/i,
-    /(^|\.)daddylive\.(eu|nl)$/i,
-    /(^|\.)daddylives\.sbs$/i,
-    /(^|\.)dlhd\.(pk|link)$/i,
-    /(^|\.)westream\.(su|top)$/i,
-  ];
+  // Stream URL gating happens at the CSP layer (frame-src in vercel.json) and
+  // at WebView level (AdBlock.kt host-suffix blocklist). The JS-side allow
+  // list used to maintain a hand-curated regex of embed hosts, but streamed.pk
+  // rotates them faster than we can update the list, which silently dropped
+  // every source through swapIframe's early return. Trust https? — let the
+  // browser actually try to load it.
   function isAllowedStreamUrl(url) {
     try {
       var u = new URL(url, location.origin);
-      if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
-      return HOST_ALLOW.some(function (rx) { return rx.test(u.hostname); });
-    } catch (e) { return false; }
+      if (u.protocol !== 'https:' && u.protocol !== 'http:') {
+        console.warn('[sport-app] rejecting non-http URL:', url);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.warn('[sport-app] rejecting unparseable URL:', url, e);
+      return false;
+    }
   }
 
   var ESX_CAT = {
@@ -423,8 +422,14 @@
   }
 
   async function getStreamEmbed(source, id) {
+    // Hard timeout so one slow provider can't hang the whole Promise.all in
+    // buildSources and leave the placeholder stuck at "Loading stream…".
+    var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, 6000) : null;
     try {
-      var r = await fetch(STREAMED + '/stream/' + source + '/' + encodeURIComponent(id));
+      var r = await fetch(STREAMED + '/stream/' + source + '/' + encodeURIComponent(id), {
+        signal: controller ? controller.signal : undefined,
+      });
       if (!r.ok) return [];
       var streams = await r.json();
       if (!Array.isArray(streams)) return [];
@@ -436,7 +441,12 @@
         return (a.streamNo || 0) - (b.streamNo || 0);
       });
       return streams;
-    } catch (e) { return []; }
+    } catch (e) {
+      console.warn('[sport-app] getStreamEmbed failed for', source, id, e && e.name);
+      return [];
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
   }
 
   // === ROUTING ===
@@ -716,8 +726,13 @@
     t._tm = setTimeout(function () { t.classList.remove('show'); }, 2200);
   }
 
+  var _loadWatchdog = null;
   function swapIframe(url) {
-    if (!isAllowedStreamUrl(url)) { toast('Source blocked'); return; }
+    if (!isAllowedStreamUrl(url)) {
+      console.warn('[sport-app] swapIframe blocked URL', url);
+      toast('Source blocked — try Next');
+      return;
+    }
     var fr = document.getElementById('sa-frame');
     var ph = document.getElementById('sa-placeholder');
     var phText = document.getElementById('sa-placeholderText');
@@ -725,8 +740,17 @@
     _activeUrl = url;
     if (ph) ph.style.display = 'flex';
     if (phText) phText.textContent = 'Loading stream…';
+
+    if (_loadWatchdog) clearTimeout(_loadWatchdog);
+    _loadWatchdog = setTimeout(function () {
+      // Iframe never fired load — embed host is hanging. Tell the user instead
+      // of leaving the spinner up forever; they can hit Next to try another.
+      if (phText) phText.textContent = 'This source is slow. Hit Next to try another.';
+    }, 12000);
+
     fr.src = url;
     fr.addEventListener('load', function () {
+      if (_loadWatchdog) { clearTimeout(_loadWatchdog); _loadWatchdog = null; }
       if (ph) ph.style.display = 'none';
     }, { once: true });
     // sync dropdown + source-list highlight
@@ -817,6 +841,26 @@
       }
       bits.push('<span class="sa-meta__pill">' + (CAT_ICON[m.category] || '📺') + ' ' + escapeHtml(CAT_LABEL[m.category] || m.category || 'Other') + '</span>');
       metaEl.innerHTML = bits.join('');
+    }
+
+    // Genres-row clone (watch-app.html parity) — single chip with sport category
+    var genresEl = document.getElementById('sa-genres');
+    if (genresEl) {
+      var cat = CAT_LABEL[m.category] || m.category || 'Sport';
+      genresEl.innerHTML = '<span class="genre">' + escapeHtml(cat) + '</span>';
+    }
+
+    // Overview clone — short summary line under the server picker
+    var overviewText = document.getElementById('sa-overviewText');
+    if (overviewText) {
+      var ob = [];
+      if (m.league) ob.push(m.league);
+      if (m.isLive) ob.push('Live now.');
+      else if (m.date) {
+        try { ob.push('Scheduled for ' + new Date(m.date).toLocaleString()); }
+        catch (e) {}
+      }
+      overviewText.textContent = ob.join(' · ') || (m.title || home);
     }
 
     paintMatchInfo(m);
