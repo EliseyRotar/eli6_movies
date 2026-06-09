@@ -75,17 +75,14 @@
     </main>
   </section>
 
-  <!-- DETAIL VIEW (watch-app.html parity) -->
+  <!-- DETAIL VIEW — verbatim watch-app.html body markup -->
   <section id="view-detail" class="view view--detail" aria-hidden="true" hidden>
 
     <div class="stage" id="sa-stage">
       <button class="stage__back" type="button" data-action="back" aria-label="Back">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <iframe id="sa-frame" class="stage__iframe"
-              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-              allowfullscreen
-              referrerpolicy="origin"></iframe>
+      <iframe id="sa-frame" class="stage__iframe" allowfullscreen allow="autoplay; fullscreen" referrerpolicy="origin"></iframe>
       <div class="stage__placeholder" id="sa-placeholder">
         <div class="stage__spinner"></div>
         <div id="sa-placeholderText">Loading stream…</div>
@@ -93,29 +90,38 @@
     </div>
 
     <div class="content">
-      <h1 class="title" id="sa-title">—</h1>
-      <div class="meta-row" id="sa-meta"></div>
+      <h1 class="title" id="sa-title">
+        <span class="skeleton-line" style="display:inline-block;height:24px;width:70%;"></span>
+      </h1>
+      <div class="meta-row" id="sa-meta">
+        <span class="skeleton-line" style="height:14px;width:140px;display:inline-block;"></span>
+      </div>
+      <div class="genres" id="sa-genres"></div>
 
       <div class="actions">
         <button class="action action--primary" type="button" data-action="toggle-fav-team" id="sa-favBtn" aria-pressed="false">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3l-5.5 3.2 1.5-6.2L3 9.9l6.3-.5L12 3.6l2.7 5.8 6.3.5-5 4.4 1.5 6.2z" fill="currentColor"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span id="sa-favBtnLabel">Favorite</span>
         </button>
         <button class="action" type="button" data-action="share">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          <span>Share</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share
         </button>
         <button class="action" type="button" data-action="reload" aria-label="Reload">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         </button>
       </div>
 
       <div class="server-bar">
         <select class="server-select" id="sa-server-select" aria-label="Stream source"></select>
-        <button class="server-next" type="button" data-action="next-source" aria-label="Try next source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
-          <span>Next</span>
+        <button class="server-next" type="button" data-action="next-source" aria-label="Try next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          Next
         </button>
+      </div>
+
+      <div class="overview" id="sa-overviewBox">
+        <div class="overview__text" id="sa-overviewText"></div>
       </div>
     </div>
 

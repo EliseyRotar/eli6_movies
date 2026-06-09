@@ -543,6 +543,92 @@ img { max-width: 100%; display: block; }
 }
 .server-next svg { width: 14px; height: 14px; }
 
+/* ─── watch-app.html parity additions ─── */
+.skeleton-line {
+  background: linear-gradient(90deg, var(--sa-surface) 0%, var(--sa-surface2) 50%, var(--sa-surface) 100%);
+  background-size: 200% 100%;
+  animation: sa-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--sa-surface2);
+  color: var(--sa-fg);
+  text-transform: uppercase;
+}
+.badge--hd { background: #fff; color: #000; }
+.badge--live {
+  background: #ef4444;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Backwards-compat shim for the legacy meta painting (sa-meta__pill spans).
+   Treat them as watch-app.html .badge elements so the UI matches. */
+.sa-meta__pill {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--sa-surface2);
+  color: var(--sa-fg);
+  text-transform: uppercase;
+}
+.sa-meta__pill.is-live {
+  background: #ef4444;
+  color: #fff;
+}
+.sa-meta__pill.is-league {
+  background: var(--league-bg, var(--sa-surface2));
+  color: var(--league-fg, var(--sa-fg));
+}
+.badge--live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+  animation: sa-pulse 1.4s ease-in-out infinite;
+}
+@keyframes sa-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.overview {
+  margin-top: 18px;
+  font-size: 14px;
+  color: var(--sa-fg-mute);
+  line-height: 1.6;
+}
+.overview__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.overview--expanded .overview__text {
+  -webkit-line-clamp: unset;
+  display: block;
+}
+.overview__toggle {
+  display: inline-block;
+  margin-top: 6px;
+  color: var(--sa-accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ─── Tabs (watch-app.html parity) ─── */
 .tabs {
   display: flex;
