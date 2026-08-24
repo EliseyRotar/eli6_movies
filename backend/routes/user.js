@@ -78,6 +78,10 @@ router.delete('/user/profile-picture', auth, async (req, res) => {
     }
 });
 
+router.get('/user/mylist', auth, async (req, res) => {
+    res.json(req.user.myList || []);
+});
+
 router.post('/user/mylist', auth, async (req, res) => {
     try {
         const { id, title, type, poster_path, overview } = req.body || {};

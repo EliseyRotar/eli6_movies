@@ -210,20 +210,25 @@ eli6_movies/
 
 ## API reference
 
+> Full documentation: [`backend/API.md`](backend/API.md)
+
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `GET` | `/api/health` | — | Health check |
-| `POST` | `/api/register` | — | Create account |
-| `POST` | `/api/login` | — | Login (sets JWT cookie) |
+| `POST` | `/api/register` | — | Create account (returns JWT) |
+| `POST` | `/api/login` | — | Login (returns JWT) |
 | `POST` | `/api/logout` | — | Logout |
+| `GET` | `/api/auth/me` | JWT | Current user (token validation) |
 | `GET` | `/api/user/profile` | JWT | Profile + My List |
+| `GET` | `/api/user/mylist` | JWT | My List |
 | `POST` | `/api/user/mylist` | JWT | Add to My List |
 | `DELETE` | `/api/user/mylist/:id/:type` | JWT | Remove from My List |
 | `GET` | `/api/user/keep-watching` | JWT | Keep Watching list |
 | `POST` | `/api/user/keep-watching` | JWT | Update progress |
-| `POST` | `/api/user/avatar` | JWT | Upload profile picture |
+| `PUT` | `/api/user/profile-picture` | JWT | Upload profile picture |
 | `GET` | `/api/tmdb/*` | — | Proxied TMDB requests (cached) |
 | `GET` | `/api/check-servers` | — | Embed provider health |
+| `GET` | `/api/embed/ru` | JWT | Russian CDN embed proxy |
 | `POST` | `/api/cron/check-episodes` | Cron-Secret header | Episode notifier trigger |
 | `GET` | `/api/trakt/auth-url` | JWT | Returns Trakt OAuth URL |
 | `POST` | `/api/trakt/callback` | JWT | Exchange OAuth code for tokens |
