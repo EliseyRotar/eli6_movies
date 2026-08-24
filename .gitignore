@@ -71,6 +71,7 @@ Thumbs.db
 
 # Local infrastructure doc (contains live secrets — keep off GitHub)
 INFRASTRUCTURE.md
+message.txt
 
 # Discord setup scripts — historically contained hardcoded bot token, keep off GitHub
 discord/content.js
