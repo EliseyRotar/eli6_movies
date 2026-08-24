@@ -31,6 +31,27 @@ router.get('/catalog/vidsrc/:type', async (req, res) => {
     }
 });
 
+// NOTE: static genre-list routes must be registered BEFORE the `:category`
+// routes below, otherwise `/catalog/movies/genres` and `/catalog/tv/genres`
+// are swallowed by the `:category` param and never reach their handlers.
+router.get('/catalog/movies/genres', async (_req, res, next) => {
+    try {
+        const data = await fetchTMDB('/genre/movie/list');
+        res.json(data.genres || []);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/catalog/tv/genres', async (_req, res, next) => {
+    try {
+        const data = await fetchTMDB('/genre/tv/list');
+        res.json(data.genres || []);
+    } catch (error) {
+        next(error);
+    }
+});
+
 router.get('/catalog/movies/:category', async (req, res, next) => {
     try {
         const { category } = req.params;
@@ -69,24 +90,6 @@ router.get('/catalog/tv/:id/seasons', async (req, res, next) => {
     try {
         const data = await fetchTMDB(`/tv/${req.params.id}`);
         res.json(data.seasons || []);
-    } catch (error) {
-        next(error);
-    }
-});
-
-router.get('/catalog/movies/genres', async (_req, res, next) => {
-    try {
-        const data = await fetchTMDB('/genre/movie/list');
-        res.json(data.genres || []);
-    } catch (error) {
-        next(error);
-    }
-});
-
-router.get('/catalog/tv/genres', async (_req, res, next) => {
-    try {
-        const data = await fetchTMDB('/genre/tv/list');
-        res.json(data.genres || []);
     } catch (error) {
         next(error);
     }

@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { createToken } = require('../utils/jwt');
 const { verifyToken } = require('../utils/jwt');
+const auth = require('../middleware/auth');
 const logger = require('../utils/logger');
 const {
     validateEmail,
@@ -113,6 +114,13 @@ router.post('/login', async (req, res, next) => {
         logger.error('Login failed', { error: error.message });
         next(error);
     }
+});
+
+// GET /auth/me — returns the authenticated user for the supplied token.
+// Useful for native clients (Android TV) that authenticate via the
+// `Authorization: Bearer <token>` header instead of the httpOnly cookie.
+router.get('/auth/me', auth, (req, res) => {
+    res.json({ user: sanitizeUser(req.user) });
 });
 
 router.post('/logout', async (req, res) => {

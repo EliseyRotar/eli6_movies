@@ -24,12 +24,11 @@ async function fetchTMDB(endpoint, params = {}) {
     const cacheKey = `${endpoint}|${JSON.stringify(params)}`;
     const cached = cache.get(cacheKey);
     if (cached) {
-        console.log(`[TMDB] Cache Hit: ${endpoint}`);
+        logger.info('TMDB cache hit', { endpoint });
         return cached;
     }
 
     try {
-        console.log(`[TMDB] Fetching: ${endpoint} with params:`, params);
         const response = await axios.get(`${TMDB_BASE_URL}${endpoint}`, {
             timeout: HTTP_TIMEOUT_MS,
             params: {
@@ -38,15 +37,9 @@ async function fetchTMDB(endpoint, params = {}) {
                 ...params,
             },
         });
-        const resultsCount = response.data.results ? response.data.results.length : (response.data ? 'object' : 0);
-        console.log(`[TMDB] Success: ${endpoint} - Results: ${resultsCount}`);
         cache.set(cacheKey, response.data, getTtl(endpoint));
         return response.data;
     } catch (error) {
-        console.error(`[TMDB] Error: ${endpoint}`, {
-            status: error.response?.status,
-            message: error.message
-        });
         logger.error('TMDB request failed', {
             endpoint,
             status: error.response?.status,
